@@ -1,0 +1,167 @@
+# =============================================================================
+# SYSTEM CONFIGURATION
+# =============================================================================
+#
+# This file contains all system-wide settings for the multimodal transformer,
+# including project paths, training parameters, model architecture, and data
+# splitting configurations.
+#
+# CONFIGURATION SECTIONS:
+# ----------------------
+# 1. project_settings: File paths and model management
+# 2. data_splitting: Training/validation data allocation
+# 3. training_parameters: Training hyperparameters
+# 4. model_architecture: Neural network structure
+#
+# USAGE:
+# ------
+# Edit these values to customize training behavior. The system will validate
+# all settings on startup and report any configuration errors.
+
+# =============================================================================
+# PROJECT SETTINGS
+# =============================================================================
+# File paths, model management, and device configuration
+
+project_settings:
+  # Base directory for the project (use forward slashes, even on Windows)
+  project_file_path: C:/Users/tsalo/gpt_proj_6/multimodal_1/
+
+  # Training log output file name (created in project directory)
+  output_file_name: training_log.txt
+
+  # Full path to model file for saving/loading trained weights
+  model_file_name: C:/Users/tsalo/gpt_proj_6/multimodal_1/output/TransformerModel.pth
+
+  # Model creation/loading behavior:
+  # 1 = Create new model from scratch (ignores existing model file)
+  # 0 = Load existing model from model_file_name (must exist)
+  create_new_model: 1
+
+  # Model saving behavior:
+  # 1 = Save model during training (at eval_interval) and at completion
+  # 0 = Don't save model (training session only)
+  save_model: 1
+
+  # Training device - options: 'cpu', 'cuda', 'auto'
+  # 'auto' will use CUDA if available, otherwise CPU
+  device: auto
+
+# =============================================================================
+# DATA SPLITTING
+# =============================================================================
+# Configuration for training/validation data allocation
+
+data_splitting:
+  # Validation size as proportion of total data (0.0 to 1.0)
+  # Example: 0.1 = 10% for validation, 90% for training
+  # Note: Only used if num_validation_files is 0
+  validation_size: 0.1
+
+  # Alternative validation method: specify number of files for validation
+  # When > 0: Uses the last N files from each folder entirely for validation
+  # When 0: Uses validation_size proportion from all data
+  # IMPORTANT: Only applies to the first modality's data
+  num_validation_files: 0
+
+# =============================================================================
+# TRAINING PARAMETERS
+# =============================================================================
+# Core hyperparameters that control the training process
+
+training_parameters:
+  # Number of training examples processed together in each batch
+  # Larger values: Better GPU utilization, more stable gradients, more memory usage
+  # Smaller values: Less memory usage, more frequent updates, potentially noisier gradients
+  # Typical values: 16, 32, 64, 128
+  batch_size: 8  # Adjusted for development/testing
+
+  # Context window size - number of previous tokens considered for prediction
+  # This is the sequence length that the model processes at once
+  # Larger values: Model can see more context, but requires more memory
+  # Must be less than the length of your data sequences
+  # Typical values: 64, 128, 256, 512, 1024
+  block_size: 6  # Adjusted for development/testing
+
+  # Maximum number of training iterations (epochs)
+  # Training will stop when this limit is reached
+  # Monitor training loss to determine appropriate stopping point
+  max_iters: 20000
+
+  # Evaluation interval - how often to calculate and log validation loss
+  # Model is also saved at these intervals (if save_model=1)
+  # More frequent evaluation provides better monitoring but slows training
+  eval_interval: 50
+
+  # Learning rate - controls the step size for weight updates
+  # Higher values: Faster learning but risk of overshooting optimal weights
+  # Lower values: More stable learning but slower convergence
+  # Typical range: 1e-5 to 1e-3
+  learning_rate: 0.0003
+
+# =============================================================================
+# MODEL ARCHITECTURE
+# =============================================================================
+# Neural network structure and capacity parameters
+
+model_architecture:
+  # Embedding dimension - size of the vector representation for each token
+  # This determines the model's capacity to represent complex relationships
+  # Larger values: More expressive model, but more parameters and memory
+  # Should be divisible by n_head for efficient attention computation
+  # Typical values: 128, 256, 384, 512, 768
+  n_embd: 16  # Adjusted for development/testing
+
+  # Number of attention heads in multi-head attention mechanism
+  # More heads allow the model to attend to different types of relationships
+  # Must divide evenly into n_embd (each head gets n_embd/n_head dimensions)
+  # Typical values: 4, 6, 8, 12, 16
+  n_head: 4
+
+  # Number of transformer layers (blocks) in the model
+  # More layers: Deeper model that can learn more complex patterns
+  # Fewer layers: Faster training and inference, less overfitting risk
+  # Typical values: 4, 6, 8, 12, 24
+  n_layer: 4
+
+  # Dropout rate - probability of randomly setting neurons to zero during training
+  # Regularization technique to prevent overfitting
+  # Higher values: More regularization, less overfitting, potentially underfitting
+  # Lower values: Less regularization, risk of overfitting
+  # Typical range: 0.1 to 0.3
+  dropout: 0.2
+
+# =============================================================================
+# CONFIGURATION NOTES
+# =============================================================================
+#
+# MEMORY CONSIDERATIONS:
+# - GPU memory usage scales with: batch_size × block_size × n_embd × n_layer
+# - If getting out-of-memory errors, reduce batch_size or block_size first
+# - Monitor GPU memory usage during training
+#
+# TRAINING TIME:
+# - Training time scales with: max_iters × batch_size × block_size
+# - Use smaller values for experimentation, scale up for production
+# - Consider using gradient accumulation for large effective batch sizes
+#
+# MODEL CAPACITY:
+# - Total parameters ≈ (vocab_size × n_embd) + (n_layer × 4 × n_embd²)
+# - Larger models need more data to train effectively
+# - Balance model size with available data and computational resources
+#
+# VALIDATION:
+# - Monitor validation loss to detect overfitting
+# - If validation loss stops improving, consider early stopping
+# - Ensure validation set is representative of your target data
+#
+# DEVICE SELECTION:
+# - 'cuda' requires NVIDIA GPU with CUDA support
+# - 'cpu' works on any system but is much slower for large models
+# - Check CUDA availability with: python -c "import torch; print(torch.cuda.is_available())"
+#
+# TROUBLESHOOTING:
+# - If training is very slow: Increase batch_size (if memory allows)
+# - If loss isn't decreasing: Try different learning_rate
+# - If getting NaN losses: Reduce learning_rate
+# - If overfitting: Increase dropout or reduce model size

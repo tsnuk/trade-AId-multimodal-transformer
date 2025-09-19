@@ -1,0 +1,198 @@
+# =============================================================================
+# INPUT SCHEMAS CONFIGURATION
+# =============================================================================
+#
+# This file defines the modality configurations for the multimodal transformer system.
+# Each modality represents a different type of data (e.g., stock prices, time, volume)
+# that will be processed and fed into the transformer model.
+#
+# YAML STRUCTURE:
+# ---------------
+# modalities:         # Root key containing list of all modality configurations
+#   - modality_name:  # Required: Descriptive name for this modality (moved to top)
+#     path:           # Required: Path to data file or folder containing data files
+#     column_number:  # Required: Column number to extract (1-based indexing)
+#     has_header:     # Required: Whether the data files have header rows (true/false)
+#     processing_steps: # Optional: List of sequential data processing functions
+#       - function:   # Function name (built-in) or fully qualified name (external)
+#         args:       # Dictionary of arguments to pass to the function
+#         enabled:    # Optional: Whether this step is enabled (default: true)
+#     cross_attention: # Optional: Enable cross-attention for this modality (default: true)
+#     randomness_size: # Optional: Add randomness to data points (integer or null)
+#
+# PROCESSING FUNCTIONS:
+# --------------------
+# Built-in functions (use simple names):
+#   - range_numeric_data: Scale numeric values and set decimal places
+#   - bin_numeric_data: Group numeric data into bins/clusters
+#   - calculate_percent_changes: Convert values to percentage changes
+#   - add_rand_to_data_points: Add randomness to data values
+#
+# External functions (use fully qualified names):
+#   - my_module.custom_function: Import and use external processing functions
+#   - sklearn.preprocessing.StandardScaler.fit_transform: Use third-party libraries
+#
+# DATA FLOW:
+# ----------
+# Data flows sequentially through processing steps:
+# raw_data → function1 → function2 → function3 → final_processed_data
+# Each function receives the output of the previous function.
+#
+# EXAMPLES AND GUIDELINES:
+# -----------------------
+
+# =============================================================================
+# EXAMPLE CONFIGURATIONS
+# =============================================================================
+
+modalities:
+  # -------------------------------------------------------------------------
+  # EXAMPLE 1: Stock price data with ranging and scaling
+  # -------------------------------------------------------------------------
+  - modality_name: "S&P 500 Stock Prices"
+    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    column_number: 13  # Close price column
+    has_header: true
+    processing_steps:
+      # Scale prices to 2 whole digits with 1 decimal place (e.g., 10.0 to 99.9)
+      - function: range_numeric_data
+        args:
+          num_whole_digits: 2    # Number of digits before decimal
+          decimal_places: 1      # Number of digits after decimal
+        enabled: true
+    cross_attention: true  # Enable cross-attention with other modalities
+    randomness_size: null  # No randomness added
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 2: Stock price data converted to percentages and binned
+  # -------------------------------------------------------------------------
+  - modality_name: "S&P 500 Percentage Changes"
+    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    column_number: 13  # Same data, different processing
+    has_header: true
+    processing_steps:
+      # Step 1: Convert to percentage changes
+      - function: calculate_percent_changes
+        args: {}  # No additional arguments needed
+        enabled: true
+
+      # Step 2: Group percentages into 6 bins
+      - function: bin_numeric_data
+        args:
+          num_bins: 6              # Number of bins to create
+          outlier_percentile: 0.1  # Exclude extreme 10% values from binning
+          exponent: 2.2           # Controls bin distribution (higher = more non-uniform)
+        enabled: true
+    cross_attention: false  # Disable cross-attention for this modality
+    randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 3: Time data (no processing needed)
+  # -------------------------------------------------------------------------
+  - modality_name: "Trading Time"
+    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    column_number: 9   # Time column
+    has_header: true
+    processing_steps: []  # No processing steps - use raw time data
+    cross_attention: false
+    randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 4: Day of week data (categorical)
+  # -------------------------------------------------------------------------
+  - modality_name: "Day of Week"
+    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    column_number: 5   # Day of week column
+    has_header: true
+    processing_steps: []  # Categorical data typically doesn't need processing
+    cross_attention: false
+    randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 5: Custom external processing function
+  # -------------------------------------------------------------------------
+  # - modality_name: "Custom Processed Data"
+  #   path: "/path/to/your/data.csv"
+  #   column_number: 1
+  #   has_header: true
+  #   processing_steps:
+  #     # Use external function from custom module
+  #     - function: my_custom_processing.advanced_transform
+  #       args:
+  #         multiplier: 2.5
+  #         method: "exponential"
+  #       enabled: true
+  #
+  #     # Chain with built-in function
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 3
+  #         decimal_places: 2
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: 2  # Add randomness with size 2
+
+# =============================================================================
+# FUNCTION REFERENCE
+# =============================================================================
+
+# BUILT-IN FUNCTIONS:
+# ------------------
+#
+# 1. range_numeric_data:
+#    Purpose: Scale numeric values to specified range and decimal places
+#    Arguments:
+#      - num_whole_digits: Number of digits before decimal (e.g., 2 for 10-99)
+#      - decimal_places: Number of digits after decimal (e.g., 1 for X.X)
+#    Example: Scales prices from various ranges to 10.0-99.9 format
+#
+# 2. bin_numeric_data:
+#    Purpose: Group numeric data into discrete bins/clusters
+#    Arguments:
+#      - num_bins: Number of bins to create
+#      - outlier_percentile: Percentage of extreme values to exclude (0.0-1.0)
+#      - exponent: Controls bin distribution (1.0=uniform, >1.0=non-uniform)
+#    Example: Groups percentage changes into 6 categories
+#
+# 3. calculate_percent_changes:
+#    Purpose: Convert values to percentage changes from previous values
+#    Arguments: None
+#    Example: [100, 102, 99] → [0, 2.0, -2.94]
+#
+# 4. add_rand_to_data_points:
+#    Purpose: Add controlled randomness to data values
+#    Arguments:
+#      - rand_size: Size/magnitude of randomness to add
+#    Example: Adds small random variations for data augmentation
+#
+# EXTERNAL FUNCTIONS:
+# ------------------
+# External functions must be specified with fully qualified names:
+# "module_name.function_name" or "package.module.function_name"
+#
+# Requirements for external functions:
+# - Must accept data as first parameter
+# - Must accept additional arguments via **kwargs
+# - Must return processed data in same format
+# - Function signature: def my_function(data, **kwargs): return processed_data
+#
+# Examples:
+# - "my_processing.normalize_data"
+# - "sklearn.preprocessing.StandardScaler.fit_transform"
+# - "custom_indicators.calculate_rsi"
+
+# =============================================================================
+# TROUBLESHOOTING
+# =============================================================================
+#
+# Common Issues:
+# 1. "Path does not exist" - Check that file/folder paths are correct
+# 2. "Column must be positive" - Column numbers start from 1, not 0
+# 3. "Function cannot be resolved" - Check spelling of function names
+# 4. "External function not found" - Ensure module is in Python path
+#
+# Tips:
+# - Use forward slashes (/) in paths, even on Windows
+# - Test external functions separately before adding to pipeline
+# - Start with simple configurations and add complexity gradually
+# - Check log files for detailed error messages during execution

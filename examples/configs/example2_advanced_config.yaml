@@ -1,0 +1,90 @@
+# =============================================================================
+# EXAMPLE 2: ADVANCED MULTIMODAL CONFIGURATION
+# =============================================================================
+# This is an advanced example demonstrating sophisticated multimodal features
+# with 4 modalities using multiple data files and complex processing pipelines.
+#
+# Features demonstrated:
+# - Multiple data files loaded into single modalities
+# - Advanced processing pipelines with multiple steps
+# - File-based validation splitting
+# - Larger model architecture
+# - GPU-optimized settings
+# - Data augmentation during training
+
+# =============================================================================
+# PROJECT SETTINGS
+# =============================================================================
+project_settings:
+  # Main project directory - change this to your project path
+  project_file_path: "./examples/"
+
+  # Output file for training logs and results
+  output_file_name: "advanced_example_training_log.txt"
+
+  # Model file name for saving/loading trained models
+  model_file_name: "advanced_example_model.pth"
+
+  # Model creation and saving behavior:
+  # 1 = Create new model (recommended for examples)
+  # 0 = Load existing model
+  create_new_model: 1
+
+  # Model saving behavior:
+  # 1 = Save model during training and at completion
+  # 0 = Don't save model (training session only)
+  save_model: 1
+
+  # Training device - options: 'cpu', 'cuda', 'auto'
+  # 'auto' will use GPU if available, otherwise CPU
+  device: auto
+
+# =============================================================================
+# DATA SPLITTING
+# =============================================================================
+data_splitting:
+  # Use percentage-based splitting
+  validation_size: 0.15
+
+  # Use file-based validation: last 1 file for validation
+  # This demonstrates using specific files for validation
+  # (useful for evaluating generalization across different stocks)
+  num_validation_files: 1
+
+# =============================================================================
+# TRAINING PARAMETERS
+# =============================================================================
+# More substantial settings for a realistic training scenario
+training_parameters:
+  # Larger batch size for more stable gradients
+  batch_size: 16
+
+  # Longer context window for learning longer-term patterns
+  block_size: 16
+
+  # More training iterations for better convergence
+  max_iters: 500
+
+  # Less frequent evaluation for efficiency
+  eval_interval: 50
+
+  # Standard learning rate
+  learning_rate: 0.0003
+
+# =============================================================================
+# MODEL ARCHITECTURE
+# =============================================================================
+# Larger model architecture for learning complex multimodal relationships
+model_architecture:
+  # Larger embedding dimension for richer representations
+  n_embd: 128
+
+  # More attention heads for complex attention patterns
+  # Must divide evenly into n_embd (128/8 = 16)
+  n_head: 8
+
+  # More transformer layers for deeper learning
+  n_layer: 6
+
+  # Higher dropout for regularization in larger model
+  dropout: 0.2

@@ -1,0 +1,32 @@
+project_settings:
+  project_file_path: C:/Users/tsalo/gpt_proj_6/multimodal_1/
+  output_file_name: training_log.txt
+  model_file_name: C:/Users/tsalo/gpt_proj_6/multimodal_1/output/TransformerModel.pth
+  create_new_model: 1
+  save_model: 1
+  device: cuda
+
+data_splitting:
+  validation_size: 0.1
+  num_validation_files: 0
+
+training_parameters:
+  batch_size: 64
+  block_size: 256
+  max_iters: 5000
+  eval_interval: 500
+  learning_rate: 0.0003
+
+hyperparameters:
+  n_embd: 16
+  n_head: 4
+  n_layer: 4
+  dropout: 0.2
+  eval_iters: 40
+
+initial_parameters:
+  project_file_path: C:/Users/tsalo/gpt_proj_6/multimodal_1/
+  model_file_name: C:/Users/tsalo/gpt_proj_6/multimodal_1/output/TransformerModel.pth
+  output_file_name: training_log.txt
+  validation_size: 0.1
+  num_validation_files: 0

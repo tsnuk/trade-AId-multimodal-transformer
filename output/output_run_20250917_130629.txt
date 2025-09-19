@@ -1,0 +1,80 @@
+
+
+2025-09-17 13:07:08
+
+Model Settings and Data Information:
+Hyperparameters:
+  n_embd: 16
+  n_head: 4
+  n_layer: 4
+  block_size: 6
+  batch_size: 8
+  dropout: 0.2
+  learning_rate: 0.0003
+
+Run Statistics:
+  Model parameter size (M): 0.5
+
+Data Information:
+  Number of modalities: 4
+  Train set size: 827583
+  Val set size: 91953
+  Split method: validation_size=0.1
+  Modality vocabulary sizes: Modality 1=900, Modality 2=13, Modality 3=40, Modality 4=5
+  Modality data lengths: Modality 1=919536, Modality 2=919536, Modality 3=919536, Modality 4=919536
+
+Input Schemas (Modality Configurations):
+  Modality 1:
+    Source: alpaca_historical_AAPL.csv
+    Modality Name: 200 stocks
+    Num Whole Digits: 2
+    Decimal Places: 1
+    Rand Size: None
+    Cross-Attend: True
+    Convert to Percents: False
+    Num Bins: None
+    Original Col Num: N/A (not in processed params)
+    Original Has Header: N/A (not in processed params)
+  Modality 2:
+    Source: alpaca_historical_AAPL.csv
+    Modality Name: 200 stocks - percents
+    Num Whole Digits: None
+    Decimal Places: 2
+    Rand Size: None
+    Cross-Attend: False
+    Convert to Percents: True
+    Num Bins: 6
+    Original Col Num: N/A (not in processed params)
+    Original Has Header: N/A (not in processed params)
+  Modality 3:
+    Source: alpaca_historical_AAPL.csv
+    Modality Name: Time
+    Num Whole Digits: None
+    Decimal Places: None
+    Rand Size: None
+    Cross-Attend: False
+    Convert to Percents: False
+    Num Bins: None
+    Original Col Num: N/A (not in processed params)
+    Original Has Header: N/A (not in processed params)
+  Modality 4:
+    Source: alpaca_historical_AAPL.csv
+    Modality Name: Day of week
+    Num Whole Digits: None
+    Decimal Places: None
+    Rand Size: None
+    Cross-Attend: False
+    Convert to Percents: False
+    Num Bins: None
+    Original Col Num: N/A (not in processed params)
+    Original Has Header: N/A (not in processed params)
+
+
+
+--- Evaluation Results ---
+Validation set (Modality 1: 200 stocks): Total Batches=320, Directional Correct=85, Directional Incorrect=235, Directional Success Rate (correct/incorrect)=26.6%
+Validation set (Modality 2: 200 stocks - percents): Total Batches=320, Directional Correct=146, Directional Incorrect=174, Directional Success Rate (correct/incorrect)=45.6%
+Validation set (Modality 3: Time): Total Batches=0, Directional Correct=0, Directional Incorrect=0, Directional Success Rate (correct/incorrect)=NA
+Validation set (Modality 4: Day of week): Total Batches=320, Directional Correct=200, Directional Incorrect=120, Directional Success Rate (correct/incorrect)=62.5%
+Step 0 Summary: Training Loss: 13.8548 | Validation Loss: 14.8982 | Time: 13:07:33
+
