@@ -431,7 +431,7 @@ def estimate_loss():
         print_state = "Training" if state == 'train' else "Validation"
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        print(f'\\nEvaluating {state} set ({eval_iters} iterations)... Current time: {current_time}')
+        print(f'Evaluation: {state.title()} set ({eval_iters} iterations) | {current_time}')
         # Initialize counters for success rate and certainty calculation for all modalities
         all_modalities_total_batches_processed = [0] * num_modalities
         all_modalities_total_correct = [0] * num_modalities
@@ -456,7 +456,7 @@ def estimate_loss():
                 total_losses.append(total_loss_this_iter.item()) # Store the scalar loss value
             else:
                 # Handle cases where losses might not be calculated (e.g., during generation if targets are None)
-                print(f"Warning: Losses not calculated for iteration {k} in state {state}. Skipping loss recording for this iter.")
+                print(f"Warning: Iteration {k} losses not calculated, skipping")
 
             # Call calculate_evaluation_metrics to calculate evaluation metrics for this batch
             # is_percents argument is now redundant and can be removed from the function signature and calls
@@ -487,33 +487,30 @@ def estimate_loss():
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"\\n-------  Directional Metrics Summary  -------")
-        print(f"\\n{print_state} set:")
+        print(f"Directional Metrics - {print_state}:")
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
-            print(f"\\nModality {modality_index+1}: '{modality_name}'")
             this_num_batches_processed = all_modalities_total_batches_processed[modality_index]
 
             # Only report correct/incorrect and success rate if there were batches where directional calculation was attempted
             if this_num_batches_processed > 0:
-                print(f'  Total batches processed (iters x batches): {this_num_batches_processed * batch_size}')
-                print(f'  Correct direction predictions: {all_modalities_total_correct[modality_index]}')
-                print(f'  Incorrect direction predictions: {all_modalities_total_incorrect[modality_index]}')
+                correct = all_modalities_total_correct[modality_index]
+                incorrect = all_modalities_total_incorrect[modality_index]
 
                 total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                 if total_predictions > 0:
                     overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                    print(f'  Overall directional success rate (correct/incorrect): {overall_success_rate_modality}%')
+                    print(f"  '{modality_name}': {correct}/{incorrect} ({overall_success_rate_modality}%)")
                 else:
-                    print(f'  Overall directional success rate: NA (No movements predicted or occurred in counted batches)')
+                    print(f"  '{modality_name}': No directional predictions")
 
                 # Calculate and report overall average directional certainty
                 overall_average_certainty_modality = all_modalities_total_certainty[modality_index] / (this_num_batches_processed * batch_size) # Assuming batch_size is constant and used for certainty accumulation
                 #print(f"  Overall Average Directional Certainty: {round(overall_average_certainty_modality * 100, 1)}%") # Not displaying at the moment
 
             else:
-                print(f'  No batches processed for directional metrics (likely non-numeric data)')
+                print(f"  '{modality_name}': No data processed (non-numeric)")
 
         # Write validation metrics to file
         from config import output_file_name, project_file_path
@@ -536,7 +533,7 @@ def estimate_loss():
                 else:
                     f.write(f"{print_state} set (Modality {modality_index+1}: {modality_name}): Total Batches=0, Directional Correct=0, Directional Incorrect=0, Directional Success Rate (correct/incorrect)=NA\\n")
 
-        print('\\n\\n-----------------------------------\\n')
+        # Remove excessive separator line
 
 
     m.train() # Set the model back to training mode

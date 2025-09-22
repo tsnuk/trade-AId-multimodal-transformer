@@ -36,9 +36,10 @@ from progress_utils import show_progress_bar, show_stage_progress, finish_progre
 # The system supports two configuration methods:
 # - YAML Configuration: Uses input_schemas.yaml + config.yaml files (recommended for most users)
 # - Programmatic Configuration: Uses Python variables in config.py (advanced users, automation)
+print("Initializing Trade-AId Multimodal Transformer...")
 print("Initializing configuration system...")
 config_mode = initialize_compatibility_layer(globals())
-print(f"Configuration method: {config_mode} ({'YAML files' if config_mode == 'modern' else 'Python variables'})")
+print(f"Configuration: {'YAML mode detected' if config_mode == 'modern' else 'Programmatic mode detected'}")
 
 # Get configuration parameters through compatibility layer
 system_config = get_system_configuration()
@@ -47,7 +48,8 @@ modality_params_list = get_modality_parameters()
 if not modality_params_list:
     raise ValueError("No modalities configured. Please check your configuration files.")
 
-print(f"Found {len(modality_params_list)} modality configurations")
+print(f"Modalities: Loaded {len(modality_params_list)} configurations")
+print()  # Spacing before data loading
 
 # Extract individual configuration variables from system_config
 # This ensures compatibility with both YAML and programmatic configurations
@@ -83,7 +85,7 @@ all_modality_params = []  # For each modality, will contain a list of processing
 modality_num = 0
 is_percents = False
 
-print(f"\nLoading and processing {len(modality_params_list)} modalities...")
+print(f"Data Loading: Processing {len(modality_params_list)} modalities...")
 
 for i, modality_params in enumerate(modality_params_list):
     # Extract parameters from modality configuration
@@ -113,18 +115,18 @@ for i, modality_params in enumerate(modality_params_list):
         # Check if the loaded data is numeric before processing
         data_is_numeric = all(isinstance(item, numbers.Number) for item in this_modality_data)
         if data_is_numeric:
-            print(f"\\n\\n  Applying Ranging and/or Decimal Places to Modality '{modality_name}'...\\n")
+            print(f"  Processing: Applying ranging/decimal places to '{modality_name}'")
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
         else:
             # Find and report the non-numeric element
-            print(f"\\nWarning: Ranging or Decimal Places specified for Modality {modality_num}, but data is not entirely numeric.")
+            print(f"  Warning: Ranging/decimal places specified for '{modality_name}' but data is not numeric")
             report_non_numeric_error(this_modality_data, this_file_info, modality_num)
 
     # Bin numeric data
     if num_bins is not None:
         outlier_percentile = 0.1 # Percentage of extreme values (outliers) to be excluded from bin range calculation
         exponent = 2.2 # Controls how bin ranges are distributed
-        print(f"\\n\\n  Applying Binning to Modality '{modality_name}'...\\n")
+        print(f"  Processing: Applying binning to '{modality_name}'")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
 
     all_modality_data.append(this_modality_data)
@@ -135,7 +137,7 @@ for i, modality_params in enumerate(modality_params_list):
 finish_progress_line()
 
 
-print("\\n\\n\\nData loading for all specified modalities complete")
+print("Data Loading: Complete")
 num_modalities = len(all_modality_data)
 
 # Check for equal modality lengths
@@ -149,7 +151,7 @@ if num_modalities > 1:
                 "All modalities must have the same length for proper training."
             )
 
-print("Creating Vocabularies and Numerical Representations...")
+print("Vocabulary Building: Creating numerical representations...")
 
 all_vocabularies = []
 all_numeric_reps = []
@@ -168,7 +170,7 @@ for m in range(num_modalities):
   all_vocabularies.append(this_vocabulary)
 
   # Show vocabulary info (on a new line after progress bar)
-  print(f"\\n  Modality {m+1} '{this_modality_name}': Vocabulary size {len(this_vocabulary)}")
+  print(f"  Modality {m+1} '{this_modality_name}': Vocabulary size {len(this_vocabulary)}")
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
   else:
@@ -177,7 +179,7 @@ for m in range(num_modalities):
 # Complete the vocabulary building progress
 show_progress_bar(num_modalities, num_modalities, f"Building vocabularies")
 
-print("\\n\\n----------------------------------------------------------\\n\\n")
+print("="*60)
 
 # Get file lengths for splitting
 file_lengths = []
@@ -189,7 +191,7 @@ else:
   # Fallback if no file info is available
   file_lengths = [len(all_modality_data[0])]
 
-print("Creating Training and Validation datasets...")
+print("Dataset Splitting: Creating train/validation sets...")
 
 all_train_sets = []
 all_val_sets = []
@@ -209,18 +211,18 @@ show_progress_bar(num_modalities, num_modalities, f"Splitting datasets")
 
 # Print validation method information
 if system_config['num_validation_files'] > 0:
-    print("\\nUsing file-based validation splitting")
-    print("Validation files:")
+    print("Validation: File-based splitting")
+    print("  Validation files:")
     # For the validation set we need to go backwards, so start from the second to last element (index len(all_file_info[0]) - 2) and step backwards by 2
     val_files_counter = 0
     for j in range(len(all_file_info[0]) - 2, -1, -2):
         this_file_name = all_file_info[0][j]
-        print(f"  - {this_file_name}")
+        print(f"    - {this_file_name}")
         val_files_counter += 1
         if val_files_counter >= system_config['num_validation_files']:
             break
 else:
-    print(f"\\nUsing percentage-based validation splitting ({system_config['validation_size']*100:.1f}% validation)")
+    print(f"Validation: Percentage-based splitting ({system_config['validation_size']*100:.1f}% validation)")
 
 # Show file caching statistics
 print_cache_stats()
@@ -228,7 +230,8 @@ print_cache_stats()
 # Clean up cache to free memory (files are no longer needed)
 cleanup_cache()
 
-print("\\nData preparation for all modalities complete")
+print("Data Preparation: Complete")
+print()  # Spacing before model section
 
 """# Building the transformer"""
 
@@ -253,39 +256,39 @@ model_params = n_embd * sum(all_vocab_sizes) + n_embd * block_size + n_layer * (
     + sum(vocab_size * n_embd for vocab_size in all_vocab_sizes)
 )
 
-print(f"\\nModel configuration:")
-print(f"  Number of modalities: {num_modalities}")
+print("Model Configuration:")
+print(f"  Modalities: {num_modalities}")
 print(f"  Vocabulary sizes: {all_vocab_sizes}")
-print(f"  Model parameters: {model_params/1e6:.1f}M")
+print(f"  Parameters: {model_params/1e6:.1f}M")
+print()  # Spacing before training section
 
 if create_new_model == 1:
-    print(f"\\nCreating new model...")
+    print("Model: Creating new transformer...")
     # Pass the list of vocab sizes and all_modality_params to the model constructor
     m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
     optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
-    print("New model and optimizer created.")
+    print("Model: Created successfully")
 else:
-    print(f"Attempting to load model from: {model_file_name}...")
+    print(f"Model: Loading from {model_file_name}...")
     # Pass the list of vocab sizes and all_modality_params when instantiating the model for loading
     m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
     try:
         m.load_state_dict(torch.load(model_file_name, weights_only=True))
-        print("Model loaded successfully.")
+        print("Model: Loaded successfully")
         optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
-        print("Optimizer created with loaded model parameters.")
+        print("Optimizer: Created with loaded parameters")
     except FileNotFoundError:
-        print(f"Model file '{model_file_name}' not found. Creating a new model instead.")
+        print(f"Model: File not found, creating new model instead")
         # Pass the list of vocab sizes and all_modality_params to the model constructor
         m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
         optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
-        print("New model and optimizer created.")
+        print("Model: Created successfully")
     except Exception as e:
-        print(f"An error occurred while loading the model: {e}")
-        print("Creating a new model instead.")
+        print(f"Model: Loading failed ({e}), creating new model")
         # Pass the list of vocab sizes and all_modality_params to the model constructor
         m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
         optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
-        print("New model and optimizer created.")
+        print("Model: Created successfully")
 
 # Set model in training_utils
 training_utils.m = m
@@ -362,8 +365,8 @@ if output_file_name != '':
 """# Running the transformer"""
 
 # Training loop
-print(f"\\nStarting training for {max_iters} iterations...")
-print(f"Device: {device}")
+print()  # Spacing before training
+print(f"Training: Starting {max_iters} iterations on {device}")
 
 # Early stopping variables
 best_val_loss = float('inf')
@@ -377,24 +380,24 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
     # Every once in a while evaluate the loss on train and val sets
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    if iter % 100 == 0 : print(f'Training progress: Iteration {iter} of {max_iters}\\n')
+    if iter % 100 == 0 : print(f'Training: Iteration {iter}/{max_iters}')
     if iter % eval_interval == 0 or iter == max_iters - 1:
         # Pass the warning tracking list to estimate_loss
-        print(f"Starting evaluation (step {iter})...")
+        print(f"Evaluation: Step {iter}...")
         losses = estimate_loss() # Uses eval_iters from global scope
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         # Check if losses are valid before printing
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"\\n=======================================================================================")
-             print(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}")
-             print(f"=======================================================================================\\n")
+             print(f"{'='*70}")
+             print(f"🎯 RESULTS: Step {iter} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | {current_time}")
+             print(f"{'='*70}")
              # write to file
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
         else:
-             print(f"\\n\\nStep {iter}: Losses are NaN, skipping print and file write. Current time = {current_time}\\n")
+             print(f"Warning: Step {iter} losses are NaN, skipping save | {current_time}")
 
         # Early stopping logic
         # if the validation loss doesn't improve for a certain number of iterations (patience), the training process is stopped
@@ -407,19 +410,19 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
                 no_improvement_count += 1
 
             if no_improvement_count >= patience:
-                print(f"Early stopping triggered. No improvement in validation loss for {patience} evaluations.")
+                print(f"Training: Early stopping (no improvement for {patience} evaluations)")
                 break
 
     # Save model periodically if save_model is enabled
     if save_model == 1 and (iter % eval_interval == 0 or iter == max_iters - 1):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        print(f'Saving model to: {model_file_name}    Current time: {current_time}')
+        print(f'Saving: Model checkpoint | {current_time}')
         # When saving, save the state dict of the MultimodalTransformer model
         # Need to ensure model_file_name includes the full path if project_file_path is used
         # model_file_name is loaded as a full path in S3fmsYL-7lVQ
         torch.save(m.state_dict(), model_file_name)
-        print("Model size:", round(os.path.getsize(model_file_name)/1024**2,2), "MB\\n" )
+        print(f"Saved: {round(os.path.getsize(model_file_name)/1024**2,2)} MB")
 
 
     # Training steps
@@ -445,7 +448,7 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
         optimizer.step()
     else:
         # Handle cases where losses might not be calculated (e.g., if targets were None, though get_batch for 'train' should provide them)
-        print("Warning: Losses not calculated for training step. Skipping backpropagation.")
+        print("Warning: Training step losses not calculated, skipping backpropagation")
 
     '''
     line 1: zero_grad() clears the gradients accumulated from the previous training step. By default, PyTorch accumulates gradients, so we need to clear them before computing the gradients for the current step.
@@ -457,14 +460,14 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
             the optimizer (AdamW) takes a step towards minimizing the loss by adjusting the parameters in the direction indicated by the gradients
     '''
 
-print(f"\\nTraining completed!")
+print("Training: Completed successfully")
 
 # Final model save
 if save_model == 1:
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    print(f'Final model save to: {model_file_name}    Current time: {current_time}')
+    print(f'Final Save: Model checkpoint | {current_time}')
     torch.save(m.state_dict(), model_file_name)
-    print("Model size:", round(os.path.getsize(model_file_name)/1024**2,2), "MB\\n" )
+    print(f"Final Save: {round(os.path.getsize(model_file_name)/1024**2,2)} MB complete")
 
 """#End New Code"""

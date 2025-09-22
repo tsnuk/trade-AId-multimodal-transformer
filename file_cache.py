@@ -321,21 +321,14 @@ def print_cache_stats():
     stats = cache.get_cache_stats()
     memory = cache.get_memory_usage()
 
-    print(f"\\nFile Cache Statistics:")
-    print(f"  Files loaded from disk: {stats['files_loaded']}")
-    print(f"  Cache hits: {stats['cache_hits']}")
-    print(f"  Total requests: {stats['total_requests']}")
-    print(f"  Cache hit rate: {stats['cache_hit_rate']:.1f}%")
-    print(f"  Cache evictions: {stats['evictions']}")
-    print(f"  Cached files: {stats['cached_files']}")
-    print(f"  Memory usage: {memory['total_memory_mb']:.1f} MB")
+    print(f"Cache Stats: {stats['cache_hits']}/{stats['total_requests']} hits ({stats['cache_hit_rate']:.1f}%) | {memory['total_memory_mb']:.1f} MB")
 
 def cleanup_cache():
     """Clear the cache to free memory after data loading is complete."""
     cache = get_file_cache()
     memory_before = cache.get_memory_usage()['total_memory_mb']
     cache.clear_cache()
-    print(f"\\nCache cleaned up - released {memory_before:.1f} MB of memory")
+    print(f"Cache: Cleaned up, released {memory_before:.1f} MB")
 
 
 if __name__ == "__main__":

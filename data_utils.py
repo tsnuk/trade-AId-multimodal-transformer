@@ -625,32 +625,9 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
     for assignment in group_assignments:
         group_counts[assignment] = group_counts.get(assignment, 0) + 1
 
-    print(f"\\nBinning summary for {display_modality_name}:")
-    print(f"  Total groups created: {2 * num_groups + 1} (including zero)")
-    print(f"  Data range after outlier removal: [{min(filtered_data):.3f}, {max(filtered_data):.3f}]")
-    print(f"  Group distribution:")
+    print(f"  Binning: {2 * num_groups + 1} groups | Range: [{min(filtered_data):.3f}, {max(filtered_data):.3f}]")
 
-    # Combine and print group boundaries/descriptions and counts
-    # Negative Groups
-    for i in range(num_groups):
-         group_label = -(num_groups - i)
-         boundary_low = negative_group_boundaries[i]
-         boundary_high = negative_group_boundaries[i+1] if i+1 < len(negative_group_boundaries) else 0
-         count = group_counts.get(group_label, 0)
-         print(f"    Group {group_label}: [{boundary_low:.3f}, {boundary_high:.3f}) -> {count} elements")
-
-    # Zero Group (if any zeros exist)
-    zero_count = group_counts.get(0, 0)
-    if zero_count > 0:
-         print(f"    Group 0: [0.0, 0.0] -> {zero_count} elements")
-
-    # Positive Groups
-    for i in range(num_groups):
-         group_label = i + 1
-         boundary_low = positive_group_boundaries[i]
-         boundary_high = positive_group_boundaries[i+1] if i+1 < len(positive_group_boundaries) else "inf"
-         count = group_counts.get(group_label, 0)
-         print(f"    Group {group_label}: [{boundary_low:.3f}, {boundary_high}) -> {count} elements")
+    # Group distribution details removed for cleaner output
 
 
     total_assigned = sum(group_assignments.count(i) for i in range(-num_groups, num_groups + 1))
