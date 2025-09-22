@@ -84,6 +84,25 @@ def clear_progress_line():
     sys.stdout.flush()
 
 
+def show_completion_animation(message="Complete", duration=1.0):
+    """
+    Show a brief animated completion indicator.
+
+    Args:
+        message (str): Message to display
+        duration (float): Animation duration in seconds
+    """
+    frames = ['●', '◐', '◑', '◒', '◓', '●', '◐', '◑', '◒', '◓', '✓']
+    frame_delay = duration / len(frames)
+
+    for frame in frames:
+        sys.stdout.write(f'\r{message} {frame}')
+        sys.stdout.flush()
+        time.sleep(frame_delay)
+
+    print()  # New line when complete
+
+
 # Example usage functions for testing
 def demo_progress_bar():
     """Demo the progress bar functionality."""

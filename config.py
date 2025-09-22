@@ -42,7 +42,7 @@ n_head = 4#8  #4#16#8    # (prev 32) use one of: 8 / 12 / 16  ### Number of atte
 n_layer = 4#6  #8#4#16#8   # (prev 32) use one of: 6 / 12 (or even 4) ### Number of transformer layers
 dropout = 0.2   # dropout: Regularization rate to prevent overfitting
 
-project_file_path = 'C:/Users/tsalo/gpt_proj_6/multimodal_1/'
+project_file_path = './'
 
 # Path for saving and loading the model weights
 model_file_name = project_file_path + 'output/' + 'TransformerModel.pth'
@@ -195,8 +195,8 @@ save_model = 1
                    6: bin data(int), 7: randomness size(int), 8: cross-attention status(bool), 9: modality name(str)]
 
   Example:
-  input_schema_1 = ['C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/', 5, True, False, 2, 2, None, 2, True, 'S&P 500 15 min close values']
-  input_schema_2 = ['C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/', 5, True, False, None, None, None, None, False, 'Candle time']
+  input_schema_1 = ['./data_1/tick_10m/', 5, True, False, 2, 2, None, 2, True, 'S&P 500 15 min close values']
+  input_schema_2 = ['./data_1/tick_10m/', 5, True, False, None, None, None, None, False, 'Candle time']
   input_schema_3 = []
   input_schema_4 = []
   input_schema_5 = []
@@ -250,10 +250,10 @@ num_input_schemas = 10
     # Elements:  [Path, Col Num, Header, Percent Changes, Num Whole Digits, Decimal Places, Bins, Rand Size, Cross-Attend, Modality Name]
     # Types:     [(str), (int), (bool), (bool or None), (int or None), (int or None), (int or None), (int or None), (bool or None), (str or None)]
 # Updated for local Windows environment #
-input_schema_1 = ['C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/', 13, True, False, 2, 1, None, None, True, '200 stocks']
-input_schema_2 = ['C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/', 13, True, True, None, 2, 6, None, False, '200 stocks - percents']
-input_schema_3 = ['C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/', 9, True, False, None, None, None, None, False, 'Time']
-input_schema_4 = ['C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/', 5, True, False, None, None, None, None, False, 'Day of week']
+input_schema_1 = ['./data_1/tick_10m/', 13, True, False, 2, 1, None, None, True, '200 stocks']
+input_schema_2 = ['./data_1/tick_10m/', 13, True, True, None, 2, 6, None, False, '200 stocks - percents']
+input_schema_3 = ['./data_1/tick_10m/', 9, True, False, None, None, None, None, False, 'Time']
+input_schema_4 = ['./data_1/tick_10m/', 5, True, False, None, None, None, None, False, 'Day of week']
 input_schema_5 = []
 input_schema_6 = []
 input_schema_7 = []

@@ -24,14 +24,14 @@
 # File paths, model management, and device configuration
 
 project_settings:
-  # Base directory for the project (use forward slashes, even on Windows)
-  project_file_path: C:/Users/tsalo/gpt_proj_6/multimodal_1/
+  # Base directory for the project (relative to where main.py is run)
+  project_file_path: ./
 
   # Training log output file name (created in project directory)
   output_file_name: training_log.txt
 
-  # Full path to model file for saving/loading trained weights
-  model_file_name: C:/Users/tsalo/gpt_proj_6/multimodal_1/output/TransformerModel.pth
+  # Relative path to model file for saving/loading trained weights
+  model_file_name: ./output/TransformerModel.pth
 
   # Model creation/loading behavior:
   # 1 = Create new model from scratch (ignores existing model file)

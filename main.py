@@ -103,7 +103,7 @@ for i, modality_params in enumerate(modality_params_list):
         is_percents = True
 
     # Show progress for current modality
-    show_stage_progress(i + 1, len(modality_params_list), f"Loading '{modality_name}'")
+    print(f"  Loading modality {i + 1}: '{modality_name}'")
 
     modality_num += 1
 
@@ -115,18 +115,18 @@ for i, modality_params in enumerate(modality_params_list):
         # Check if the loaded data is numeric before processing
         data_is_numeric = all(isinstance(item, numbers.Number) for item in this_modality_data)
         if data_is_numeric:
-            print(f"  Processing: Applying ranging/decimal places to '{modality_name}'")
+            print(f"    Processing: Applying ranging/decimal places to '{modality_name}'")
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
         else:
             # Find and report the non-numeric element
-            print(f"  Warning: Ranging/decimal places specified for '{modality_name}' but data is not numeric")
+            print(f"    Warning: Ranging/decimal places specified for '{modality_name}' but data is not numeric")
             report_non_numeric_error(this_modality_data, this_file_info, modality_num)
 
     # Bin numeric data
     if num_bins is not None:
         outlier_percentile = 0.1 # Percentage of extreme values (outliers) to be excluded from bin range calculation
         exponent = 2.2 # Controls how bin ranges are distributed
-        print(f"  Processing: Applying binning to '{modality_name}'")
+        print(f"    Processing: Applying binning to '{modality_name}'")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
 
     all_modality_data.append(this_modality_data)
@@ -138,6 +138,7 @@ finish_progress_line()
 
 
 print("Data Loading: Complete")
+print()
 num_modalities = len(all_modality_data)
 
 # Check for equal modality lengths
@@ -160,8 +161,7 @@ for m in range(num_modalities):
   # Access modality name using the attribute from the ModalityConfig instance
   this_modality_name = all_modality_params[m][9] if all_modality_params[m][9] is not None else f"Modality {m+1}"
 
-  # Show progress for vocabulary building
-  show_progress_bar(m, num_modalities, f"Building vocabularies")
+  # Building vocabulary for this modality
 
   # Generate a vocabulary and numerical representation
   this_numeric_rep, this_vocabulary = numerical_representation(all_modality_data[m])
@@ -176,10 +176,7 @@ for m in range(num_modalities):
   else:
     print(f"    Vocabulary (first 10): {this_vocabulary[:10]}")
 
-# Complete the vocabulary building progress
-show_progress_bar(num_modalities, num_modalities, f"Building vocabularies")
-
-print("="*60)
+# Vocabulary building complete
 
 # Get file lengths for splitting
 file_lengths = []
@@ -191,23 +188,22 @@ else:
   # Fallback if no file info is available
   file_lengths = [len(all_modality_data[0])]
 
+print()
 print("Dataset Splitting: Creating train/validation sets...")
 
 all_train_sets = []
 all_val_sets = []
 
 for i in range(num_modalities):
-  # Show progress for dataset splitting
+  # Splitting dataset for this modality
   modality_name = all_modality_params[i][9] if all_modality_params[i][9] else f"Modality {i+1}"
-  show_progress_bar(i, num_modalities, f"Splitting datasets")
 
   # Use the file_lengths derived from the first modality for splitting all modalities
   this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
-# Complete the dataset splitting progress
-show_progress_bar(num_modalities, num_modalities, f"Splitting datasets")
+# Dataset splitting complete
 
 # Print validation method information
 if system_config['num_validation_files'] > 0:
@@ -256,6 +252,10 @@ model_params = n_embd * sum(all_vocab_sizes) + n_embd * block_size + n_layer * (
     + sum(vocab_size * n_embd for vocab_size in all_vocab_sizes)
 )
 
+print("="*60)
+print("🤖 MODEL CREATION & TRAINING")
+print("="*60)
+print()
 print("Model Configuration:")
 print(f"  Modalities: {num_modalities}")
 print(f"  Vocabulary sizes: {all_vocab_sizes}")

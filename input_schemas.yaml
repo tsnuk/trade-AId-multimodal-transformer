@@ -50,7 +50,7 @@ modalities:
   # EXAMPLE 1: Stock price data with ranging and scaling
   # -------------------------------------------------------------------------
   - modality_name: "S&P 500 Stock Prices"
-    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    path: "./data_1/tick_10m/"
     column_number: 13  # Close price column
     has_header: true
     processing_steps:
@@ -67,7 +67,7 @@ modalities:
   # EXAMPLE 2: Stock price data converted to percentages and binned
   # -------------------------------------------------------------------------
   - modality_name: "S&P 500 Percentage Changes"
-    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    path: "./data_1/tick_10m/"
     column_number: 13  # Same data, different processing
     has_header: true
     processing_steps:
@@ -90,7 +90,7 @@ modalities:
   # EXAMPLE 3: Time data (no processing needed)
   # -------------------------------------------------------------------------
   - modality_name: "Trading Time"
-    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    path: "./data_1/tick_10m/"
     column_number: 9   # Time column
     has_header: true
     processing_steps: []  # No processing steps - use raw time data
@@ -101,7 +101,7 @@ modalities:
   # EXAMPLE 4: Day of week data (categorical)
   # -------------------------------------------------------------------------
   - modality_name: "Day of Week"
-    path: "C:/Users/tsalo/gpt_proj_6/multimodal_1/data_1/tick_10m/"
+    path: "./data_1/tick_10m/"
     column_number: 5   # Day of week column
     has_header: true
     processing_steps: []  # Categorical data typically doesn't need processing
