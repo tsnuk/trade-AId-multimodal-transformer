@@ -353,10 +353,10 @@ def create_train_val_datasets(numeric_rep_data, val_size, num_val_files, file_le
         train_num_elements = int(len(numeric_rep_data) * (1 - val_size))
         val_num_elements = len(numeric_rep_data) - train_num_elements
 
-        print(f"  Percentage-based splitting: {val_size*100}% for validation.")
+        # Percentage-based splitting info moved to main.py for better organization
+        pass
 
-    print(f"    Train set size: {train_num_elements}")
-    print(f"    Validation set size: {val_num_elements}")
+    # Train/validation set sizes info moved to main.py for better organization
 
 
     train_dataset = numeric_rep_data[:train_num_elements]
@@ -625,7 +625,6 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
     for assignment in group_assignments:
         group_counts[assignment] = group_counts.get(assignment, 0) + 1
 
-    print(f"    Binning: {2 * num_groups + 1} groups | Range: [{min(filtered_data):.3f}, {max(filtered_data):.3f}]")
 
     # Group distribution details removed for cleaner output
 

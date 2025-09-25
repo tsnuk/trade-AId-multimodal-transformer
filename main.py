@@ -81,6 +81,7 @@ output_file_name = system_config['output_file_name']
 all_modality_data = []  # For each modality, will contain a list of raw data elements, or of processed elements (if specified and if numeric)
 all_file_info = []  # For each modality, will contain a list of the loaded file information: [file1_name, data1_length, file2_name, data2_length, ...]
 all_modality_params = []  # For each modality, will contain a list of processing parameters
+all_raw_vocab_sizes = []  # For each modality, will contain the raw vocabulary size before processing
 
 modality_num = 0
 is_percents = False
@@ -110,33 +111,59 @@ for i, modality_params in enumerate(modality_params_list):
     # Load data using complete modality parameters (with caching for performance)
     this_modality_data, this_file_info = load_file_data_cached(modality_params)
 
+    # Capture raw vocabulary size before any processing
+    raw_vocabulary_size = len(set(this_modality_data))
+
+    # Track if any processing is applied
+    processing_applied = False
+
+    # Convert to percentages (happens first in the processing pipeline)
+    if convert_to_percents:
+        print(f"    Processing: Converting to percentages")
+        processing_applied = True
+
     # Range numeric data: scale values and set decimal places
     if num_whole_digits is not None or decimal_places is not None:
         # Check if the loaded data is numeric before processing
         data_is_numeric = all(isinstance(item, numbers.Number) for item in this_modality_data)
         if data_is_numeric:
-            print(f"    Processing: Applying ranging/decimal places to '{modality_name}'")
+            range_details = f"{num_whole_digits} digits" if num_whole_digits else ""
+            decimal_details = f"{decimal_places} decimals" if decimal_places else ""
+            details = ", ".join(filter(None, [range_details, decimal_details]))
+            print(f"    Processing: Ranging ({details})")
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
+            processing_applied = True
         else:
             # Find and report the non-numeric element
-            print(f"    Warning: Ranging/decimal places specified for '{modality_name}' but data is not numeric")
+            print(f"    Warning: Ranging/decimal places specified but data is not numeric")
             report_non_numeric_error(this_modality_data, this_file_info, modality_num)
 
-    # Bin numeric data
+    # Bin numeric data (happens after ranging)
     if num_bins is not None:
         outlier_percentile = 0.1 # Percentage of extreme values (outliers) to be excluded from bin range calculation
         exponent = 2.2 # Controls how bin ranges are distributed
-        print(f"    Processing: Applying binning to '{modality_name}'")
+        print(f"    Processing: Binning ({num_bins} bins)")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
+        processing_applied = True
+
+    # Show if no processing was applied
+    if not processing_applied:
+        print(f"    Processing: No processing specified")
 
     all_modality_data.append(this_modality_data)
     all_file_info.append(this_file_info)
     all_modality_params.append(modality_params)
+    all_raw_vocab_sizes.append(raw_vocabulary_size)
+
+    # Show data summary for this modality
+    data_length = len(this_modality_data)
+    file_count = len(this_file_info) // 2 if this_file_info else 0
+    print(f"  Summary: {data_length:,} data points ({file_count} files loaded)")
 
 # Data loading complete
 
 
-print("Data Loading: Complete")
+print("Data Loading and Processing: Complete")
 print()
 num_modalities = len(all_modality_data)
 
@@ -168,8 +195,27 @@ for m in range(num_modalities):
   all_numeric_reps.append(this_numeric_rep)
   all_vocabularies.append(this_vocabulary)
 
-  # Show vocabulary info (on a new line after progress bar)
-  print(f"  Modality {m+1} '{this_modality_name}': Vocabulary size {len(this_vocabulary)}")
+  # Get the raw vocabulary size that was stored during data loading
+  raw_vocab_size = all_raw_vocab_sizes[m]
+
+  # Determine what processing was applied for this modality (in correct order)
+  processing_applied = []
+  modality_params = all_modality_params[m]
+  if len(modality_params) > 3 and modality_params[3]:  # convert_to_percentages
+    processing_applied.append("percentages")
+  if len(modality_params) > 4 and modality_params[4] is not None:  # num_whole_digits
+    processing_applied.append("ranging")
+  if len(modality_params) > 6 and modality_params[6] is not None:  # num_bins
+    processing_applied.append("binning")
+
+  processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
+
+  # Show modality name first
+  print(f"  Modality {m+1} '{this_modality_name}':")
+
+  # Show vocabulary info on indented line - always show before/after
+  print(f"    Vocabulary: {raw_vocab_size:,} → {len(this_vocabulary):,}{processing_text}")
+
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
   else:
@@ -190,23 +236,9 @@ else:
 print()
 print("Dataset Splitting: Creating train/validation sets...")
 
-all_train_sets = []
-all_val_sets = []
-
-for i in range(num_modalities):
-  # Splitting dataset for this modality
-  modality_name = all_modality_params[i][9] if all_modality_params[i][9] else f"Modality {i+1}"
-
-  # Use the file_lengths derived from the first modality for splitting all modalities
-  this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)
-  all_train_sets.append(this_train_set)
-  all_val_sets.append(this_val_set)
-
-# Dataset splitting complete
-
-# Print validation method information
+# Print validation method information at the beginning
 if system_config['num_validation_files'] > 0:
-    print("Validation: File-based splitting")
+    print("Method: File-based splitting")
     print("  Validation files:")
     # For the validation set we need to go backwards, so start from the second to last element (index len(all_file_info[0]) - 2) and step backwards by 2
     val_files_counter = 0
@@ -217,11 +249,33 @@ if system_config['num_validation_files'] > 0:
         if val_files_counter >= system_config['num_validation_files']:
             break
 else:
-    print(f"Validation: Percentage-based splitting ({system_config['validation_size']*100:.1f}% validation)")
+    print(f"Method: Percentage-based splitting ({system_config['validation_size']*100:.1f}% validation)")
+
+all_train_sets = []
+all_val_sets = []
+
+for i in range(num_modalities):
+  # Splitting dataset for this modality
+  modality_name = all_modality_params[i][9] if all_modality_params[i][9] else f"Modality {i+1}"
+
+  # Check for randomness setting
+  rand_size = all_modality_params[i][7] if len(all_modality_params[i]) > 7 and all_modality_params[i][7] is not None else None
+  rand_text = f" | Randomness: {rand_size}" if rand_size is not None else ""
+
+  # Use the file_lengths derived from the first modality for splitting all modalities
+  this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)
+  all_train_sets.append(this_train_set)
+  all_val_sets.append(this_val_set)
+
+  # Show split summary
+  print(f"  Modality {i+1} '{modality_name}': Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}")
+
+# Dataset splitting complete
 
 # Clean up cache to free memory (files are no longer needed)
 cleanup_cache()
 
+print()
 print("Data Preparation: Complete")
 print()  # Spacing before model section
 
