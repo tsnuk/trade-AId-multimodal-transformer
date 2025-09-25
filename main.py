@@ -18,7 +18,7 @@ from datetime import datetime
 # Import our modular components
 from compatibility_layer import (
     initialize_compatibility_layer, get_modality_parameters,
-    get_system_configuration
+    get_system_configuration, is_modern_mode
 )
 from data_utils import (
     load_file_data, range_numeric_data, report_non_numeric_error,
@@ -146,9 +146,32 @@ for i, modality_params in enumerate(modality_params_list):
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
 
-    # Show if no processing was applied
+    # Show if no processing was applied (accounting for external processing in YAML mode)
     if not processing_applied:
-        print(f"    Processing: No processing specified")
+        # In modern (YAML) mode, check if there are external processing steps defined
+        if is_modern_mode():
+            from compatibility_layer import compatibility_layer
+            modality_metadata = compatibility_layer.get_modality_metadata(modality_num - 1)  # 0-based index
+            if modality_metadata.get('processing_steps_count', 0) > 0:
+                # External processing functions are defined - get the step names
+                if compatibility_layer.config_manager:
+                    schemas = compatibility_layer.config_manager.schema_manager.schemas
+                    if modality_num - 1 < len(schemas):
+                        schema = schemas[modality_num - 1]
+                        external_functions = [step.function for step in schema.processing_steps if step.enabled]
+                        if external_functions:
+                            external_names = ', '.join(external_functions)
+                            print(f"    Processing: External functions ({external_names})")
+                        else:
+                            print(f"    Processing: No processing specified")
+                    else:
+                        print(f"    Processing: No processing specified")
+                else:
+                    print(f"    Processing: No processing specified")
+            else:
+                print(f"    Processing: No processing specified")
+        else:
+            print(f"    Processing: No processing specified")
 
     all_modality_data.append(this_modality_data)
     all_file_info.append(this_file_info)
@@ -201,12 +224,34 @@ for m in range(num_modalities):
   # Determine what processing was applied for this modality (in correct order)
   processing_applied = []
   modality_params = all_modality_params[m]
-  if len(modality_params) > 3 and modality_params[3]:  # convert_to_percentages
-    processing_applied.append("percentages")
-  if len(modality_params) > 4 and modality_params[4] is not None:  # num_whole_digits
-    processing_applied.append("ranging")
-  if len(modality_params) > 6 and modality_params[6] is not None:  # num_bins
-    processing_applied.append("binning")
+
+  # In modern (YAML) mode, translate built-in functions to user-friendly names, show external functions as-is
+  if is_modern_mode():
+    from compatibility_layer import compatibility_layer
+    if compatibility_layer.config_manager:
+      schemas = compatibility_layer.config_manager.schema_manager.schemas
+      if m < len(schemas):
+        schema = schemas[m]
+        for step in schema.processing_steps:
+          if step.enabled:
+            # Map built-in functions to user-friendly names
+            if step.function == 'calculate_percent_changes':
+              processing_applied.append("percentages")
+            elif step.function == 'range_numeric_data':
+              processing_applied.append("ranging")
+            elif step.function == 'bin_numeric_data':
+              processing_applied.append("binning")
+            else:
+              # External/custom function - show actual function name
+              processing_applied.append(step.function)
+  else:
+    # In legacy (programmatic) mode, show built-in processing names
+    if len(modality_params) > 3 and modality_params[3]:  # convert_to_percentages
+      processing_applied.append("percentages")
+    if len(modality_params) > 4 and modality_params[4] is not None:  # num_whole_digits
+      processing_applied.append("ranging")
+    if len(modality_params) > 6 and modality_params[6] is not None:  # num_bins
+      processing_applied.append("binning")
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
@@ -214,7 +259,7 @@ for m in range(num_modalities):
   print(f"  Modality {m+1} '{this_modality_name}':")
 
   # Show vocabulary info on indented line - always show before/after
-  print(f"    Vocabulary: {raw_vocab_size:,} → {len(this_vocabulary):,}{processing_text}")
+  print(f"    Vocabulary size: {raw_vocab_size:,} → {len(this_vocabulary):,}{processing_text}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
@@ -262,13 +307,17 @@ for i in range(num_modalities):
   rand_size = all_modality_params[i][7] if len(all_modality_params[i]) > 7 and all_modality_params[i][7] is not None else None
   rand_text = f" | Randomness: {rand_size}" if rand_size is not None else ""
 
+  # Check for cross-attention setting
+  cross_attention = all_modality_params[i][8] if len(all_modality_params[i]) > 8 and all_modality_params[i][8] is not None else True  # Default to True
+  cross_text = " | Cross-attention: ON" if cross_attention else " | Cross-attention: OFF"
+
   # Use the file_lengths derived from the first modality for splitting all modalities
   this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
   # Show split summary
-  print(f"  Modality {i+1} '{modality_name}': Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}")
+  print(f"  Modality {i+1} '{modality_name}': Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
 
 # Dataset splitting complete
 
