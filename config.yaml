@@ -88,13 +88,19 @@ training_parameters:
   # Monitor training loss to determine appropriate stopping point
   max_iters: 20000
 
-  # Evaluation interval - how often to calculate and log validation loss
+  # Evaluation frequency - how often to run evaluation (every N training iterations)
+  # Controls WHEN evaluation happens during training
   # Model is also saved at these intervals (if save_model=1)
+  # Example: eval_interval=50 means evaluate after every 50 training steps
   # More frequent evaluation provides better monitoring but slows training
+  # Typical values: 50, 100, 200, 500
   eval_interval: 50
 
-  # Number of evaluation batches used for loss estimation
-  # More batches provide more accurate loss estimates but take longer
+  # Evaluation thoroughness - how many batches to use for each evaluation
+  # Controls HOW THOROUGH each evaluation is when it runs
+  # More batches provide more accurate loss estimates but take longer per evaluation
+  # Example: eval_iters=40 means use 40 validation batches to calculate loss
+  # Balance: Higher values = more accurate validation loss, but slower evaluation
   # Typical values: 20, 40, 100, 200
   eval_iters: 40
 
