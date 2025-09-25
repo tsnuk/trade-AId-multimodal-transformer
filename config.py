@@ -1,106 +1,76 @@
 """config.py
 
-Configuration module containing all hyperparameters, settings, and input schemas
-for the multimodal transformer training system.
+Legacy configuration support for programmatic input schemas.
 
-Extracted from mm_final_4.py for better code organization.
+This module provides backward compatibility for programmatic configuration
+when YAML configuration files are not present. Contains input schema definitions
+and conditionally loads hyperparameters when config.yaml is missing.
 """
 
 import torch
 from datetime import datetime
+from pathlib import Path
 
-# Export only the configuration variables that should be imported
+
+# Check if YAML configuration exists
+_yaml_config_exists = (Path('input_schemas.yaml').exists() and Path('config.yaml').exists())
+
+# Export variables - conditionally include hyperparameters if YAML config is missing
 __all__ = [
-    # Training hyperparameters
-    'batch_size', 'block_size', 'max_iters', 'eval_interval', 'learning_rate', 'device', 'eval_iters',
-    # Model architecture
-    'n_embd', 'n_head', 'n_layer', 'dropout',
-    # File paths and settings
-    'project_file_path', 'model_file_name', 'output_file_name',
-    # Data splitting
-    'validation_size', 'num_validation_files',
-    # Model management
-    'create_new_model', 'save_model',
-    # Legacy support
+    # Programmatic input schemas (always available)
     'num_input_schemas', 'input_schema_1', 'input_schema_2', 'input_schema_3', 'input_schema_4',
     'input_schema_5', 'input_schema_6', 'input_schema_7', 'input_schema_8', 'input_schema_9', 'input_schema_10',
+    # Model-specific constants
     'fixed_values'
 ]
 
-"""# Hyperparams"""
+# Add hyperparameters to exports only if YAML config doesn't exist
+if not _yaml_config_exists:
+    __all__.extend([
+        # Training hyperparameters
+        'batch_size', 'block_size', 'max_iters', 'eval_interval', 'eval_iters', 'learning_rate', 'device',
+        # Model architecture
+        'n_embd', 'n_head', 'n_layer', 'dropout',
+        # File paths and settings
+        'project_file_path', 'model_file_name', 'output_file_name',
+        # Data splitting
+        'validation_size', 'num_validation_files',
+        # Model management
+        'create_new_model', 'save_model'
+    ])
 
-batch_size = 8#32   # 64 # 32 # 128 # Batch Size: Number of sequences processed in parallel
-block_size = 6   # EXPLAIN HOW input_schemas AFFECT block_size
-                  # (prev 48) 64 # 512 # Block Size: Context window length for sequence processing
-max_iters = 20000 #5000 # 400 # 25000 # max_iters: Maximum training iterations
-eval_interval = 50#100   # 50 #400 # 100 # 1000 # eval_interval: Evaluation frequency during training
-learning_rate = 3e-4  # learning_rate: Weight update step size
-device = 'cuda' if torch.cuda.is_available() else 'cpu'   # device: GPU if available, otherwise CPU
-eval_iters = 40  # (prev 20) #100  # 20 # 250 # eval_iters: Number of evaluation batches for loss estimation
-n_embd = 16#64  #16#32#64#128  # (prev 256) could be 1/20th, or even smaller, of the vocab size. 64 # 512 # n_embd: Embedding dimension size
-n_head = 4#8  #4#16#8    # (prev 32) use one of: 8 / 12 / 16  ### Number of attention heads
-n_layer = 4#6  #8#4#16#8   # (prev 32) use one of: 6 / 12 (or even 4) ### Number of transformer layers
-dropout = 0.2   # dropout: Regularization rate to prevent overfitting
+# Conditional hyperparameter loading - only define these if YAML config doesn't exist
+if not _yaml_config_exists:
+    # Training hyperparameters
+    batch_size = 8
+    block_size = 6
+    max_iters = 20000
+    eval_interval = 50
+    eval_iters = 40
+    learning_rate = 3e-4
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-project_file_path = './'
+    # Model architecture
+    n_embd = 16
+    n_head = 4
+    n_layer = 4
+    dropout = 0.2
 
-# Path for saving and loading the model weights
-model_file_name = project_file_path + 'output/' + 'TransformerModel.pth'
+    # File paths and settings
+    project_file_path = './'
+    model_file_name = project_file_path + 'output/' + 'TransformerModel.pth'
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file_name = f'output_run_{timestamp}.txt'
 
-# Training log file with timestamp
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-output_file_name = f'output_run_{timestamp}.txt'
+    # Data splitting
+    validation_size = 0.1
+    num_validation_files = 0
 
+    # Model management
+    create_new_model = 0
+    save_model = 1
 
-# validation_size: Proportion of data for validation (0.1-0.3). Used only if num_validation_files = 0.
-validation_size = 0.1
-
-# An alternative method for specifying/allocating loaded data for validation is using 'num_validation_files'.
-# When specifying to load data from a folder (as opposed to a file),
-# the user has the option to set a number of the files within that folder to be used for validation.
-# These files will be used for validation in their entirety, and not be included in the training set.
-# For that, the user should set num_validation_files to a number other than 0, in which case,
-# the last uploaded n files in the folder will be used for this purpose (this will override 'validation_size').
-# This will apply only to the 1st modality  --EXPLAIN THIS BETTER (SEE COMMENT IN get_batch FUNC)
-# MAKE SURE TO MAKE IT VERY CLEAR THAT num_validation_files WILL BE APPLIED ON THE 1ST MODALITY ONLY !!!!
-num_validation_files = 0
-
-
-# --- Model Creation and Loading ---
-#
-# The 'create_new_model' variable controls whether
-# a new model is created or a previously saved one is loaded.
-# Set create_new_model = 1 to create a new model and start training from scratch.
-# Set create_new_model = 0 to attempt to load a model from model_file_name.
-#
-# The 'model_file_name' variable ####DEFINE LOCATION BETTER(defined in a settings cell)#### specifies the path
-# to save the model to, or load the model from. Ensure this path is correct.
-#
-# IMPORTANT CONSIDERATION WHEN LOADING A MODEL (create_new_model = 0):
-# The code assumes that the data loading and processing steps executed
-# BEFORE attempting to load the model generate the *same* vocabulary
-# and that the hyperparameters (like n_embd, n_head, n_layer, block_size,
-# num_modalities) match those of the saved model.
-# If the data, vocabulary, or hyperparameters change between saving and loading,
-# the loaded model might not work correctly with the current data or evaluation
-# logic and could produce nonsensical results.
-
-# --- Model Saving ---
-#
-# The 'save_model' variable ####DEFINE LOCATION BETTER(defined in a settings cell)#### controls whether
-# the model's parameters are saved during and after training.
-# Set save_model = 1 to save the model periodically during training (at eval_interval)
-# and at the end of training.
-# Set save_model = 0 to disable model saving for this training run.
-#
-# When save_model = 1, the model will be saved to the path specified by
-# 'model_file_name'.
-
-create_new_model = 0
-save_model = 1
-####DEFINE LOCATION BETTER(defined in a settings cell) - ALSO SIMILAR IN THE CODE FURTHER DOWN !!!!!!!
-
-"""# Input Data"""
+"""Programmatic Input Schema Definitions"""
 
 '''
 
@@ -224,14 +194,8 @@ save_model = 1
 
 '''
 
-################################## SEE IF I CAN FIND A WAY NO USING num_input_schemas  #####################################
-#! SEE IF GEMINI CAN SUGGEST SOMETHING
-# num_input_schemas is the number of 'input_schema's the code will look at for forming modalities.
-# Make sure to update this variable to match the number of 'input_schema's in use.
+# Number of input schemas available for programmatic configuration
 num_input_schemas = 10
-
-# ADD TO GITHUB A FEW OF STOCK PRICE FILES SO THAT PEOPLE CAN TRY RUNNING THIS CODE WITHOUT HAVING TO LOOK FOR DATA
-# AND SPECIFY THE BELOW input_schemas ACCORDINGLY
 
 
 

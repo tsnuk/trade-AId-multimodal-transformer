@@ -20,7 +20,28 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import random
-from config import n_embd, n_head, n_layer, dropout, block_size, device, fixed_values
+
+# Configuration will be loaded lazily when needed
+from config import fixed_values
+
+# Global configuration cache - will be populated when first accessed
+_config_cache = None
+
+def _get_config():
+    """Lazy load configuration through compatibility layer"""
+    global _config_cache
+    if _config_cache is None:
+        from compatibility_layer import get_system_configuration
+        _config_cache = get_system_configuration()
+    return _config_cache
+
+# Create property-like accessors for configuration values
+def _get_n_embd(): return _get_config()['n_embd']
+def _get_n_head(): return _get_config()['n_head']
+def _get_n_layer(): return _get_config()['n_layer']
+def _get_dropout(): return _get_config()['dropout']
+def _get_block_size(): return _get_config()['block_size']
+def _get_device(): return _get_config()['device']
 
 
 class Head(nn.Module):  # The Head class represents a single attention head within a multi-head attention mechanism
@@ -33,17 +54,17 @@ class Head(nn.Module):  # The Head class represents a single attention head with
         super().__init__()  # constructor
 
         self.key = nn.Sequential(
-            nn.Linear(n_embd, head_size // 2),
+            nn.Linear(_get_n_embd(), head_size // 2),
             nn.Tanh(),
             nn.Linear(head_size // 2, head_size, bias=False)
         )
         self.query = nn.Sequential(
-            nn.Linear(n_embd, head_size // 2),
+            nn.Linear(_get_n_embd(), head_size // 2),
             nn.Tanh(),
             nn.Linear(head_size // 2, head_size, bias=False)
         )
         self.value = nn.Sequential(
-            nn.Linear(n_embd, head_size // 2),
+            nn.Linear(_get_n_embd(), head_size // 2),
             nn.Tanh(),
             nn.Linear(head_size // 2, head_size, bias=False)
         )
@@ -55,9 +76,9 @@ class Head(nn.Module):  # The Head class represents a single attention head with
                                     # when we pass an input to an nn.Sequential instance, it will be passed through each module in the defined order, and the output of the last module will be returned.
 
 
-            nn.Linear(n_embd, head_size // 2),  # a linear transformation that maps the input embedding (n_embd) to an intermediate size (head_size // 2).
+            nn.Linear(_get_n_embd(), head_size // 2),  # a linear transformation that maps the input embedding (_get_n_embd()) to an intermediate size (head_size // 2).
                                                 # the intermediate size in the attention head (head_size // 2) aims to balance dimensionality reduction and information preservation.
-                                                # this is particularly beneficial when dealing with large embedding dimensions (n_embd) or long input sequences.
+                                                # this is particularly beneficial when dealing with large embedding dimensions (_get_n_embd()) or long input sequences.
                                                 # while head_size // 2 is a common choice, it's worth considering other values based on the specific application.
                                                 # // divides and rounds down to the nearest integer. For example, 7 // 2 would result in 3.
                                                 # head_size // 2 is effectively half the value of head_size, rounded down to the nearest whole number.
@@ -70,7 +91,7 @@ class Head(nn.Module):  # The Head class represents a single attention head with
                                                 # x is the input vector, W is the weight matrix (^T denotes the transpose operation), b is the bias vector, y is the output vector
                                                 #
                                                 # how nn.Linear is applied:
-                                                # 1. Input: The input to the first nn.Linear layer is the token embedding (n_embd dimensions).
+                                                # 1. Input: The input to the first nn.Linear layer is the token embedding (_get_n_embd() dimensions).
                                                 # 2. Transformation: The nn.Linear layer applies a linear transformation using a learned weight matrix and a bias vector (if bias=True, which is the default).
                                                 # this maps the input to an intermediate size (head_size // 2).
                                                 # 3. Non-linearity: The nn.Tanh activation function introduces non-linearity.
@@ -94,25 +115,25 @@ class Head(nn.Module):  # The Head class represents a single attention head with
         )
         '''
 
-        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.register_buffer('tril', torch.tril(torch.ones(_get_block_size(), _get_block_size())))
         # This line registers a buffer called tril
         # torch.tril creates a lower triangular matrix (all elements above the main diagonal are zero) with size block_size x block_size.
         # this is used for masking in the attention mechanism to prevent the model from attending to future tokens in the sequence.
 
-        self.dropout = nn.Dropout(dropout)
-        # This adds a dropout layer to the attention head.
+        self.dropout = nn.Dropout(_get_dropout())
+        # This adds a _get_dropout() layer to the attention head.
         # Dropout helps to prevent overfitting by randomly setting a fraction of the input units to zero during training.
-        # (dropout) is a hyperparameter that controls the dropout rate.
+        # (_get_dropout()) is a hyperparameter that controls the _get_dropout() rate.
 
 
     def forward(self, x):   # This function is the core of the attention mechanism within a single "head" of a Transformer model.
                             # This function defines how the attention head processes its input during the forward pass of the neural network.
 
         Ba,Bl,C = x.shape # x is the input to the attention head
-                          # x has shape (batch_size, block_size, n_embd)
+                          # x has shape (batch_size, block_size, _get_n_embd())
                           # batch_size (Ba): The number of independent sequences processed in parallel
                           # block_size (Bl): The length of each sequence (context window)
-                          # n_embd (C): The dimensionality of the token embeddings
+                          # _get_n_embd() (C): The dimensionality of the token embeddings
         k = self.key(x)   # k has shape (batch_size, block_size, head_size)
                           # The input x is transformed into "keys" (k) using a linear layer (self.key)
         q = self.query(x) # q has shape (batch_size, block_size, head_size)
@@ -126,7 +147,7 @@ class Head(nn.Module):  # The Head class represents a single attention head with
         aff = F.softmax(aff, dim=-1)  # (Ba, Bl, Bl)
                                       # Convert affinities to attention probabilities
 
-        aff = self.dropout(aff)   # Apply dropout for regularization
+        aff = self.dropout(aff)   # Apply _get_dropout() for regularization
 
         # Perform weighted aggregation of values
         v = self.value(x) # (Ba,Bl,head_size)
@@ -143,17 +164,17 @@ class MultiHeadAttention(nn.Module):
         self.heads = nn.ModuleList([Head(head_size) for cur_head in range(num_heads)])
         # Multiple attention heads for parallel processing
         self.proj = nn.Sequential(
-            nn.Linear(head_size * num_heads, n_embd//2),
+            nn.Linear(head_size * num_heads, _get_n_embd()//2),
             nn.Tanh(),
-            nn.Linear(n_embd//2, n_embd)
+            nn.Linear(_get_n_embd()//2, _get_n_embd())
         )
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(_get_dropout())
 
     def forward(self, x):
         out = torch.cat([head(x) for head in self.heads], dim=-1)
         # Concatenate outputs from all attention heads
         out = self.dropout(self.proj(out))
-        # Project and apply dropout
+        # Project and apply _get_dropout()
         return out
 
 
@@ -168,16 +189,16 @@ class CrossAttention(nn.Module):
         # The output from each head is head_size, and there are num_heads.
         # The input to proj is the concatenation of head outputs, which will be num_heads * head_size
         self.proj = nn.Sequential(
-            nn.Linear(head_size * num_heads, n_embd // 2),
+            nn.Linear(head_size * num_heads, _get_n_embd() // 2),
             nn.Tanh(),
-            nn.Linear(n_embd // 2, n_embd)
+            nn.Linear(_get_n_embd() // 2, _get_n_embd())
         )
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(_get_dropout())
 
     def forward(self, query_x, key_value_x_list):
-        # query_x: the modality that is querying, shape (batch_size, block_size, n_embd)
+        # query_x: the modality that is querying, shape (batch_size, block_size, _get_n_embd())
         # key_value_x_list: List of tensors, one for each modality providing keys and values
-        # Each tensor in key_value_x_list should have shape (batch_size, block_size, n_embd)
+        # Each tensor in key_value_x_list should have shape (batch_size, block_size, _get_n_embd())
 
         # Concatenate outputs from all heads
         # Each head now takes query_x and the list of key_value_x_list
@@ -193,20 +214,20 @@ class CrossAttention(nn.Module):
             self.head_size = head_size # Store head_size
 
             # Query projection for the querying modality
-            self.query = nn.Linear(n_embd, head_size, bias=False)
+            self.query = nn.Linear(_get_n_embd(), head_size, bias=False)
 
             # Separate key and value projections for each key/value modality
             self.kv_projections = nn.ModuleList([
-                nn.Linear(n_embd, 2 * head_size, bias=False) for _ in range(num_kv_modalities)
+                nn.Linear(_get_n_embd(), 2 * head_size, bias=False) for _ in range(num_kv_modalities)
             ])
 
             # Define mask for causal attention (prevent attending to future positions)
-            self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
-            self.dropout = nn.Dropout(dropout)
+            self.register_buffer('tril', torch.tril(torch.ones(_get_block_size(), _get_block_size())))
+            self.dropout = nn.Dropout(_get_dropout())
 
         def forward(self, query_x, key_value_x_list):
-            # query_x: shape (batch_size, block_size, n_embd)
-            # key_value_x_list: List of tensors, each shape (batch_size, block_size, n_embd)
+            # query_x: shape (batch_size, block_size, _get_n_embd())
+            # key_value_x_list: List of tensors, each shape (batch_size, block_size, _get_n_embd())
 
             Ba, Bl, C = query_x.shape
 
@@ -246,10 +267,10 @@ class FeedForward(nn.Module): # Feedforward network with expansion and contracti
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_embd, 4 * n_embd),  # Expand dimensionality
+            nn.Linear(_get_n_embd(), 4 * _get_n_embd()),  # Expand dimensionality
             nn.ReLU(),  # Non-linear activation
-            nn.Linear(4 * n_embd, n_embd),  # Contract back to original size
-            nn.Dropout(dropout),  # Regularization
+            nn.Linear(4 * _get_n_embd(), _get_n_embd()),  # Contract back to original size
+            nn.Dropout(_get_dropout()),  # Regularization
         )
 
     def forward(self, x):
@@ -262,16 +283,16 @@ class MultimodalBlock(nn.Module):
         self.num_modalities = num_modalities
         self.all_modality_params = all_modality_params # Store all_modality_params
 
-        head_size = n_embd // n_head
+        head_size = _get_n_embd() // _get_n_head()
         # Multi-head attention for each modality (self-attention)
-        self.sa_layers = nn.ModuleList([MultiHeadAttention(n_head, head_size) for _ in range(num_modalities)])
+        self.sa_layers = nn.ModuleList([MultiHeadAttention(_get_n_head(), head_size) for _ in range(num_modalities)])
 
         # Feedforward layers for each modality
         self.ffwd_layers = nn.ModuleList([FeedForward() for _ in range(num_modalities)])
 
         # Layer norms for each modality
-        self.ln1_layers = nn.ModuleList([nn.LayerNorm(n_embd) for _ in range(num_modalities)])
-        self.ln2_layers = nn.ModuleList([nn.LayerNorm(n_embd) for _ in range(num_modalities)])
+        self.ln1_layers = nn.ModuleList([nn.LayerNorm(_get_n_embd()) for _ in range(num_modalities)])
+        self.ln2_layers = nn.ModuleList([nn.LayerNorm(_get_n_embd()) for _ in range(num_modalities)])
 
         # Cross-attention layers: only for modalities with cross_attention enabled
         self.cross_attention_layers = nn.ModuleList()
@@ -282,7 +303,7 @@ class MultimodalBlock(nn.Module):
                 # Get the indices of other modalities (all except the current one)
                 other_modality_indices = [j for j in range(num_modalities) if j != i]
                 num_kv_modalities = len(other_modality_indices)
-                self.cross_attention_layers.append(CrossAttention(n_head, head_size, num_kv_modalities))
+                self.cross_attention_layers.append(CrossAttention(_get_n_head(), head_size, num_kv_modalities))
             else:
                 self.cross_attention_layers.append(None) # No cross-attention for this modality
 
@@ -292,12 +313,12 @@ class MultimodalBlock(nn.Module):
             modality_params = all_modality_params[i]
             cross_attention_enabled = modality_params[8] # Index 8 is cross_attention status
             if cross_attention_enabled:
-                self.ln_cross_layers.append(nn.LayerNorm(n_embd))
+                self.ln_cross_layers.append(nn.LayerNorm(_get_n_embd()))
             else:
                 self.ln_cross_layers.append(None) # No cross-attention layer norm for this modality
 
     def forward(self, x_list): # x_list is a list of tensors, one for each modality
-        # x_list: List of tensors, each shape (batch_size, block_size, n_embd)
+        # x_list: List of tensors, each shape (batch_size, block_size, _get_n_embd())
 
         attended_x_list = []
 
@@ -355,7 +376,7 @@ class FixedEmbedding(nn.Module):  # this class defines a custom embedding layer 
         Args:
             input_tokens (torch.Tensor): Indices of tokens. Shape: [batch_size, seq_len]
         Returns:
-            torch.Tensor: Fixed embeddings. Shape: [batch_size, seq_len, n_embd]
+            torch.Tensor: Fixed embeddings. Shape: [batch_size, seq_len, _get_n_embd()]
         """
         return self.embedding_table[input_tokens]
 
@@ -376,10 +397,10 @@ class MultimodalPreBlock(nn.Module):
         self.vocab_sizes = vocab_sizes # list of vocab sizes, one for each modality
 
         # Token embeddings for each modality
-        self.token_embedding_tables = nn.ModuleList([nn.Embedding(vocab_sizes[i], n_embd) for i in range(num_modalities)])
+        self.token_embedding_tables = nn.ModuleList([nn.Embedding(vocab_sizes[i], _get_n_embd()) for i in range(num_modalities)])
 
         # Positional embedding table (shared across modalities)
-        self.position_embedding_table = nn.Embedding(block_size, n_embd)
+        self.position_embedding_table = nn.Embedding(_get_block_size(), _get_n_embd())
 
     def forward(self, idx_list): # idx_list is a list of tensors, one for each modality
         # idx_list: List of tensors, each shape (batch_size, block_size)
@@ -410,17 +431,17 @@ class MultimodalPostBlock(nn.Module):
         self.vocab_sizes = vocab_sizes
 
         # Layer normalization and linear layers for each modality
-        self.fin_norm_layers = nn.ModuleList([nn.LayerNorm(n_embd) for _ in range(num_modalities)])
+        self.fin_norm_layers = nn.ModuleList([nn.LayerNorm(_get_n_embd()) for _ in range(num_modalities)])
         self.soft_score_layers = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(n_embd, vocab_sizes[i] // 2),
+                nn.Linear(_get_n_embd(), vocab_sizes[i] // 2),
                 nn.Tanh(),
                 nn.Linear(vocab_sizes[i] // 2, vocab_sizes[i])
             ) for i in range(self.num_modalities)
         ])
 
     def forward(self, x_list): # x_list is a list of tensors, one for each modality
-        # x_list: List of tensors, each shape (batch_size, block_size, n_embd)
+        # x_list: List of tensors, each shape (batch_size, block_size, _get_n_embd())
 
         logits_list = []
         for i in range(self.num_modalities):
@@ -448,7 +469,7 @@ class MultimodalTransformer(nn.Module):
 
         self.pre_block = MultimodalPreBlock(num_modalities, vocab_sizes)
         # Pass all_modality_params to the MultimodalBlock
-        self.blocks = nn.Sequential(*[MultimodalBlock(n_embd, n_head, num_modalities, all_modality_params) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(*[MultimodalBlock(_get_n_embd(), _get_n_head(), num_modalities, all_modality_params) for _ in range(_get_n_layer())])
         self.post_block = MultimodalPostBlock(num_modalities, vocab_sizes)
 
         self.apply(self._init_weights)
@@ -492,7 +513,7 @@ class MultimodalTransformer(nn.Module):
         for _ in range(max_new_tokens):
             # Crop idx_list to the last block_size tokens
             # Need to apply cropping to each tensor in the list
-            idx_cond_list = [idx[:, -block_size:] for idx in generated_sequences_list]
+            idx_cond_list = [idx[:, -_get_block_size():] for idx in generated_sequences_list]
 
             # Get predictions
             logits_list, _ = self(idx_cond_list)

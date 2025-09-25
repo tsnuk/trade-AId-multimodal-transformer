@@ -16,7 +16,24 @@ import torch.nn.functional as F
 import numbers
 import os
 from datetime import datetime
-from config import device, block_size, batch_size, eval_iters
+# Configuration will be loaded lazily when needed
+
+# Global configuration cache - will be populated when first accessed
+_config_cache = None
+
+def _get_config():
+    """Lazy load configuration through compatibility layer"""
+    global _config_cache
+    if _config_cache is None:
+        from compatibility_layer import get_system_configuration
+        _config_cache = get_system_configuration()
+    return _config_cache
+
+# Create property-like accessors for configuration values
+def _get_device(): return _get_config()['device']
+def _get_block_size(): return _get_config()['block_size']
+def _get_batch_size(): return _get_config()['batch_size']
+def _get_eval_iters(): return _get_config()['eval_iters']
 
 # Export only the functions that should be publicly available
 __all__ = [
@@ -32,7 +49,7 @@ __all__ = [
 def generate_batch_starting_indices(data_size, block_size, batch_size, split, file_lengths, is_percents):
     '''
     Generates a batch of random starting indices for extracting sequences
-    of a fixed length (block_size) from the data.
+    of a fixed length (_get_block_size()) from the data.
 
     This function is designed to ensure that sequences don't cross file boundaries
     when the data comes from multiple concatenated files. It respects the structure
@@ -41,8 +58,8 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
     Args:
         data_size: The total size of the data from which to extract sequences.
                    Must be a positive integer.
-                   Also, block_size must be less than `data_size`.
-        batch_size: The number of starting indices to generate (the batch size).
+                   Also, _get_block_size() must be less than `data_size`.
+        _get_batch_size(): The number of starting indices to generate (the batch size).
                     Must be a positive integer.
         split: Indicates whether the data is for 'train' or 'val'. Must be 'train' or 'val'.
         file_lengths: A list of integers representing the length of each loaded file
@@ -52,7 +69,7 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
                      for percentage data).
 
     Returns:
-        torch.Tensor: A tensor of shape (batch_size,) containing the
+        torch.Tensor: A tensor of shape (_get_batch_size(),) containing the
                       random starting indices within the dataset.
 
     Raises:
@@ -62,12 +79,12 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
     # Input validation
     if not isinstance(data_size, int) or data_size <= 0:
         raise TypeError("'data_size' must be a positive integer.")
-    if not isinstance(block_size, int) or block_size <= 0:
-        raise TypeError("'block_size' must be a positive integer.")
-    if block_size >= data_size:
-        raise ValueError("'block_size' cannot be equal to or greater than 'data_size'.")
-    if not isinstance(batch_size, int) or batch_size <= 0:
-        raise TypeError("'batch_size' must be a positive integer.")
+    if not isinstance(_get_block_size(), int) or _get_block_size() <= 0:
+        raise TypeError("'_get_block_size()' must be a positive integer.")
+    if _get_block_size() >= data_size:
+        raise ValueError("'_get_block_size()' cannot be equal to or greater than 'data_size'.")
+    if not isinstance(_get_batch_size(), int) or _get_batch_size() <= 0:
+        raise TypeError("'_get_batch_size()' must be a positive integer.")
     if not isinstance(split, str) or (split != 'train' and split != 'val'):
         raise ValueError("'split' must be 'train' or 'val'.")
     if not isinstance(file_lengths, list) or not all(isinstance(length, int) and length > 0 for length in file_lengths):
@@ -78,19 +95,19 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
     if len(file_lengths) == 1:
         # Single file case, simpler logic
         first_element_offset = 1 if is_percents else 0
-        block_size_xy = block_size + 1
+        block_size_xy = _get_block_size() + 1
 
         # Generate random starting indices for the single file, ensuring sequences don't cross the file boundary.
         # Ensure the starting index + block_size_xy does not exceed the file length.
         # then generate random starting indices ensuring sequences fit within the data (sequence + block_size_xy).
         # Adjust the range to start from 'first_element_offset'
-        return torch.randint(first_element_offset, data_size - block_size_xy + 1, (batch_size,))
+        return torch.randint(first_element_offset, data_size - block_size_xy + 1, (_get_batch_size(),))
 
 
     else:
         # Multiple files case
         first_element_offset = 1 if is_percents else 0
-        block_size_xy = block_size + 1
+        block_size_xy = _get_block_size() + 1
 
         # Calculate valid starting positions for each file
         # A valid starting position allows for a full sequence (block_size_xy elements) within the file
@@ -103,16 +120,16 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
             total_valid_ix_positions += valid_positions_in_file
 
         if total_valid_ix_positions == 0:
-            raise ValueError("No valid starting positions available. All files are too short for the given block_size.")
+            raise ValueError("No valid starting positions available. All files are too short for the given _get_block_size().")
 
         # Generate initial random indices within the range of total valid positions
-        initial_indices = torch.randint(total_valid_ix_positions, (batch_size,))
+        initial_indices = torch.randint(total_valid_ix_positions, (_get_batch_size(),))
 
         # Now, map these initial indices back to the correct starting positions in the
         # combined data, ensuring they fall within the valid range of a specific file.
-        actual_indices = torch.empty(batch_size, dtype=torch.long)
+        actual_indices = torch.empty(_get_batch_size(), dtype=torch.long)
 
-        for i in range(batch_size):
+        for i in range(_get_batch_size()):
             cumulative_valid_ix_positions = 0
             found_position = False
             selected_index = initial_indices[i].item()
@@ -200,9 +217,9 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
 
     Args:
         logits_list: A list of tensors, one for each modality, containing the logits
-                     for each token in the batch. Shape: List of [(batch_size, block_size, vocab_size)]
+                     for each token in the batch. Shape: List of [(_get_batch_size(), _get_block_size(), vocab_size)]
         yb_list: A list of tensors, one for each modality, containing the target token
-                 indices for each token in the batch. Shape: List of [(batch_size, block_size)]
+                 indices for each token in the batch. Shape: List of [(_get_batch_size(), _get_block_size())]
         num_modalities: The total number of modalities being processed. (int)
         all_vocabularies: A list of lists, where each inner list is the vocabulary
                           (unique elements) for a specific modality, sorted in ascending order.
@@ -211,7 +228,7 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
                              rand_size, cross_attend, convert_to_percents, num_bins, modality_name].
         all_file_info: A list of lists, where each inner list contains the file information
                        for a specific modality, in the format [file1_name, data1_length, ...].
-        batch_size: The number of sequences processed in parallel in each batch. (int)
+        _get_batch_size(): The number of sequences processed in parallel in each batch. (int)
         is_percents: A boolean indicating whether the data being evaluated is in percentage form. (bool)
 
     Returns:
@@ -342,7 +359,7 @@ def get_batch(split, is_training):
 
     # Generate starting indices using FULL datasets (preserves file boundary logic)
     full_data_size = len(all_full_datasets[0])
-    ix = generate_batch_starting_indices(full_data_size, block_size, batch_size, split, file_lengths, is_percents)
+    ix = generate_batch_starting_indices(full_data_size, _get_block_size(), _get_batch_size(), split, file_lengths, is_percents)
 
     # Determine train/val boundaries from the split configuration
     # This should match the logic used in create_train_val_datasets
@@ -370,26 +387,26 @@ def get_batch(split, is_training):
 
         # If we don't have enough valid indices, regenerate
         # (This is a simplified approach; proper implementation would regenerate until enough valid indices)
-        if len(valid_indices) < batch_size:
+        if len(valid_indices) < _get_batch_size():
             # For now, pad with valid indices (not ideal but prevents crash)
             if len(valid_indices) > 0:
-                # Repeat existing valid indices to reach batch_size
-                repeats_needed = (batch_size + len(valid_indices) - 1) // len(valid_indices)
-                valid_indices = valid_indices.repeat(repeats_needed)[:batch_size]
+                # Repeat existing valid indices to reach _get_batch_size()
+                repeats_needed = (_get_batch_size() + len(valid_indices) - 1) // len(valid_indices)
+                valid_indices = valid_indices.repeat(repeats_needed)[:_get_batch_size()]
             else:
                 # No valid indices found, use boundary-safe indices
                 if split == 'train':
-                    max_safe_idx = val_start_idx - block_size - 1
-                    valid_indices = torch.randint(0, max(1, max_safe_idx), (batch_size,))
+                    max_safe_idx = val_start_idx - _get_block_size() - 1
+                    valid_indices = torch.randint(0, max(1, max_safe_idx), (_get_batch_size(),))
                 else:
                     val_size = full_data_size - val_start_idx
-                    max_safe_idx = val_size - block_size - 1
+                    max_safe_idx = val_size - _get_block_size() - 1
                     if max_safe_idx > 0:
-                        valid_indices = torch.randint(0, max_safe_idx, (batch_size,))
+                        valid_indices = torch.randint(0, max_safe_idx, (_get_batch_size(),))
                     else:
-                        raise ValueError("Validation set too small for block_size")
+                        raise ValueError("Validation set too small for _get_block_size()")
         else:
-            valid_indices = valid_indices[:batch_size]
+            valid_indices = valid_indices[:_get_batch_size()]
 
     # Use the appropriate dataset portion for extraction
     if split == 'train':
@@ -415,9 +432,9 @@ def get_batch(split, is_training):
     yb_list = []
     for r in range(num_modalities):
         temp_data = dataset_tensors[r]
-        xb = torch.stack([temp_data[i:i+block_size] for i in valid_indices])
-        yb = torch.stack([temp_data[i+1:i+block_size+1] for i in valid_indices])
-        xb, yb = xb.to(device), yb.to(device)
+        xb = torch.stack([temp_data[i:i+_get_block_size()] for i in valid_indices])
+        yb = torch.stack([temp_data[i+1:i+_get_block_size()+1] for i in valid_indices])
+        xb, yb = xb.to(_get_device()), yb.to(_get_device())
         xb_list.append(xb)
         yb_list.append(yb)
 
@@ -431,7 +448,7 @@ def estimate_loss():
         print_state = "Training" if state == 'train' else "Validation"
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        print(f'Evaluation: {state.title()} set ({eval_iters} iterations) | {current_time}')
+        print(f'Evaluation: {state.title()} set ({_get_eval_iters()} iterations) | {current_time}')
         # Initialize counters for success rate and certainty calculation for all modalities
         all_modalities_total_batches_processed = [0] * num_modalities
         all_modalities_total_correct = [0] * num_modalities
@@ -441,7 +458,7 @@ def estimate_loss():
         total_losses = []
         non_numeric_warning_printed = [False] * num_modalities
 
-        for k in range(eval_iters):
+        for k in range(_get_eval_iters()):
             # get_batch returns lists of tensors: [xb_mod1, xb_mod2, ...], [yb_mod1, yb_mod2, ...]
             xb_list, yb_list = get_batch(state, 0)
 
@@ -462,7 +479,7 @@ def estimate_loss():
             # is_percents argument is now redundant and can be removed from the function signature and calls
             # The calculate_evaluation_metrics function accesses percentage status from all_modality_params
             batch_correct, batch_incorrect, batch_certainty, batches_processed_list = calculate_evaluation_metrics(
-                logits_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, batch_size, is_percents
+                logits_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, _get_batch_size(), is_percents
             )
 
             # Check if any modality was skipped due to non-numeric data and print a warning once per eval run
@@ -505,14 +522,16 @@ def estimate_loss():
                     print(f"  '{modality_name}': No directional predictions")
 
                 # Calculate and report overall average directional certainty
-                overall_average_certainty_modality = all_modalities_total_certainty[modality_index] / (this_num_batches_processed * batch_size) # Assuming batch_size is constant and used for certainty accumulation
+                overall_average_certainty_modality = all_modalities_total_certainty[modality_index] / (this_num_batches_processed * _get_batch_size()) # Assuming _get_batch_size() is constant and used for certainty accumulation
                 #print(f"  Overall Average Directional Certainty: {round(overall_average_certainty_modality * 100, 1)}%") # Not displaying at the moment
 
             else:
                 print(f"  '{modality_name}': No data processed (non-numeric)")
 
         # Write validation metrics to file
-        from config import output_file_name, project_file_path
+        system_config = _get_config()
+        output_file_name = system_config['output_file_name']
+        project_file_path = system_config['project_file_path']
         if state == 'val' and output_file_name != '':
           output_file_path = project_file_path + 'output/' + output_file_name
           with open(output_file_path, 'a', encoding='utf-8') as f:

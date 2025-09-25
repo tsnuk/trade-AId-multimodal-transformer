@@ -15,7 +15,6 @@ import numbers
 import os
 from datetime import datetime
 
-# Import our modular components
 from compatibility_layer import (
     initialize_compatibility_layer, get_modality_parameters,
     get_system_configuration, is_modern_mode
@@ -28,20 +27,11 @@ from data_utils import (
 from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
 from training_utils import get_batch, estimate_loss
-# Removed unused progress utilities
-
-"""# Data loading & processing"""
-
-# Initialize configuration system (supports both YAML and programmatic setup)
-# The system supports two configuration methods:
-# - YAML Configuration: Uses input_schemas.yaml + config.yaml files (recommended for most users)
-# - Programmatic Configuration: Uses Python variables in config.py (advanced users, automation)
 print("Initializing Trade-AId Multimodal Transformer...")
 print("Initializing configuration system...")
 config_mode = initialize_compatibility_layer(globals())
 print(f"Configuration: {'YAML mode detected' if config_mode == 'modern' else 'Programmatic mode detected'}")
 
-# Get configuration parameters through compatibility layer
 system_config = get_system_configuration()
 modality_params_list = get_modality_parameters()
 
@@ -49,10 +39,8 @@ if not modality_params_list:
     raise ValueError("No modalities configured. Please check your configuration files.")
 
 print(f"Modalities: Loaded {len(modality_params_list)} configurations")
-print()  # Spacing before data loading
+print()
 
-# Extract individual configuration variables from system_config
-# This ensures compatibility with both YAML and programmatic configurations
 batch_size = system_config['batch_size']
 block_size = system_config['block_size']
 max_iters = system_config['max_iters']
@@ -72,16 +60,10 @@ model_file_name = system_config['model_file_name']
 project_file_path = system_config['project_file_path']
 output_file_name = system_config['output_file_name']
 
-# Data Preparation:
-# - Load raw data from files
-# - Process the data (if specified)
-# - Create a vocabulary of unique elements and convert it into a numerical representation
-# - Split the data into training and validation sets
-
-all_modality_data = []  # For each modality, will contain a list of raw data elements, or of processed elements (if specified and if numeric)
-all_file_info = []  # For each modality, will contain a list of the loaded file information: [file1_name, data1_length, file2_name, data2_length, ...]
-all_modality_params = []  # For each modality, will contain a list of processing parameters
-all_raw_vocab_sizes = []  # For each modality, will contain the raw vocabulary size before processing
+all_modality_data = []
+all_file_info = []
+all_modality_params = []
+all_raw_vocab_sizes = []
 
 modality_num = 0
 is_percents = False
@@ -89,8 +71,6 @@ is_percents = False
 print(f"Data Loading: Processing {len(modality_params_list)} modalities...")
 
 for i, modality_params in enumerate(modality_params_list):
-    # Extract parameters from modality configuration
-    # Format: [path, column_number, has_header, convert_to_percents, num_whole_digits, decimal_places, num_bins, rand_size, cross_attend, modality_name]
 
     convert_to_percents = modality_params[3] if len(modality_params) > 3 else False
     num_whole_digits = modality_params[4] if len(modality_params) > 4 else None
@@ -103,28 +83,21 @@ for i, modality_params in enumerate(modality_params_list):
     if convert_to_percents:
         is_percents = True
 
-    # Show progress for current modality
     print(f"  Loading modality {i + 1}: '{modality_name}'")
 
     modality_num += 1
 
-    # Load data using complete modality parameters (with caching for performance)
     this_modality_data, this_file_info = load_file_data_cached(modality_params)
 
-    # Capture raw vocabulary size before any processing
     raw_vocabulary_size = len(set(this_modality_data))
 
-    # Track if any processing is applied
     processing_applied = False
 
-    # Convert to percentages (happens first in the processing pipeline)
     if convert_to_percents:
         print(f"    Processing: Converting to percentages")
         processing_applied = True
 
-    # Range numeric data: scale values and set decimal places
     if num_whole_digits is not None or decimal_places is not None:
-        # Check if the loaded data is numeric before processing
         data_is_numeric = all(isinstance(item, numbers.Number) for item in this_modality_data)
         if data_is_numeric:
             range_details = f"{num_whole_digits} digits" if num_whole_digits else ""
@@ -134,26 +107,21 @@ for i, modality_params in enumerate(modality_params_list):
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
             processing_applied = True
         else:
-            # Find and report the non-numeric element
             print(f"    Warning: Ranging/decimal places specified but data is not numeric")
             report_non_numeric_error(this_modality_data, this_file_info, modality_num)
 
-    # Bin numeric data (happens after ranging)
     if num_bins is not None:
-        outlier_percentile = 0.1 # Percentage of extreme values (outliers) to be excluded from bin range calculation
-        exponent = 2.2 # Controls how bin ranges are distributed
+        outlier_percentile = 0.1
+        exponent = 2.2
         print(f"    Processing: Binning ({num_bins} bins)")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
 
-    # Show if no processing was applied (accounting for external processing in YAML mode)
     if not processing_applied:
-        # In modern (YAML) mode, check if there are external processing steps defined
         if is_modern_mode():
             from compatibility_layer import compatibility_layer
             modality_metadata = compatibility_layer.get_modality_metadata(modality_num - 1)  # 0-based index
             if modality_metadata.get('processing_steps_count', 0) > 0:
-                # External processing functions are defined - get the step names
                 if compatibility_layer.config_manager:
                     schemas = compatibility_layer.config_manager.schema_manager.schemas
                     if modality_num - 1 < len(schemas):
@@ -178,19 +146,13 @@ for i, modality_params in enumerate(modality_params_list):
     all_modality_params.append(modality_params)
     all_raw_vocab_sizes.append(raw_vocabulary_size)
 
-    # Show data summary for this modality
     data_length = len(this_modality_data)
     file_count = len(this_file_info) // 2 if this_file_info else 0
     print(f"  Summary: {data_length:,} data points ({file_count} files loaded)")
 
-# Data loading complete
-
-
 print("Data Loading and Processing: Complete")
 print()
 num_modalities = len(all_modality_data)
-
-# Check for equal modality lengths
 if num_modalities > 1:
     first_modality_length = len(all_modality_data[0])
     for i in range(1, num_modalities):
@@ -207,25 +169,17 @@ all_vocabularies = []
 all_numeric_reps = []
 
 for m in range(num_modalities):
-  # Access modality name using the attribute from the ModalityConfig instance
   this_modality_name = all_modality_params[m][9] if all_modality_params[m][9] is not None else f"Modality {m+1}"
-
-  # Building vocabulary for this modality
-
-  # Generate a vocabulary and numerical representation
   this_numeric_rep, this_vocabulary = numerical_representation(all_modality_data[m])
 
   all_numeric_reps.append(this_numeric_rep)
   all_vocabularies.append(this_vocabulary)
 
-  # Get the raw vocabulary size that was stored during data loading
   raw_vocab_size = all_raw_vocab_sizes[m]
 
-  # Determine what processing was applied for this modality (in correct order)
   processing_applied = []
   modality_params = all_modality_params[m]
 
-  # In modern (YAML) mode, translate built-in functions to user-friendly names, show external functions as-is
   if is_modern_mode():
     from compatibility_layer import compatibility_layer
     if compatibility_layer.config_manager:
@@ -234,7 +188,6 @@ for m in range(num_modalities):
         schema = schemas[m]
         for step in schema.processing_steps:
           if step.enabled:
-            # Map built-in functions to user-friendly names
             if step.function == 'calculate_percent_changes':
               processing_applied.append("percentages")
             elif step.function == 'range_numeric_data':
@@ -242,23 +195,19 @@ for m in range(num_modalities):
             elif step.function == 'bin_numeric_data':
               processing_applied.append("binning")
             else:
-              # External/custom function - show actual function name
               processing_applied.append(step.function)
   else:
-    # In legacy (programmatic) mode, show built-in processing names
-    if len(modality_params) > 3 and modality_params[3]:  # convert_to_percentages
+    if len(modality_params) > 3 and modality_params[3]:
       processing_applied.append("percentages")
-    if len(modality_params) > 4 and modality_params[4] is not None:  # num_whole_digits
+    if len(modality_params) > 4 and modality_params[4] is not None:
       processing_applied.append("ranging")
-    if len(modality_params) > 6 and modality_params[6] is not None:  # num_bins
+    if len(modality_params) > 6 and modality_params[6] is not None:
       processing_applied.append("binning")
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
-  # Show modality name first
   print(f"  Modality {m+1} '{this_modality_name}':")
 
-  # Show vocabulary info on indented line - always show before/after
   print(f"    Vocabulary size: {raw_vocab_size:,} → {len(this_vocabulary):,}{processing_text}")
 
   if len(this_vocabulary) <= 20:
@@ -266,26 +215,19 @@ for m in range(num_modalities):
   else:
     print(f"    Vocabulary (first 10): {this_vocabulary[:10]}")
 
-# Vocabulary building complete
-
-# Get file lengths for splitting
 file_lengths = []
-# Use the file lengths from the *first* modality for splitting consistency across all modalities
 if all_file_info and len(all_file_info) > 0:
   for f_idx in range(1, len(all_file_info[0]), 2):
     file_lengths.append(all_file_info[0][f_idx])
 else:
-  # Fallback if no file info is available
   file_lengths = [len(all_modality_data[0])]
 
 print()
 print("Dataset Splitting: Creating train/validation sets...")
 
-# Print validation method information at the beginning
 if system_config['num_validation_files'] > 0:
     print("Method: File-based splitting")
     print("  Validation files:")
-    # For the validation set we need to go backwards, so start from the second to last element (index len(all_file_info[0]) - 2) and step backwards by 2
     val_files_counter = 0
     for j in range(len(all_file_info[0]) - 2, -1, -2):
         this_file_name = all_file_info[0][j]
@@ -300,39 +242,28 @@ all_train_sets = []
 all_val_sets = []
 
 for i in range(num_modalities):
-  # Splitting dataset for this modality
   modality_name = all_modality_params[i][9] if all_modality_params[i][9] else f"Modality {i+1}"
-
-  # Check for randomness setting
   rand_size = all_modality_params[i][7] if len(all_modality_params[i]) > 7 and all_modality_params[i][7] is not None else None
   rand_text = f" | Randomness: {rand_size}" if rand_size is not None else ""
 
-  # Check for cross-attention setting
-  cross_attention = all_modality_params[i][8] if len(all_modality_params[i]) > 8 and all_modality_params[i][8] is not None else True  # Default to True
+  cross_attention = all_modality_params[i][8] if len(all_modality_params[i]) > 8 and all_modality_params[i][8] is not None else True
   cross_text = " | Cross-attention: ON" if cross_attention else " | Cross-attention: OFF"
 
-  # Use the file_lengths derived from the first modality for splitting all modalities
   this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
-  # Show split summary
   print(f"  Modality {i+1} '{modality_name}': Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
 
-# Dataset splitting complete
-
-# Clean up cache to free memory (files are no longer needed)
 cleanup_cache()
 
 print()
 print("Data Preparation: Complete")
-print()  # Spacing before model section
-
-"""# Building the transformer"""
+print()
 
 # Set global variables in training_utils
 import training_utils
-training_utils.all_full_datasets = all_numeric_reps  # Pass full datasets for proper index generation
+training_utils.all_full_datasets = all_numeric_reps
 training_utils.all_train_sets = all_train_sets
 training_utils.all_val_sets = all_val_sets
 training_utils.all_vocabularies = all_vocabularies
@@ -342,10 +273,8 @@ training_utils.file_lengths = file_lengths
 training_utils.num_modalities = num_modalities
 training_utils.is_percents = is_percents
 
-# Create vocab sizes list for model initialization
 all_vocab_sizes = [len(vocab) for vocab in all_vocabularies]
 
-# Model parameter count calculation
 model_params = n_embd * sum(all_vocab_sizes) + n_embd * block_size + n_layer * (
     num_modalities * (3 * n_embd * n_embd + n_embd * 4 * n_embd + 4 * n_embd + n_embd)
     + sum(vocab_size * n_embd for vocab_size in all_vocab_sizes)
@@ -359,17 +288,15 @@ print("Model Configuration:")
 print(f"  Modalities: {num_modalities}")
 print(f"  Vocabulary sizes: {all_vocab_sizes}")
 print(f"  Parameters: {model_params/1e6:.1f}M")
-print()  # Spacing before training section
+print()
 
 if create_new_model == 1:
     print("Model: Creating new transformer...")
-    # Pass the list of vocab sizes and all_modality_params to the model constructor
     m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
     optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
     print("Model: Created successfully")
 else:
     print(f"Model: Loading from {model_file_name}...")
-    # Pass the list of vocab sizes and all_modality_params when instantiating the model for loading
     m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
     try:
         m.load_state_dict(torch.load(model_file_name, weights_only=True))
@@ -378,21 +305,17 @@ else:
         print("Optimizer: Created with loaded parameters")
     except FileNotFoundError:
         print(f"Model: File not found, creating new model instead")
-        # Pass the list of vocab sizes and all_modality_params to the model constructor
         m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
         optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
         print("Model: Created successfully")
     except Exception as e:
         print(f"Model: Loading failed ({e}), creating new model")
-        # Pass the list of vocab sizes and all_modality_params to the model constructor
         m = MultimodalTransformer(num_modalities, all_vocab_sizes, all_modality_params).to(device)
         optimizer = torch.optim.AdamW(m.parameters(), lr=learning_rate)
         print("Model: Created successfully")
 
-# Set model in training_utils
 training_utils.m = m
 
-# Prepare data for output file
 hyperparams = {
     "n_embd": n_embd,
     "n_head": n_head,
@@ -403,21 +326,14 @@ hyperparams = {
     "learning_rate": learning_rate
 }
 
-# Extract vocab sizes and data lengths for data_info summary
 modality_vocab_sizes_summary = ", ".join([f"Modality {i+1}={len(all_vocabularies[i])}" for i in range(num_modalities)])
 modality_data_lengths_summary = ", ".join([f"Modality {i+1}={len(all_modality_data[i])}" for i in range(num_modalities)])
 
 
-# 1. Hyperparameters dictionary
-# (already created above)
-
-# 2. Run Statistics dictionary
 run_stats = {
     "Model parameter size (M)": round(model_params / 1e6, 1)
 }
 
-# 3. Data Information dictionary
-# Assuming train/val sizes are the same for all modalities
 train_size = len(all_train_sets[0])
 val_size_actual = len(all_val_sets[0])
 split_method = f"validation_size={validation_size}" if num_validation_files == 0 else f"num_validation_files={num_validation_files}"
@@ -431,13 +347,10 @@ data_info = {
     "Modality data lengths": modality_data_lengths_summary
 }
 
-# 4. Modality Configurations list of dictionaries
 modality_configs = []
 for i in range(num_modalities):
-    modality_params = all_modality_params[i] # This is a ModalityConfig instance
+    modality_params = all_modality_params[i]
     modality_file_info = all_file_info[i]
-
-    # Extract the first file name as the source
     source_file = modality_file_info[0] if modality_file_info else "Unknown"
 
     config_dict = {
@@ -454,56 +367,41 @@ for i in range(num_modalities):
     }
     modality_configs.append(config_dict)
 
-# Write initial run details to output file
 output_file_path = project_file_path + 'output/' + output_file_name
 if output_file_name != '':
     write_initial_run_details(output_file_path, hyperparams, data_info, modality_configs, run_stats)
     with open(output_file_path, 'a', encoding='utf-8') as f:
-        f.write("\\n\\n--- Evaluation Results ---\\n") # Add the header
+        f.write("\\n\\n--- Evaluation Results ---\\n")
 
-"""# Running the transformer"""
-
-# Training loop
-print()  # Spacing before training
+print()
 print(f"Training: Starting {max_iters} iterations on {device}")
 print("*** This process involves intensive computation and may take considerable time ***")
 print()
 
-# Early stopping variables
 best_val_loss = float('inf')
-patience = 1000  # Number of evaluations to wait for improvement
+patience = 1000
 no_improvement_count = 0
 
-for iter in range(max_iters): # the loop iterates for a maximum number of iterations (max_iters)
-                              # it periodically estimates the loss and prints it
-                              # it also generates text samples using the model's generate method
-
-    # Every once in a while evaluate the loss on train and val sets
+for iter in range(max_iters):
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     if iter % 100 == 0 : print(f'Training: Iteration {iter}/{max_iters}')
     if iter % eval_interval == 0 or iter == max_iters - 1:
-        # Pass the warning tracking list to estimate_loss
         print(f"Evaluation: Step {iter}...")
-        losses = estimate_loss() # Uses eval_iters from global scope
+        losses = estimate_loss()
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        # Check if losses are valid before printing
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
              print(f"{'='*70}")
              print(f"🎯 RESULTS: Step {iter} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | {current_time}")
              print(f"{'='*70}")
-             # write to file
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
         else:
              print(f"Warning: Step {iter} losses are NaN, skipping save | {current_time}")
 
-        # Early stopping logic
-        # if the validation loss doesn't improve for a certain number of iterations (patience), the training process is stopped
-        # Only apply early stopping if validation loss is a valid number
-        if not torch.isnan(torch.tensor(losses['val'])).any(): # Use .any() for tensor check
+        if not torch.isnan(torch.tensor(losses['val'])).any():
             if losses['val'] < best_val_loss:
                 best_val_loss = losses['val']
                 no_improvement_count = 0
@@ -514,7 +412,6 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
                 print(f"Training: Early stopping (no improvement for {patience} evaluations)")
                 break
 
-    # Save model periodically if save_model is enabled
     if save_model == 1 and (iter % eval_interval == 0 or iter == max_iters - 1):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
@@ -524,44 +421,22 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
         print()
 
 
-    # Training steps
-    # get_batch returns lists of tensors: [xb_mod1, xb_mod2, ...], [yb_mod1, yb_mod2, ...]
-    # get_batch needs access to all_train_sets, all_val_sets, device, block_size, batch_size, randomness_size
-    # randomness_size is in all_modality_params, which is accessible globally
-    # all_modality_params is a list of ModalityConfig instances, need to pass this to get_batch
-    xb_list, yb_list = get_batch('train', 1) # Pass 1 for is_training flag
-
-
-    # Pass lists of tensors to the multimodal model
-    # m is the model instance
+    xb_list, yb_list = get_batch('train', 1)
     logits_list, losses_list = m(xb_list, yb_list)
 
 
-    # Calculate total loss by summing modality losses
-    # Ensure losses_list is not None and contains tensors before summing
     if losses_list and all(l is not None for l in losses_list):
         total_loss = sum(losses_list)
 
         optimizer.zero_grad(set_to_none=True)
-        total_loss.backward() # Backpropagate the combined loss
+        total_loss.backward()
         optimizer.step()
     else:
-        # Handle cases where losses might not be calculated (e.g., if targets were None, though get_batch for 'train' should provide them)
         print("Warning: Training step losses not calculated, skipping backpropagation")
 
-    '''
-    line 1: zero_grad() clears the gradients accumulated from the previous training step. By default, PyTorch accumulates gradients, so we need to clear them before computing the gradients for the current step.
-    line 2: this line calls the backward() method on the loss tensor, which triggers the backpropagation algorithm to calculate the gradients of the loss with respect to all the model parameters.
-    line 3: this line updates the model's parameters using the gradients calculated in the previous step.
-    line 4: this line defines a variable `losses` which will store the estimated losses on the training and validation sets every `eval_interval` steps.
-    line 5: this line updates the model's parameters using the calculated gradients
-            optimizer.step()
-            the optimizer (AdamW) takes a step towards minimizing the loss by adjusting the parameters in the direction indicated by the gradients
-    '''
 
 print("Training: Completed successfully")
 
-# Final model save
 if save_model == 1:
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
@@ -569,4 +444,3 @@ if save_model == 1:
     torch.save(m.state_dict(), model_file_name)
     print(f"Final Save: {round(os.path.getsize(model_file_name)/1024**2,2)} MB complete")
 
-"""#End New Code"""

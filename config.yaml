@@ -93,6 +93,11 @@ training_parameters:
   # More frequent evaluation provides better monitoring but slows training
   eval_interval: 50
 
+  # Number of evaluation batches used for loss estimation
+  # More batches provide more accurate loss estimates but take longer
+  # Typical values: 20, 40, 100, 200
+  eval_iters: 40
+
   # Learning rate - controls the step size for weight updates
   # Higher values: Faster learning but risk of overshooting optimal weights
   # Lower values: More stable learning but slower convergence

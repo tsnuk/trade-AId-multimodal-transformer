@@ -23,7 +23,6 @@ from schema import InputSchema, SchemaManager
 from config_manager import ConfigManager, SystemConfig
 from processing_pipeline import ProcessingPipeline, execute_processing_pipeline
 
-# Set up logging
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +30,7 @@ class CompatibilityMode:
     """Manages compatibility between YAML and programmatic configuration systems"""
 
     def __init__(self):
-        self.mode = None  # Will be set to 'legacy' (programmatic) or 'modern' (YAML) after detection
+        self.mode = None
         self.config_manager = None
         self.legacy_schemas = []
         self.is_initialized = False
@@ -49,19 +48,16 @@ class CompatibilityMode:
         if self.is_initialized:
             return self.mode
 
-        # Check for YAML configuration files
         yaml_config_exists = (
             Path('input_schemas.yaml').exists() and
             Path('config.yaml').exists()
         )
 
-        # Check for programmatic input schemas in globals
         programmatic_schemas_exist = any(
             key.startswith('input_schema_') and globals_dict.get(key)
             for key in globals_dict.keys()
         )
 
-        # Determine mode based on what's available
         if yaml_config_exists:
             self.mode = 'modern'
             logger.info("YAML configuration system detected")
@@ -71,7 +67,6 @@ class CompatibilityMode:
             logger.info("Programmatic configuration system detected")
             self._initialize_legacy_system(globals_dict)
         else:
-            # Default to programmatic mode if nothing is detected
             self.mode = 'legacy'
             logger.warning("No configuration detected, defaulting to programmatic mode")
 
@@ -86,14 +81,12 @@ class CompatibilityMode:
             logger.info(f"YAML system initialized with {len(self.config_manager.schema_manager.schemas)} modalities")
         except Exception as e:
             logger.error(f"Failed to initialize YAML system: {e}")
-            # Fall back to programmatic mode
             self.mode = 'legacy'
             self.config_manager = None
 
     def _initialize_legacy_system(self, globals_dict: dict):
         """Initialize using programmatic input schemas from globals"""
         try:
-            # Extract programmatic schemas from globals
             from config import num_input_schemas
 
             self.legacy_schemas = []
@@ -115,10 +108,8 @@ class CompatibilityMode:
             List of parameter lists compatible with existing code
         """
         if self.mode == 'modern' and self.config_manager:
-            # Convert YAML schemas to programmatic format
             return [schema.to_legacy_list() for schema in self.config_manager.schema_manager.schemas]
         else:
-            # Return programmatic schemas as-is
             return self.legacy_schemas
 
     def get_system_parameters(self) -> Dict[str, Any]:
@@ -129,13 +120,9 @@ class CompatibilityMode:
             Dictionary of system parameters compatible with existing code
         """
         if self.mode == 'modern' and self.config_manager and self.config_manager.system_config:
-            # Convert YAML system config to standard format
             sys_config = self.config_manager.system_config
-            # Import eval_iters from programmatic config since it's not in YAML config yet
-            from config import eval_iters
             import torch
 
-            # Handle 'auto' device detection
             device = sys_config.device
             if device == 'auto':
                 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -145,7 +132,7 @@ class CompatibilityMode:
                 'block_size': sys_config.block_size,
                 'max_iters': sys_config.max_iters,
                 'eval_interval': sys_config.eval_interval,
-                'eval_iters': eval_iters,  # Use programmatic value until added to YAML
+                'eval_iters': sys_config.eval_iters,
                 'learning_rate': sys_config.learning_rate,
                 'device': device,
                 'n_embd': sys_config.n_embd,
@@ -161,7 +148,6 @@ class CompatibilityMode:
                 'output_file_name': sys_config.output_file_name
             }
         else:
-            # Return programmatic parameters from config.py
             from config import (
                 batch_size, block_size, max_iters, eval_interval, eval_iters, learning_rate, device,
                 n_embd, n_head, n_layer, dropout, validation_size, num_validation_files,
@@ -200,7 +186,6 @@ class CompatibilityMode:
             Tuple of (processed_data, metadata)
         """
         if self.mode == 'modern' and self.config_manager:
-            # Use modern processing pipeline
             schemas = self.config_manager.schema_manager.schemas
             if modality_index < len(schemas):
                 schema = schemas[modality_index]
@@ -211,14 +196,11 @@ class CompatibilityMode:
                     return result.processed_data, result.metadata
                 else:
                     logger.error(f"Modern pipeline failed for modality {modality_index}: {result.error}")
-                    # Fall back to returning original data
                     return raw_data, {'error': result.error}
             else:
                 logger.warning(f"Modality index {modality_index} out of range")
                 return raw_data, {}
         else:
-            # Use programmatic processing (no pipeline, data is processed elsewhere)
-            # In programmatic mode, processing is handled by the existing code flow
             return raw_data, {}
 
     def get_modality_metadata(self, modality_index: int) -> Dict[str, Any]:
@@ -243,14 +225,13 @@ class CompatibilityMode:
                     'mode': 'modern'
                 }
 
-        # Programmatic mode or fallback
         if modality_index < len(self.legacy_schemas):
             programmatic_schema = self.legacy_schemas[modality_index]
             return {
                 'modality_name': programmatic_schema[9] if len(programmatic_schema) > 9 else f'Modality {modality_index + 1}',
                 'cross_attention': programmatic_schema[8] if len(programmatic_schema) > 8 else True,
                 'randomness_size': programmatic_schema[7] if len(programmatic_schema) > 7 else None,
-                'processing_steps_count': 0,  # Programmatic doesn't have explicit steps
+                'processing_steps_count': 0,
                 'mode': 'programmatic'
             }
 
@@ -271,16 +252,13 @@ class CompatibilityMode:
             schemas = self.config_manager.schema_manager.schemas
             if modality_index < len(schemas):
                 schema = schemas[modality_index]
-                # Check if any processing step is percentage conversion
                 for step in schema.processing_steps:
                     if step.function == 'calculate_percent_changes' and step.enabled:
                         return True
                 return False
         else:
-            # Programmatic mode - check the programmatic schema format
             if modality_index < len(self.legacy_schemas):
                 programmatic_schema = self.legacy_schemas[modality_index]
-                # Index 3 is convert_to_percents in programmatic format
                 return len(programmatic_schema) > 3 and programmatic_schema[3]
             return False
 
@@ -308,7 +286,6 @@ class CompatibilityMode:
         return summary
 
 
-# Global compatibility layer instance
 compatibility_layer = CompatibilityMode()
 
 

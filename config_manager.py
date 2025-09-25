@@ -48,6 +48,7 @@ class SystemConfig:
     block_size: int
     max_iters: int
     eval_interval: int
+    eval_iters: int
     learning_rate: float
 
     # Model architecture
@@ -126,6 +127,7 @@ class SystemConfig:
             'block_size': training_params.get('block_size', 64),
             'max_iters': training_params.get('max_iters', 5000),
             'eval_interval': training_params.get('eval_interval', 500),
+            'eval_iters': training_params.get('eval_iters', 40),
             'learning_rate': training_params.get('learning_rate', 3e-4)
         })
 
@@ -160,6 +162,7 @@ class SystemConfig:
                 'block_size': self.block_size,
                 'max_iters': self.max_iters,
                 'eval_interval': self.eval_interval,
+                'eval_iters': self.eval_iters,
                 'learning_rate': self.learning_rate
             },
             'model_architecture': {
