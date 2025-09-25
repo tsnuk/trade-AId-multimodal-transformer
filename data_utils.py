@@ -625,7 +625,7 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
     for assignment in group_assignments:
         group_counts[assignment] = group_counts.get(assignment, 0) + 1
 
-    print(f"  Binning: {2 * num_groups + 1} groups | Range: [{min(filtered_data):.3f}, {max(filtered_data):.3f}]")
+    print(f"    Binning: {2 * num_groups + 1} groups | Range: [{min(filtered_data):.3f}, {max(filtered_data):.3f}]")
 
     # Group distribution details removed for cleaner output
 

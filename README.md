@@ -182,6 +182,8 @@ python main.py
 - **Single Modality**: Combine similar data sources (e.g., multiple stock tickers) to learn general patterns
 - **Separate Modalities**: Use for fundamentally different data types (e.g., prices vs. sentiment) with explicit cross-modal attention
 
+**File Caching System**: The system includes automatic file caching to optimize performance when the same data files are accessed multiple times during processing. Files are cached in memory after first load, eliminating redundant disk reads. The cache is automatically cleared after data preparation completes to free memory before training begins.
+
 ### Data Splitting Methods
 
 The system supports two methods for splitting the loaded data into training and validation sets. These methods are configured in the `data_splitting` section of the `config.yaml` file:

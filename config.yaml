@@ -74,14 +74,14 @@ training_parameters:
   # Larger values: Better GPU utilization, more stable gradients, more memory usage
   # Smaller values: Less memory usage, more frequent updates, potentially noisier gradients
   # Typical values: 16, 32, 64, 128
-  batch_size: 8  # Adjusted for development/testing
+  batch_size: 32  # Adjusted for development/testing
 
   # Context window size - number of previous tokens considered for prediction
   # This is the sequence length that the model processes at once
   # Larger values: Model can see more context, but requires more memory
   # Must be less than the length of your data sequences
   # Typical values: 64, 128, 256, 512, 1024
-  block_size: 6  # Adjusted for development/testing
+  block_size: 64  # Adjusted for development/testing
 
   # Maximum number of training iterations (epochs)
   # Training will stop when this limit is reached

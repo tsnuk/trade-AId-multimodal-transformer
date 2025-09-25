@@ -25,10 +25,10 @@ from data_utils import (
     bin_numeric_data, numerical_representation, create_train_val_datasets,
     write_initial_run_details
 )
-from file_cache import load_file_data_cached, print_cache_stats, cleanup_cache
+from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
 from training_utils import get_batch, estimate_loss
-from progress_utils import show_progress_bar, show_stage_progress, finish_progress_line
+# Removed unused progress utilities
 
 """# Data loading & processing"""
 
@@ -133,8 +133,7 @@ for i, modality_params in enumerate(modality_params_list):
     all_file_info.append(this_file_info)
     all_modality_params.append(modality_params)
 
-# Finish the data loading progress
-finish_progress_line()
+# Data loading complete
 
 
 print("Data Loading: Complete")
@@ -219,9 +218,6 @@ if system_config['num_validation_files'] > 0:
             break
 else:
     print(f"Validation: Percentage-based splitting ({system_config['validation_size']*100:.1f}% validation)")
-
-# Show file caching statistics
-print_cache_stats()
 
 # Clean up cache to free memory (files are no longer needed)
 cleanup_cache()
@@ -367,6 +363,8 @@ if output_file_name != '':
 # Training loop
 print()  # Spacing before training
 print(f"Training: Starting {max_iters} iterations on {device}")
+print("*** This process involves intensive computation and may take considerable time ***")
+print()
 
 # Early stopping variables
 best_val_loss = float('inf')
@@ -418,11 +416,9 @@ for iter in range(max_iters): # the loop iterates for a maximum number of iterat
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         print(f'Saving: Model checkpoint | {current_time}')
-        # When saving, save the state dict of the MultimodalTransformer model
-        # Need to ensure model_file_name includes the full path if project_file_path is used
-        # model_file_name is loaded as a full path in S3fmsYL-7lVQ
         torch.save(m.state_dict(), model_file_name)
         print(f"Saved: {round(os.path.getsize(model_file_name)/1024**2,2)} MB")
+        print()
 
 
     # Training steps

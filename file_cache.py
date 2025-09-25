@@ -272,16 +272,28 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
 
     cache = get_file_cache()
 
+    # Print loading information
+    from pathlib import Path
+    data_name_from_path = Path(data_path).name
+
     # Handle both single files and folders
     if os.path.isfile(data_path):
         # Single file
+        print(f"  Loading data from file: '{data_name_from_path}'")
         column_data = cache.get_column_data(data_path, column_number, has_header)
         file_name = os.path.basename(data_path)
+        print(f"    Successfully read file: {file_name}")
         file_info = [file_name, len(column_data)]
         all_data = column_data
     else:
         # Folder with multiple files
+        print(f"    Loading data from folder: '{data_name_from_path}'")
         all_data, file_info = cache.load_multiple_files(data_path, column_number, has_header)
+
+        # Print individual file names
+        for i in range(0, len(file_info), 2):
+            file_name = file_info[i]
+            print(f"    Successfully read file: {file_name}")
 
     # Apply percentage conversion if requested
     if convert_to_percentages:
@@ -328,7 +340,6 @@ def cleanup_cache():
     cache = get_file_cache()
     memory_before = cache.get_memory_usage()['total_memory_mb']
     cache.clear_cache()
-    print(f"Cache: Cleaned up, released {memory_before:.1f} MB")
 
 
 if __name__ == "__main__":

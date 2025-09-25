@@ -472,7 +472,6 @@ def estimate_loss():
                     data_is_numeric = all(isinstance(item, numbers.Number) for item in modality_vocab)
                     if not data_is_numeric:
                         modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
-                        print(f"Note: Data for Modality {modality_index+1}: '{modality_name}' is not numeric. Directional metrics will be skipped.")
                         non_numeric_warning_printed[modality_index] = True
 
             # Accumulate the results returned by the separate function
