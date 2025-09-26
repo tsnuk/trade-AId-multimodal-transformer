@@ -18,7 +18,6 @@ Usage:
 import importlib
 from typing import Callable, Dict, Any, List
 
-# Import all built-in processing functions from data_utils
 from data_utils import (
     range_numeric_data,
     bin_numeric_data,
@@ -26,16 +25,11 @@ from data_utils import (
     add_rand_to_data_points
 )
 
-# Registry mapping simple string names to actual function objects
-# This dictionary is used by the processing pipeline to look up built-in functions
-# specified by their simple names in YAML configuration files
 builtin_processing_functions: Dict[str, Callable] = {
     'range_numeric_data': range_numeric_data,
     'bin_numeric_data': bin_numeric_data,
     'calculate_percent_changes': calculate_percent_changes,
     'add_rand_to_data_points': add_rand_to_data_points,
-    # Add other built-in or commonly used functions here
-    # 'another_function_name_in_yaml': another_function_object,
 }
 
 
@@ -59,28 +53,22 @@ def resolve_function(function_name: str) -> Callable:
     if not function_name or not isinstance(function_name, str):
         raise ValueError(f"Function name must be a non-empty string, got: {function_name}")
 
-    # First, check if it's a built-in function
     if function_name in builtin_processing_functions:
         return builtin_processing_functions[function_name]
 
-    # If not built-in, try to import as external function
     try:
-        # Split fully qualified name: 'my_module.my_function' -> ('my_module', 'my_function')
         if '.' not in function_name:
             raise ImportError(f"External function '{function_name}' must be fully qualified (e.g., 'module.function')")
 
         module_name, func_name = function_name.rsplit('.', 1)
 
-        # Dynamically import the module
         module = importlib.import_module(module_name)
 
-        # Get the function from the module
         if not hasattr(module, func_name):
             raise AttributeError(f"Module '{module_name}' has no function '{func_name}'")
 
         function_obj = getattr(module, func_name)
 
-        # Verify it's actually callable
         if not callable(function_obj):
             raise TypeError(f"'{function_name}' is not a callable function")
 
@@ -95,24 +83,22 @@ def resolve_function(function_name: str) -> Callable:
 
 
 def get_available_builtin_functions() -> List[str]:
-    """
-    Get a list of all available built-in function names.
+    """Get a list of all available built-in function names.
 
     Returns:
-        List of built-in function names that can be used in configuration
+        List of built-in function names that can be used in configuration.
     """
     return list(builtin_processing_functions.keys())
 
 
 def validate_function_exists(function_name: str) -> bool:
-    """
-    Check if a function exists without actually importing it.
+    """Check if a function exists without actually importing it.
 
     Args:
-        function_name: Function name to validate
+        function_name: Function name to validate.
 
     Returns:
-        True if function exists and is callable, False otherwise
+        True if function exists and is callable, False otherwise.
     """
     try:
         resolve_function(function_name)
@@ -122,15 +108,14 @@ def validate_function_exists(function_name: str) -> bool:
 
 
 def register_builtin_function(name: str, function: Callable) -> None:
-    """
-    Register a new built-in function in the registry.
+    """Register a new built-in function in the registry.
 
     Args:
-        name: Simple string name to use in configurations
-        function: The actual function object
+        name: Simple string name to use in configurations.
+        function: The actual function object.
 
     Raises:
-        ValueError: If name is invalid or function is not callable
+        ValueError: If name is invalid or function is not callable.
     """
     if not name or not isinstance(name, str):
         raise ValueError("Function name must be a non-empty string")
@@ -145,14 +130,13 @@ def register_builtin_function(name: str, function: Callable) -> None:
 
 
 def unregister_builtin_function(name: str) -> bool:
-    """
-    Remove a built-in function from the registry.
+    """Remove a built-in function from the registry.
 
     Args:
-        name: Function name to remove
+        name: Function name to remove.
 
     Returns:
-        True if function was removed, False if it didn't exist
+        True if function was removed, False if it didn't exist.
     """
     if name in builtin_processing_functions:
         del builtin_processing_functions[name]
@@ -160,7 +144,6 @@ def unregister_builtin_function(name: str) -> bool:
     return False
 
 
-# Validation schemas for built-in processing functions
 BUILTIN_FUNCTION_VALIDATION = {
     'range_numeric_data': {
         'required': [],
@@ -212,39 +195,34 @@ BUILTIN_FUNCTION_VALIDATION = {
 
 
 def validate_function_arguments(function_name: str, args: Dict[str, Any]) -> bool:
-    """
-    Validate arguments for built-in processing functions.
+    """Validate arguments for built-in processing functions.
 
     Args:
-        function_name: Name of the function to validate
-        args: Dictionary of arguments to validate
+        function_name: Name of the function to validate.
+        args: Dictionary of arguments to validate.
 
     Returns:
-        True if valid
+        True if valid.
 
     Raises:
-        ValueError: If validation fails
-        TypeError: If argument types are incorrect
+        ValueError: If validation fails.
+        TypeError: If argument types are incorrect.
     """
-    # Only validate built-in functions
     if function_name not in BUILTIN_FUNCTION_VALIDATION:
         return True  # External functions are not validated
 
     schema = BUILTIN_FUNCTION_VALIDATION[function_name]
 
-    # Check required arguments
     for req_arg in schema['required']:
         if req_arg not in args:
             raise ValueError(f"Missing required argument '{req_arg}' for function '{function_name}'")
 
-    # Check for unknown arguments
     allowed_args = set(schema['required'] + schema['optional'])
     provided_args = set(args.keys())
     unknown_args = provided_args - allowed_args
     if unknown_args:
         raise ValueError(f"Unknown arguments for function '{function_name}': {unknown_args}")
 
-    # Validate argument types and values
     for arg_name, arg_value in args.items():
         if arg_name in schema['types']:
             expected_type = schema['types'][arg_name]
@@ -260,16 +238,14 @@ def validate_function_arguments(function_name: str, args: Dict[str, Any]) -> boo
     return True
 
 
-# For debugging and inspection
 def get_function_info(function_name: str) -> Dict[str, Any]:
-    """
-    Get information about a function (built-in or external).
+    """Get information about a function (built-in or external).
 
     Args:
-        function_name: Function name to inspect
+        function_name: Function name to inspect.
 
     Returns:
-        Dictionary with function information
+        Dictionary with function information.
     """
     try:
         func = resolve_function(function_name)
