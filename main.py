@@ -113,7 +113,7 @@ for i, modality_params in enumerate(modality_params_list):
     if num_bins is not None:
         outlier_percentile = 0.1
         exponent = 2.2
-        print(f"    Processing: Binning ({num_bins} bins)")
+        print(f"    Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
 

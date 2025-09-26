@@ -417,6 +417,12 @@ def range_numeric_data(numeric_data, num_whole_digits, decimal_places):
         if decimal_places is not None:
             processed_point = round(processed_point, decimal_places)
 
+            # Handle edge case: if rounding pushed value outside intended range, cap it
+            if num_whole_digits is not None:
+                max_allowed = (10 ** num_whole_digits) - (10 ** -decimal_places)
+                if processed_point >= 10 ** num_whole_digits:
+                    processed_point = max_allowed
+
         processed_data.append(processed_point)
 
     return processed_data
@@ -480,7 +486,7 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
     # Assign each data point to a group
     group_assignments = []
     for value in data:
-        if value >= 0:
+        if value > 0:
             # Find the group index for positive values
             group_index = 0
             for j in range(num_groups):
@@ -493,6 +499,9 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
                  group_index = num_groups
 
             group_assignments.append(group_index)
+        elif value == 0:
+            # Assign zero values to bin 0
+            group_assignments.append(0)
         else:
             # Find the group index for negative values
             # Iterate through negative boundaries (from most negative towards zero)

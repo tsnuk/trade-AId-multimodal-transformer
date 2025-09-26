@@ -54,7 +54,7 @@ modalities:
     column_number: 13  # Close price column
     has_header: true
     processing_steps:
-      # Scale prices to 2 whole digits with 1 decimal place (e.g., 10.0 to 99.9)
+      # Scale prices to 2 whole digits with 1 decimal place (10.0 to 99.9)
       - function: range_numeric_data
         args:
           num_whole_digits: 2    # Number of digits before decimal
