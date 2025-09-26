@@ -32,48 +32,25 @@ __all__ = [
 
 
 def load_file_data(input_info):
-    """
-    Reads data from a specified file or folder and extracts data from a
-    given column. This data will be used to form a single modality for the
-    multimodal processing framework. Handles CSV and TXT formats with optional header,
-    attempting both comma and semicolon delimiters.
-
-    Optionally, the extracted numeric data can be converted into percentage changes.
+    """Load data from CSV/TXT files and extract specified column data.
 
     Args:
-        input_info: A list containing 10 elements:
-            1. Path to a data file or a folder containing data files. Files
-               must have '.csv' or '.txt' extensions (str).
-            2. The 1-based index of the column to extract data from (int).
-            3. Boolean indicating if the data column has a header row (bool).
-            4. Boolean indicating if the data should be converted to percentage changes (bool or None).
-            5. Number of whole digits (int or None, for ranging - not used in this function).
-            6. Number of decimal places (int or None - not used in this function).
-            7. Bin data (int or None, for binning - not used in this function).
-            8. Randomness size (int or None, for data augmentation - not used in this function).
-            9. Cross-attention status (bool or None, for model configuration - not used in this function).
-            10. Modality name (str or None - not used in this function).
-
+        input_info: List of 10 elements containing path, column number, header flag,
+                   percentage conversion flag, and other processing parameters.
 
     Returns:
-        A tuple containing:
-        - A list of the loaded data points (can be of various data types: numeric, string, ...).
-          If 'convert_to_percentages' is True, this list will contain float percentage changes.
-        - A list containing the names and lengths of the loaded files:
-            [file1_name (str), file1_length (int), file2_name (str), file2_length (int), ...]
+        Tuple of (loaded_data_list, file_info_list) where loaded_data_list contains
+        the extracted data points and file_info_list contains filename and length pairs.
 
     Raises:
-        TypeError: If input_info or its elements are not of the expected types.
-        ValueError: If input_info is empty or does not contain exactly 10 elements,
-                    if the data path is invalid or no supported files are found,
-                    or if the specified column does not exist.
-        RuntimeError: If an unexpected error occurs during file loading.
-        ZeroDivisionError: If attempting to calculate percentage change with a zero value.
+        TypeError: If input_info is not a list or elements have wrong types.
+        ValueError: If input_info doesn't have 10 elements or path/column are invalid.
+        FileNotFoundError: If specified path doesn't exist.
+        RuntimeError: If file reading fails after trying both delimiters.
     """
 
     if not isinstance(input_info, list):
         raise TypeError("'input_info' must be a list.")
-    # Validation to check for 10 elements
     if len(input_info) != 10:
         raise ValueError("'input_info' must contain 10 elements: Path, data column number, header status, convert to percentages status, num whole digits, num dec places, bin data, rand size, cross-attention status, modality name.")
 
@@ -93,60 +70,48 @@ def load_file_data(input_info):
     if not isinstance(has_header, bool):
         raise TypeError(f"Element 3 (header status) of 'input_info' must be a boolean, but got {type(has_header).__name__}.")
 
-    # Validate the convert_to_percentages flag
     convert_to_percentages = input_info[3]
     if not (isinstance(convert_to_percentages, bool) or convert_to_percentages is None):
         raise TypeError(f"Element 4 (convert to percentages) of 'input_info' must be a boolean or None, but got {type(convert_to_percentages).__name__}.")
 
-    # Get modality name (element 10)
     modality_name = input_info[9]
     if not (isinstance(modality_name, str) or modality_name is None):
         raise TypeError(f"Element 10 (modality name) of 'input_info' must be a string or None, but got {type(modality_name).__name__}.")
 
     data_file_paths = []
     if os.path.isdir(data_path):
-        # Path to a folder
         load_from = "folder"
         data_file_paths = [os.path.join(data_path, f) for f in os.listdir(data_path) if os.path.isfile(os.path.join(data_path, f)) and (f.endswith('.csv') or f.endswith('.txt'))]
         if not data_file_paths:
             raise ValueError(f"No CSV or TXT files found in folder '{data_path}'.")
-
     elif os.path.isfile(data_path):
-        # Path to a file
         load_from = "file"
         if not (data_path.endswith('.csv') or data_path.endswith('.txt')):
             raise ValueError(f"The specified file '{data_path}' is not a CSV or TXT file.")
         data_file_paths.append(data_path)
 
-
-    # Read the datafile/s
     loaded_data = []
     data_info = []
-
-    # This will be used for rounding if data is specified to be converted to percentages (convert_to_percentages is true)
     num_dec_places = input_info[5]
-
     data_name_from_path = Path(data_path).name
-    #prep = "for" if modality_name else "from"
-    #print(f"  Loading data {prep}: '{modality_name if modality_name else data_name_from_path}'") # Print modality name if provided
-    print(f"  Loading data from {load_from}: '{data_name_from_path}'") # Print modality name if provided
+    print(f"  Loading data from {load_from}: '{data_name_from_path}'")
 
 
     for full_path in data_file_paths:
         filename = os.path.basename(full_path)
-        df = pd.DataFrame() # Initialize empty DataFrame
+        df = pd.DataFrame()
         read_successful = False
 
-        # Try reading with comma delimiter first
+        # Try comma delimiter first
         try:
             df = pd.read_csv(full_path, delimiter=',', engine='python', header=None, skiprows=1 if has_header else 0)
             if not df.empty:
                 read_successful = True
                 print(f'  Successfully read file: {filename}')
         except (pd.errors.EmptyDataError, pd.errors.ParserError, Exception) as e:
-            last_error = e # Store the last error
+            last_error = e
 
-        # If not successful, try reading with semicolon delimiter
+        # Try semicolon delimiter if comma failed
         if not read_successful:
             try:
                 df = pd.read_csv(full_path, delimiter=';', engine='python', header=None, skiprows=1 if has_header else 0)
@@ -154,13 +119,11 @@ def load_file_data(input_info):
                     read_successful = True
                     print(f'  Successfully read file: {filename}')
             except (pd.errors.EmptyDataError, pd.errors.ParserError, Exception) as e:
-                last_error = e # Store the last error
+                last_error = e
 
-
-        # If after trying both delimiters, the DataFrame is still empty or read was not successful
         if not read_successful or df.empty:
             error_message = f"Failed to load data from file '{filename}' after trying both comma and semicolon delimiters."
-            if 'last_error' in locals(): # Check if an error was caught
+            if 'last_error' in locals():
                 error_message += f" Last error: {last_error}"
             print(error_message)
             raise RuntimeError(error_message)
@@ -170,20 +133,14 @@ def load_file_data(input_info):
             raise ValueError(f"The specified data column ({num_data_column}) does not exist in file '{filename}'. File has {df.shape[1]} columns.")
 
         column_data = df.iloc[:, num_data_column - 1]
-
-        # Convert column data to a list
         column_data_list = column_data.tolist()
 
-        # Check if convert_to_percentages is True before processing
         if convert_to_percentages is True:
-            # Check if data is numeric before calculating percentages
             data_is_numeric = all(isinstance(item, numbers.Number) for item in column_data_list)
             if not data_is_numeric:
-                # Find and report the non-numeric element
                 print(f"\\nError: Percentage calculation specified for Modality '{modality_name if modality_name else data_name_from_path}' from file '{filename}', but data is not entirely numeric.")
                 report_non_numeric_error(column_data_list, data_info + [filename, len(column_data_list)], modality_name if modality_name else data_name_from_path)
 
-            # Proceed with percentage calculation since data is confirmed to be numeric
             try:
                 percentages = calculate_percent_changes(column_data_list, num_dec_places if num_dec_places else 2)
                 loaded_data.extend(percentages)
@@ -191,12 +148,9 @@ def load_file_data(input_info):
                 print(f"\\nError: Division by zero encountered when calculating percentage changes for Modality '{modality_name if modality_name else data_name_from_path}' from file '{filename}'.")
                 print(f"This usually occurs when the data contains consecutive zero values.")
                 raise e
-
         else:
-            # No percentage conversion, add as-is
             loaded_data.extend(column_data_list)
 
-        # Add filename and data length to file info
         data_info.extend([filename, len(column_data_list)])
 
 
@@ -204,20 +158,15 @@ def load_file_data(input_info):
 
 
 def report_non_numeric_error(data_list, file_info, this_modality):
-    """
-    Finds the first non-numeric element in a data list and raises a ValueError,
-    reporting its location, including the file name and approximate element index within that file,
-    as well as the element's value and type.
+    """Find and report the first non-numeric element with location details.
 
     Args:
-        data_list: A list of data points to check for non-numeric elements.
-        file_info: A list containing the file information in the format
-                   [file1_name, data1_length, file2_name, data2_length, ...].
-        this_modality: An integer representing the 1-based index of the modality,
-                       or a string representing the name of the modality.
+        data_list: List of data points to check for non-numeric elements.
+        file_info: List of file information in format [file1_name, file1_length, ...].
+        this_modality: Modality name or index for error reporting.
 
     Raises:
-        ValueError: If a non-numeric element is found in the data_list.
+        ValueError: When a non-numeric element is found in the data_list.
     """
     first_non_numeric_index = -1
     non_numeric_value = None
@@ -258,62 +207,36 @@ def report_non_numeric_error(data_list, file_info, this_modality):
 
 
 def numerical_representation(data_points):
-  """
-  Converts a list of data points (numeric or other types) into a numerical
-  representation by mapping each unique element to an integer index.
+    """Convert data points to numerical indices with vocabulary mapping.
 
-  Args:
-    data_points: A list of data points. Can be numeric or other types.
+    Args:
+        data_points: List of data points (can be numeric, strings, or other types).
 
-  Returns:
-    A tuple containing:
-    - A list of integers representing the numerical representation of the input data.
-    - A list of the unique elements (vocabulary) sorted in ascending order.
-  """
-
-  # Create vocabulary of unique elements
-  vocabulary = sorted(list(set(data_points)))
-
-  # Map elements to indices
-  data_mapping = {element: index for index, element in enumerate(vocabulary)}
-
-  # Transform data to indices
-  transformed_data = [data_mapping[element] for element in data_points]
-
-  return transformed_data, vocabulary
+    Returns:
+        Tuple of (transformed_data, vocabulary) where transformed_data is a list of
+        integer indices and vocabulary is the sorted list of unique elements.
+    """
+    vocabulary = sorted(list(set(data_points)))
+    data_mapping = {element: index for index, element in enumerate(vocabulary)}
+    transformed_data = [data_mapping[element] for element in data_points]
+    return transformed_data, vocabulary
 
 
 def create_train_val_datasets(numeric_rep_data, val_size, num_val_files, file_lengths):
-    """
-    Splits a combined list of numerical data into training and validation datasets.
-
-    The splitting is done based on either a specified percentage of the total data
-    or by allocating a specified number of the *last* data files loaded
-    to the validation set.
-
-    When num_val_files > 0, the last num_val_files loaded files are allocated
-    to validation, and validation percentage (val_size) is ignored.
+    """Split numerical data into training and validation datasets.
 
     Args:
-        numeric_rep_data: A list of numerical data points representing the combined data.
-                          Must be a list containing integers.
-        val_size: A float between 0 and 1 representing the portion of the data
-                  to allocate to the validation set. Used only if num_val_files is 0.
-        num_val_files: An integer specifying the number of the last loaded files
-                       to allocate to the validation set. If > 0, overrides val_size.
-        file_lengths: A list of integers representing the length of each loaded file
-                      in the order they were loaded.
+        numeric_rep_data: List of numerical data points to split.
+        val_size: Float between 0 and 1 representing validation set proportion.
+        num_val_files: Integer specifying number of last files for validation.
+        file_lengths: List of integers representing length of each loaded file.
 
     Returns:
-        A tuple containing:
-        - train_dataset: The list containing the training data. This list will be converted
-                         to a tensor at a later stage (in the get_batch function).
-        - val_dataset: The tensor containing the validation data.
+        Tuple of (train_dataset, val_dataset) where both are lists of data points.
 
     Raises:
-        TypeError: If inputs are not of the expected types.
-        ValueError: If inputs have invalid values (e.g., inconsistent lengths,
-                    invalid val_size, invalid num_val_files).
+        TypeError: If inputs are not of expected types.
+        ValueError: If inputs have invalid values or inconsistent lengths.
     """
 
     if not isinstance(numeric_rep_data, (list)):
@@ -367,26 +290,19 @@ def create_train_val_datasets(numeric_rep_data, val_size, num_val_files, file_le
 
 
 def add_rand_to_data_points(numeric_data, rand_size, vocab_size):
-    """
-    Introduces small random changes to numeric data for data augmentation.
-
-    To mitigate limited trading data volume compared to language training,
-    this function synthetically increases the amount of data by adding a small random value
-    within a specified range to each data point. This creates slightly varied
-    versions of the original data.
+    """Introduce small random changes to numeric data for data augmentation.
 
     Args:
-      numeric_data: A list or tensor of integers (indices representing the original data).
-      rand_size: An integer between 1 and 3 specifying the maximum random value range.
-                 The actual random values will be in the range [-rand_size, rand_size].
-      vocab_size: The size of the vocabulary, used to ensure augmented values stay within bounds.
+        numeric_data: List or tensor of integers (indices representing original data).
+        rand_size: Integer between 1 and 3 specifying maximum random value range.
+        vocab_size: Size of vocabulary to ensure augmented values stay within bounds.
 
     Returns:
-      A list or tensor of integers with small random changes applied.
+        List or tensor of integers with small random changes applied.
 
     Raises:
-      TypeError: If inputs are not of the expected types.
-      ValueError: If inputs are not of the expected values.
+        TypeError: If inputs are not of expected types.
+        ValueError: If inputs have invalid values or numeric_data is empty.
     """
 
     # if numeric_data was input as a tensor, then temporarily turn it into a list
@@ -442,113 +358,85 @@ def add_rand_to_data_points(numeric_data, rand_size, vocab_size):
 
 
 def range_numeric_data(numeric_data, num_whole_digits, decimal_places):
-  """
-  Converts numeric data to a specified range by scaling them by factors of 10
-  and/or rounds to a specified number of decimal places.
+    """Scale numeric data by factors of 10 and round to specified precision.
 
-  The purpose is to standardize data magnitude and precision, thereby controlling
-  vocabulary size.
+    Args:
+        numeric_data: List of numeric data points to process.
+        num_whole_digits: Target number of whole digits, or None.
+        decimal_places: Target number of decimal places, or None.
 
-  Args:
-    numeric_data: A list of numeric data points. Must be a list containing numeric types.
-    num_whole_digits: The desired number of whole digits for the ranged data.
-                      Must be an integer greater than 0, or None.
-    decimal_places: The desired number of decimal places for the ranged data.
-                    Must be an integer greater than or equal to 0, or None.
+    Returns:
+        List of processed numeric values as floats.
 
-  Returns:
-    A list of float numbers that have been ranged and rounded.
+    Raises:
+        TypeError: If inputs are not of expected types.
+        ValueError: If numeric_data is empty or contains non-numeric values.
+    """
+    # Input validation
+    if not isinstance(numeric_data, list):
+        raise TypeError("'numeric_data' must be a list.")
+    if not numeric_data:
+        raise ValueError("'numeric_data' cannot be empty.")
 
-  Raises:
-    TypeError: If inputs are not of the expected types.
-    ValueError: If inputs have invalid values (e.g., empty list,
-                negative decimal_places if not None, non-numeric data).
-    IndexError: If an element in 'numeric_data' is not a number.
-  """
+    for i, item in enumerate(numeric_data):
+        if not isinstance(item, numbers.Number):
+            raise ValueError(f"All elements in 'numeric_data' must be numeric. Element at index {i} is {type(item).__name__}: '{item}'.")
 
-  # Input validation
-  if not isinstance(numeric_data, list):
-      raise TypeError("'numeric_data' must be a list.")
-  if not numeric_data:
-      raise ValueError("'numeric_data' cannot be empty.")
-
-  # check for numeric data
-  for i, item in enumerate(numeric_data):
-      if not isinstance(item, numbers.Number):
-          raise ValueError(f"All elements in 'numeric_data' must be numeric. Element at index {i} is {type(item).__name__}: '{item}'.")
-
-  if num_whole_digits is not None:
-      if not isinstance(num_whole_digits, int) or num_whole_digits <= 0:
-          raise TypeError("'num_whole_digits' must be a positive integer or None.")
-
-  if decimal_places is not None:
-      if not isinstance(decimal_places, int) or decimal_places < 0:
-          raise TypeError("'decimal_places' must be a non-negative integer or None.")
-
-
-  processed_data = []
-
-  # check if any processing is specified
-  if num_whole_digits is None and decimal_places is None:
-      # Nothing to do, return original data as a list of floats (for consistency)
-      return [float(item) for item in numeric_data]
-
-  # If only one of the parameters is specified, treat it as num_whole_digits
-  if num_whole_digits is None and decimal_places is not None:
-      # User provided only one parameter, treat it as num_whole_digits
-      num_whole_digits = decimal_places
-      decimal_places = 0  # Apply no rounding
-
-  # From this point, we know that at least num_whole_digits is not None
-
-  for data_point in numeric_data:
-    processed_point = data_point
-
-    # Apply ranging if num_whole_digits is specified
     if num_whole_digits is not None:
-        # Calculate the magnitude and scaling
-        magnitude = len(str(int(abs(processed_point))))
-        target_magnitude = num_whole_digits
+        if not isinstance(num_whole_digits, int) or num_whole_digits <= 0:
+            raise TypeError("'num_whole_digits' must be a positive integer or None.")
 
-        if magnitude != target_magnitude:
-            scaling_factor = 10 ** (target_magnitude - magnitude)
-            processed_point *= scaling_factor
-
-    # Apply rounding if decimal_places is specified
     if decimal_places is not None:
-        processed_point = round(processed_point, decimal_places)
+        if not isinstance(decimal_places, int) or decimal_places < 0:
+            raise TypeError("'decimal_places' must be a non-negative integer or None.")
 
-    processed_data.append(processed_point)
+    processed_data = []
 
+    # Check if any processing is specified
+    if num_whole_digits is None and decimal_places is None:
+        return [float(item) for item in numeric_data]
 
-  return processed_data
+    # If only decimal_places specified, treat as num_whole_digits
+    if num_whole_digits is None and decimal_places is not None:
+        num_whole_digits = decimal_places
+        decimal_places = 0
+
+    for data_point in numeric_data:
+        processed_point = data_point
+
+        # Apply ranging if num_whole_digits is specified
+        if num_whole_digits is not None:
+            magnitude = len(str(int(abs(processed_point))))
+            target_magnitude = num_whole_digits
+
+            if magnitude != target_magnitude:
+                scaling_factor = 10 ** (target_magnitude - magnitude)
+                processed_point *= scaling_factor
+
+        # Apply rounding if decimal_places is specified
+        if decimal_places is not None:
+            processed_point = round(processed_point, decimal_places)
+
+        processed_data.append(processed_point)
+
+    return processed_data
 
 
 def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
-    """
-    Divides a list of numeric data into a specified number of groups with
-    non-uniform ranges, based on an exponential-like distribution, after
-    removing outliers using percentiles, handling both positive and negative values symmetrically.
+    """Divide numeric data into groups with exponential distribution after outlier removal.
 
     Args:
-        data: A list of numeric data points to be binned. Must be a list
-              containing numeric types.
-        num_groups: The number of groups to create for positive values (and the same
-                    for negative values). Total groups = 2 * num_groups + 1 (including zero).
-                    Must be a positive integer.
-        outlier_percentile: The percentile threshold for outlier removal
-                            (default: 5, removing values below 5th and above 95th percentile).
-        exponent: Controls the distribution of group boundaries.
-                  A value = 1 creates uniform ranges. Must be a number >= 1. (default: 2.0).
+        data: List of numeric data points to bin.
+        num_groups: Number of groups for positive values (total groups = 2*num_groups + 1).
+        outlier_percentile: Percentile threshold for outlier removal (default: 5).
+        exponent: Controls distribution of group boundaries (default: 2.0).
 
     Returns:
-        A list of group assignments (integers) for each data point in the input,
-        where each integer represents the group number.
+        List of group assignments (integers) for each data point.
 
     Raises:
-        TypeError: If inputs are not of the expected types.
-        ValueError: If inputs have invalid values (e.g., empty data list,
-                    non-positive num_groups, invalid outlier_percentile, invalid exponent).
+        TypeError: If inputs are not of expected types.
+        ValueError: If data is empty or parameters are invalid.
     """
     # Input validation
     if not isinstance(data, list) or not data:
@@ -637,24 +525,19 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
 
 
 def calculate_percent_changes(data, decimal_places=2):
-    """
-    Calculates the percentage change between adjacent numeric data points
-    and returns a list of the same length by prepending a 0.
+    """Calculate percentage changes between adjacent data points.
 
     Args:
-        data: A list of numeric data points. Must be a list containing numeric types.
-        decimal_places: The number of decimal places to round the percentage changes to.
-                        If None, the default value of 2 will be used. (default: 2).
+        data: List of numeric data points.
+        decimal_places: Number of decimal places to round to (default: 2).
 
     Returns:
-        A list of float percentage changes, with the first element being 0.0.
+        List of percentage changes with first element as 0.0.
 
     Raises:
-        TypeError: If inputs are not of the expected types.
-        ValueError: If inputs have invalid values (e.g., empty data list,
-                    negative decimal_places if not None).
-        ZeroDivisionError: If an attempt is made to divide by zero when calculating
-                           percentage change.
+        TypeError: If inputs are not of expected types.
+        ValueError: If data is empty or contains non-numeric values.
+        ZeroDivisionError: If division by zero occurs during calculation.
     """
     # Input validation
     if not isinstance(data, list) or not data:
@@ -691,17 +574,14 @@ def calculate_percent_changes(data, decimal_places=2):
 
 
 def write_initial_run_details(file_path, hyperparams, data_info, modality_configs, run_stats):
-    """
-    Writes the initial run details (hyperparameters, data info, modality configs)
-    to the specified output file.
+    """Write initial run details to specified output file.
 
     Args:
-        file_path (str): The full path to the output file.
-        hyperparams (dict): A dictionary containing the model hyperparameters.
-        data_info (dict): A dictionary containing general data information (e.g., split sizes).
-        modality_configs (list): A list of dictionaries, where each dictionary
-                                 contains the configuration details for a modality.
-        run_stats (dict): A dictionary containing overall run statistics (e.g., number of parameters).
+        file_path: Full path to the output file.
+        hyperparams: Dictionary containing model hyperparameters.
+        data_info: Dictionary containing general data information (e.g., split sizes).
+        modality_configs: List of dictionaries with modality configuration details.
+        run_stats: Dictionary containing overall run statistics (e.g., number of parameters).
     """
     if file_path: # Only write if a file path is provided
         with open(file_path, 'a', encoding='utf-8') as f:
