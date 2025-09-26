@@ -142,9 +142,9 @@ model_architecture:
   # Typical range: 0.1 to 0.3
   dropout: 0.2
 
-  # Fixed values for custom embedding layer initialization
-  # Each element of embedding vectors is randomly selected from this list
-  # These values control the initialization distribution of embedding weights
+  # Fixed values for custom embedding layer initialization (experimental feature)
+  # Currently not used by main model but available for research/testing
+  # Each element of embedding vectors is randomly selected from this list when using FixedEmbedding
   fixed_values: [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5]
 
 # =============================================================================

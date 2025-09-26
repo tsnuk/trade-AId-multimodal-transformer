@@ -8,7 +8,7 @@ Contains all PyTorch model classes:
 - CrossAttention (cross-modal attention)
 - FeedForward (feedforward layer)
 - MultimodalBlock (transformer block)
-- FixedEmbedding (custom embedding layer)
+- FixedEmbedding (custom embedding layer - experimental, not currently used)
 - MultimodalPreBlock (input processing)
 - MultimodalPostBlock (output processing)
 - MultimodalTransformer (main model)
@@ -255,7 +255,13 @@ class MultimodalBlock(nn.Module):
 
 
 class FixedEmbedding(nn.Module):
-    """Custom embedding layer with fixed (non-learnable) values."""
+    """
+    Custom embedding layer with fixed (non-learnable) values.
+
+    NOTE: This is an alternative embedding approach not currently used by the main model.
+    The active model uses standard nn.Embedding layers. This class is preserved for
+    research/experimentation purposes.
+    """
 
     def __init__(self, vocab_size, embed_size, fixed_values):
         super().__init__()
