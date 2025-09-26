@@ -47,70 +47,31 @@ __all__ = [
 
 
 def generate_batch_starting_indices(data_size, block_size, batch_size, split, file_lengths, is_percents):
-    '''
-    Generates a batch of random starting indices for extracting sequences
-    of a fixed length (_get_block_size()) from the data.
-
-    This function is designed to ensure that sequences don't cross file boundaries
-    when the data comes from multiple concatenated files. It respects the structure
-    of the original files to maintain data integrity.
-
-    Args:
-        data_size: The total size of the data from which to extract sequences.
-                   Must be a positive integer.
-                   Also, _get_block_size() must be less than `data_size`.
-        _get_batch_size(): The number of starting indices to generate (the batch size).
-                    Must be a positive integer.
-        split: Indicates whether the data is for 'train' or 'val'. Must be 'train' or 'val'.
-        file_lengths: A list of integers representing the length of each loaded file
-                      in the order they were loaded. Must be a list of positive integers.
-        is_percents: A boolean indicating whether the data represents percentages.
-                     If True, the first element of each file is skipped (since it's always 0
-                     for percentage data).
-
-    Returns:
-        torch.Tensor: A tensor of shape (_get_batch_size(),) containing the
-                      random starting indices within the dataset.
-
-    Raises:
-        TypeError: If inputs are not of the expected types.
-        ValueError: If inputs have invalid values.
-    '''
-    # Input validation
+    """Generate random starting indices for batch sequences, respecting file boundaries."""
+    # Validate inputs
     if not isinstance(data_size, int) or data_size <= 0:
         raise TypeError("'data_size' must be a positive integer.")
-    if not isinstance(_get_block_size(), int) or _get_block_size() <= 0:
-        raise TypeError("'_get_block_size()' must be a positive integer.")
-    if _get_block_size() >= data_size:
-        raise ValueError("'_get_block_size()' cannot be equal to or greater than 'data_size'.")
-    if not isinstance(_get_batch_size(), int) or _get_batch_size() <= 0:
-        raise TypeError("'_get_batch_size()' must be a positive integer.")
-    if not isinstance(split, str) or (split != 'train' and split != 'val'):
+    if not isinstance(block_size, int) or block_size <= 0:
+        raise TypeError("'block_size' must be a positive integer.")
+    if block_size >= data_size:
+        raise ValueError("'block_size' cannot be equal to or greater than 'data_size'.")
+    if not isinstance(batch_size, int) or batch_size <= 0:
+        raise TypeError("'batch_size' must be a positive integer.")
+    if split not in ['train', 'val']:
         raise ValueError("'split' must be 'train' or 'val'.")
     if not isinstance(file_lengths, list) or not all(isinstance(length, int) and length > 0 for length in file_lengths):
         raise TypeError("'file_lengths' must be a list of positive integers.")
     if not isinstance(is_percents, bool):
         raise TypeError("'is_percents' must be a boolean.")
 
+    first_element_offset = 1 if is_percents else 0
+    block_size_xy = block_size + 1
+
     if len(file_lengths) == 1:
-        # Single file case, simpler logic
-        first_element_offset = 1 if is_percents else 0
-        block_size_xy = _get_block_size() + 1
-
-        # Generate random starting indices for the single file, ensuring sequences don't cross the file boundary.
-        # Ensure the starting index + block_size_xy does not exceed the file length.
-        # then generate random starting indices ensuring sequences fit within the data (sequence + block_size_xy).
-        # Adjust the range to start from 'first_element_offset'
-        return torch.randint(first_element_offset, data_size - block_size_xy + 1, (_get_batch_size(),))
-
-
+        # Single file case
+        return torch.randint(first_element_offset, data_size - block_size_xy + 1, (batch_size,))
     else:
-        # Multiple files case
-        first_element_offset = 1 if is_percents else 0
-        block_size_xy = _get_block_size() + 1
-
-        # Calculate valid starting positions for each file
-        # A valid starting position allows for a full sequence (block_size_xy elements) within the file
+        # Multiple files case - calculate valid positions per file
         valid_positions_per_file = []
         total_valid_ix_positions = 0
 
@@ -120,25 +81,20 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
             total_valid_ix_positions += valid_positions_in_file
 
         if total_valid_ix_positions == 0:
-            raise ValueError("No valid starting positions available. All files are too short for the given _get_block_size().")
+            raise ValueError("No valid starting positions available. All files are too short for the given block_size.")
 
-        # Generate initial random indices within the range of total valid positions
-        initial_indices = torch.randint(total_valid_ix_positions, (_get_batch_size(),))
+        # Generate and map indices back to correct starting positions
+        initial_indices = torch.randint(total_valid_ix_positions, (batch_size,))
+        actual_indices = torch.empty(batch_size, dtype=torch.long)
 
-        # Now, map these initial indices back to the correct starting positions in the
-        # combined data, ensuring they fall within the valid range of a specific file.
-        actual_indices = torch.empty(_get_batch_size(), dtype=torch.long)
-
-        for i in range(_get_batch_size()):
+        for i in range(batch_size):
             cumulative_valid_ix_positions = 0
             found_position = False
             selected_index = initial_indices[i].item()
 
-            # Determine which file this index falls into
             cumulative_data_length = 0
             for file_idx, (file_length, valid_positions_in_file) in enumerate(zip(file_lengths, valid_positions_per_file)):
                 if cumulative_valid_ix_positions <= selected_index < cumulative_valid_ix_positions + valid_positions_in_file:
-                    # The selected index falls within this file's valid range
                     relative_index_in_file = selected_index - cumulative_valid_ix_positions
                     actual_starting_position = cumulative_data_length + first_element_offset + relative_index_in_file
                     actual_indices[i] = actual_starting_position
@@ -155,18 +111,7 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
 
 
 def _get_direction_sign(current_value, previous_value, is_percentage_data):
-    """
-    Determines the direction sign (1 for up, -1 for down, 0 for flat)
-    based on the current and previous numeric values and whether the data is percentages.
-
-    Args:
-        current_value: The current numeric value.
-        previous_value: The previous numeric value (only used if not percentage data).
-        is_percentage_data: Boolean indicating if the data represents percentages.
-
-    Returns:
-        An integer: 1 for up, -1 for down, 0 for flat.
-    """
+    """Determine direction: 1=up, -1=down, 0=flat."""
     if is_percentage_data:
         if current_value > 0: return 1
         elif current_value < 0: return -1
@@ -184,100 +129,43 @@ def _get_direction_sign(current_value, previous_value, is_percentage_data):
 
 
 def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, batch_size, is_percents):
-    """
-    Calculates success rate (based on predicting the correct direction of change for numeric data)
-    and certainty (confidence in the prediction) for each modality from evaluation logits and targets.
-
-    This function processes the output of the model (logits) and the actual target values (yb)
-    for a given batch during evaluation. It iterates through each modality and, for numeric data,
-    determines if the model's prediction for the last token in a sequence correctly predicted
-    the direction of change compared to the previous token.
-
-    For the success rate calculation, *any* predicted direction (up, down, or flat) is compared
-    against the actual direction. Wins are counted when the predicted direction matches the
-    actual direction (e.g., both up, both down, or both flat). Losses are counted when they do not match.
-
-    The certainty metric represents the model's confidence in the predicted *direction* of change for
-    the last token. It is calculated by summing the probabilities (from the softmax of the last token's
-    logits) of all possible next tokens that fall within the same direction (up, down, or flat) as the
-    single token with the highest predicted probability.
-
-    For applications like stock price prediction, accurately forecasting the direction of movement can
-    be highly beneficial, as predicting the exact next price can be significantly more challenging and
-    isn't always necessary.
-
-    Note that unusually high directional certainty rates may occur, especially in early training stages
-    or with certain data distributions, even if the overall success rate is near chance. This indicates
-    the model is strongly skewed towards predicting a particular direction, regardless of accuracy.
-
-    These directional metrics provide additional insights into the model's behavior during evaluation.
-    The model's learning process, however, is driven solely by minimizing the calculated loss.
-
-    The function accumulates these metrics across the batch and reports the results for each modality.
-
-    Args:
-        logits_list: A list of tensors, one for each modality, containing the logits
-                     for each token in the batch. Shape: List of [(_get_batch_size(), _get_block_size(), vocab_size)]
-        yb_list: A list of tensors, one for each modality, containing the target token
-                 indices for each token in the batch. Shape: List of [(_get_batch_size(), _get_block_size())]
-        num_modalities: The total number of modalities being processed. (int)
-        all_vocabularies: A list of lists, where each inner list is the vocabulary
-                          (unique elements) for a specific modality, sorted in ascending order.
-        all_modality_params: A list of lists, where each inner list contains the processing parameters
-                             for a specific modality, in the format [num_whole_digits, decimal_places,
-                             rand_size, cross_attend, convert_to_percents, num_bins, modality_name].
-        all_file_info: A list of lists, where each inner list contains the file information
-                       for a specific modality, in the format [file1_name, data1_length, ...].
-        _get_batch_size(): The number of sequences processed in parallel in each batch. (int)
-        is_percents: A boolean indicating whether the data being evaluated is in percentage form. (bool)
-
-    Returns:
-        A tuple containing four lists:
-        - batch_wins_list: List of wins for each modality in the current batch.
-        - batch_losses_list: List of losses for each modality in the current batch.
-        - batch_certainty_list: List of total certainty for each modality in the current batch.
-        - batches_processed_list: List of 1 (if batch was processed for directional metrics) or 0 for each modality.
-    """
+    """Calculate directional prediction metrics: wins, losses, and certainty for each modality."""
     batch_wins_list = [0] * num_modalities
     batch_losses_list = [0] * num_modalities
     batch_certainty_list = [0.0] * num_modalities
-    batches_processed_list = [0] * num_modalities # To indicate if directional metrics were calculated for this modality in this batch
-
+    batches_processed_list = [0] * num_modalities
 
     for modality_index in range(num_modalities):
-        # Get modality name from all_modality_params
+        # Get modality name with fallbacks
         modality_name = all_modality_params[modality_index][9]
-        # Use the first file name as a fallback if modality_name is not provided or is empty string
         if not modality_name or not isinstance(modality_name, str):
-            # Get the name of the first file loaded for this modality from all_file_info
-            # all_file_info[modality_index][0] is the name of the first file
             if all_file_info and len(all_file_info) > modality_index and all_file_info[modality_index]:
                 modality_name = os.path.basename(all_file_info[modality_index][0])
             else:
-                modality_name = f"Modality {modality_index+1}" # Fallback if no file info is available
+                modality_name = f"Modality {modality_index+1}"
 
 
         if len(logits_list) > modality_index and len(yb_list) > modality_index:
 
             modality_vocab = all_vocabularies[modality_index]
-            is_percentage_data = all_modality_params[modality_index][3] # Get percentage flag from params
+            is_percentage_data = all_modality_params[modality_index][3]
 
-            # Check if the modality data is numeric and sequence length is sufficient for directional calculations
+            # Check if data is numeric and has sufficient sequence length for directional analysis
             data_is_numeric = all(isinstance(item, numbers.Number) for item in modality_vocab)
             min_seq_len = 1 if is_percentage_data else 2
             if data_is_numeric and yb_list[modality_index].ndim >= 2 and yb_list[modality_index].shape[1] >= min_seq_len:
 
-                logits_modality = logits_list[modality_index][:, -1, :] # Logits for the last token
-                targets_modality = yb_list[modality_index][:, -1] # Target index for the last token
+                logits_modality = logits_list[modality_index][:, -1, :]  # Last token logits
+                targets_modality = yb_list[modality_index][:, -1]        # Last token targets
 
-                if targets_modality.shape[0] > 0: # Ensure there are elements in the target batch
-                    batches_processed_list[modality_index] = 1 # Mark this modality as processed for directional metrics in this batch
+                if targets_modality.shape[0] > 0:
+                    batches_processed_list[modality_index] = 1
                     batch_wins_modality = 0
                     batch_losses_modality = 0
                     batch_certainty_modality_sum = 0.0
 
 
-                    for j in range(logits_modality.shape[0]): # Iterate through each sequence in the batch
+                    for j in range(logits_modality.shape[0]):
                         predicted_token_logits = logits_modality[j]
                         predicted_token_index = torch.argmax(predicted_token_logits).item()
                         predicted_token_value = modality_vocab[predicted_token_index]
@@ -285,45 +173,35 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
                         actual_token_index = targets_modality[j].item()
                         actual_token_value = modality_vocab[actual_token_index]
 
-                        # Get previous actual value if needed for non-percentage data
+                        # Get previous value for direction calculation
                         prev_actual_token_value = None
                         if not is_percentage_data and yb_list[modality_index].shape[1] >= 2:
                             prev_actual_token_value = modality_vocab[yb_list[modality_index][j, -2].item()]
 
-
-                        # Determine Predicted and Actual Direction Signs using helper function
+                        # Calculate direction signs
                         predicted_direction_sign = _get_direction_sign(predicted_token_value, prev_actual_token_value, is_percentage_data)
                         actual_direction_sign = _get_direction_sign(actual_token_value, prev_actual_token_value, is_percentage_data)
 
-
-                        # --- Count wins/losses based on direction signs ---
-                        # Only count if both predicted and actual directions could be determined
+                        # Count wins/losses
                         if predicted_direction_sign is not None and actual_direction_sign is not None:
                             if predicted_direction_sign == actual_direction_sign:
                                 batch_wins_modality += 1
                             else:
                                 batch_losses_modality += 1
 
-
-                            # --- Directional Certainty Calculation for this batch instance (j) ---
+                            # Calculate directional certainty
                             probs = F.softmax(predicted_token_logits, dim=-1)
                             summed_certainty_for_direction = 0.0
 
-                            # Iterate through all possible next tokens in the vocabulary
                             for token_index, token_value in enumerate(modality_vocab):
-                                if isinstance(token_value, numbers.Number): # Only consider numeric vocabulary values for certainty
-                                    # Determine the direction sign of this possible token relative to the relevant previous value
+                                if isinstance(token_value, numbers.Number):
                                     possible_direction_sign = _get_direction_sign(token_value, prev_actual_token_value, is_percentage_data)
 
-                                    # Check if this possible token's direction sign matches the *predicted* direction sign for this batch instance (j)
                                     if possible_direction_sign is not None and possible_direction_sign == predicted_direction_sign:
                                         summed_certainty_for_direction += probs[token_index].item()
 
-                            # Add the calculated certainty for this batch instance (j) to the batch total
                             batch_certainty_modality_sum += summed_certainty_for_direction
-                        else:
-                            # If direction could not be determined for this instance, it's not counted for wins/losses or certainty
-                            pass
+                        # Note: instances where direction can't be determined are ignored
 
 
                     # Store the total results for this batch and modality

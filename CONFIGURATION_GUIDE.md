@@ -1,22 +1,6 @@
 # Trade-AId Configuration Guide
 
-This guide explains how to configure the Trade-AId multimodal transformer system for your specific use case.
-
-## Configuration Methods
-
-The system supports two configuration approaches:
-
-### 🚀 **YAML Configuration (Recommended)**
-- **Files**: `config.yaml` + `input_schemas.yaml`
-- **Best for**: Most users, clean separation of concerns
-- **Benefits**: User-friendly, well-documented, validation built-in
-
-### 🔧 **Programmatic Configuration**
-- **Files**: `config.py` with input_schema definitions
-- **Best for**: Advanced users, automation, dynamic configuration
-- **Benefits**: Full Python flexibility, programmatic control
-
-The system automatically detects which method you're using and adapts accordingly.
+Quick reference for configuring the multimodal transformer system. For detailed explanations and tutorials, see [README.md](README.md).
 
 ---
 
@@ -120,118 +104,29 @@ cross_attention = False  # This modality is independent
 
 ---
 
-## Example Configurations
+## Quick Examples
 
-### Basic Stock Analysis
+For detailed examples and tutorials, see [README.md](README.md#example-modality-configurations).
+
+### Basic Schema Format
 ```python
-input_schema_1 = [
-    './data/stocks/',           # Folder with multiple stock files
-    4,                          # Column 4 (closing price)
-    True,                       # Has header row
-    False,                      # Don't convert to percentages
-    2, 1,                       # Range to 2 digits, 1 decimal (10.0-99.9)
-    None,                       # No binning
-    None,                       # No randomness
-    True,                       # Enable cross-attention
-    'Stock Prices'              # Modality name
-]
-
-input_schema_2 = [
-    './data/stocks/',           # Same folder
-    7,                          # Column 7 (volume)
-    True,                       # Has header row
-    True,                       # Convert to percentage changes
-    None, 2,                    # Only decimal places
-    10,                         # Bin into 10 groups
-    1,                          # Light randomization
-    True,                       # Enable cross-attention
-    'Volume Changes'            # Modality name
-]
+input_schema_1 = [path, column, header, percentages, digits, decimals, bins, randomness, cross_attn, name]
 ```
 
-### Multi-Asset Strategy
-```python
-# Gold prices
-input_schema_1 = ['./data/gold.csv', 2, True, False, 4, 2, None, None, True, 'Gold']
-
-# Oil futures
-input_schema_2 = ['./data/oil.csv', 3, True, True, None, 1, 5, None, True, 'Oil Returns']
-
-# USD Index
-input_schema_3 = ['./data/usd.csv', 2, True, False, 2, 3, None, 2, True, 'USD Index']
-
-# Market timing (day of week)
-input_schema_4 = ['./data/timing.csv', 1, True, False, None, None, None, None, False, 'Day of Week']
-```
-
----
-
-## Data Examples
-
-### Suitable Data Types
-
-**Financial Time Series**:
-- Stock prices (OHLCV)
-- Forex rates
-- Cryptocurrency prices
-- Bond yields
-- Commodity prices
-
-**Technical Indicators**:
-- Moving averages (SMA, EMA)
-- Oscillators (RSI, MACD, Stochastic)
-- Volatility (Bollinger Bands, ATR)
-- Volume indicators (VWAP, OBV)
-
-**Market Data**:
-- VIX (volatility index)
-- Interest rates
-- Economic indicators
-- Sector performance
-
-**Contextual Features**:
-- Time (hour, day, month)
-- Market session (pre-market, regular, after-hours)
-- Calendar events (earnings, Fed meetings)
-- Seasonal factors
+### Common Data Types
+- **Financial**: Stock prices, forex, crypto, bonds, commodities
+- **Indicators**: RSI, MACD, moving averages, Bollinger Bands
+- **Market**: VIX, volume, interest rates, sector performance
+- **Context**: Time, day of week, market sessions, events
 
 ---
 
 ## Best Practices
 
-### 1. **Data Synchronization**
-```python
-# ✅ Good: All data points align temporally
-timestamp_1 = ['2023-01-01 09:30', '2023-01-01 09:31', ...]  # Stock prices
-timestamp_2 = ['2023-01-01 09:30', '2023-01-01 09:31', ...]  # Volume
-
-# ❌ Bad: Different timestamps
-timestamp_1 = ['2023-01-01 09:30', '2023-01-01 09:31', ...]  # Stock prices
-timestamp_2 = ['2023-01-01 10:00', '2023-01-01 10:01', ...]  # Volume
-```
-
-### 2. **Vocabulary Size Control**
-- **Large vocabularies** = More unique values = Harder to learn
-- **Small vocabularies** = Less precision = Less information
-- Use **ranging** and **binning** to find the right balance
-
-### 3. **Cross-Attention Strategy**
-```python
-# Primary signal modalities: Enable cross-attention
-price_modality = [..., True, 'Prices']      # Can see other modalities
-volume_modality = [..., True, 'Volume']     # Can see other modalities
-
-# Context modalities: Often don't need cross-attention
-time_modality = [..., False, 'Time']        # Independent context
-```
-
-### 4. **Processing Pipeline Order**
-The system processes data in this order:
-1. **Percentage changes** (if enabled)
-2. **Ranging** (if specified)
-3. **Binning** (if specified)
-
-Plan your processing chain accordingly.
+- **Data Alignment**: All modalities must have same-length, temporally synchronized datasets
+- **Vocabulary Control**: Use ranging/binning to balance precision vs. learning efficiency
+- **Cross-Attention**: Enable for related data, disable for independent context (time, categorical)
+- **Processing Order**: Percentages → Ranging → Binning
 
 ---
 
