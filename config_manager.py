@@ -56,6 +56,7 @@ class SystemConfig:
     n_head: int
     n_layer: int
     dropout: float
+    fixed_values: List[float]
 
     def __post_init__(self):
         """Validate system configuration"""
@@ -91,6 +92,13 @@ class SystemConfig:
             raise ValueError("n_layer must be positive")
         if not 0.0 <= self.dropout <= 1.0:
             raise ValueError(f"dropout must be between 0.0 and 1.0, got {self.dropout}")
+
+        # Validate fixed_values
+        if not isinstance(self.fixed_values, list) or not self.fixed_values:
+            raise ValueError("fixed_values must be a non-empty list")
+        for i, val in enumerate(self.fixed_values):
+            if not isinstance(val, (int, float)):
+                raise ValueError(f"fixed_values[{i}] must be a number, got {type(val).__name__}")
 
         # Validate device
         if self.device not in ['cpu', 'cuda', 'auto']:
@@ -137,7 +145,8 @@ class SystemConfig:
             'n_embd': model_arch.get('n_embd', 384),
             'n_head': model_arch.get('n_head', 6),
             'n_layer': model_arch.get('n_layer', 6),
-            'dropout': model_arch.get('dropout', 0.2)
+            'dropout': model_arch.get('dropout', 0.2),
+            'fixed_values': model_arch.get('fixed_values', [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5])
         })
 
         return cls(**flattened)
@@ -169,7 +178,8 @@ class SystemConfig:
                 'n_embd': self.n_embd,
                 'n_head': self.n_head,
                 'n_layer': self.n_layer,
-                'dropout': self.dropout
+                'dropout': self.dropout,
+                'fixed_values': self.fixed_values
             }
         }
 
@@ -341,7 +351,8 @@ class ConfigManager:
                 'max_iters': self.system_config.max_iters,
                 'n_embd': self.system_config.n_embd,
                 'n_head': self.system_config.n_head,
-                'n_layer': self.system_config.n_layer
+                'n_layer': self.system_config.n_layer,
+                'fixed_values': len(self.system_config.fixed_values)
             }
 
         if self.schema_manager.schemas:

@@ -145,13 +145,14 @@ class CompatibilityMode:
                 'save_model': sys_config.save_model,
                 'model_file_name': sys_config.model_file_name,
                 'project_file_path': sys_config.project_file_path,
-                'output_file_name': sys_config.output_file_name
+                'output_file_name': sys_config.output_file_name,
+                'fixed_values': sys_config.fixed_values
             }
         else:
             from config import (
                 batch_size, block_size, max_iters, eval_interval, eval_iters, learning_rate, device,
                 n_embd, n_head, n_layer, dropout, validation_size, num_validation_files,
-                create_new_model, save_model, model_file_name, project_file_path, output_file_name
+                create_new_model, save_model, model_file_name, project_file_path, output_file_name, fixed_values
             )
             return {
                 'batch_size': batch_size,
@@ -171,7 +172,8 @@ class CompatibilityMode:
                 'save_model': save_model,
                 'model_file_name': model_file_name,
                 'project_file_path': project_file_path,
-                'output_file_name': output_file_name
+                'output_file_name': output_file_name,
+                'fixed_values': fixed_values
             }
 
     def process_modality_data(self, modality_index: int, raw_data: Any) -> Tuple[Any, Dict[str, Any]]:
@@ -322,6 +324,8 @@ def get_system_configuration() -> Dict[str, Any]:
     Returns:
         Dictionary of system parameters
     """
+    if not compatibility_layer.is_initialized:
+        compatibility_layer.detect_and_initialize(globals())
     return compatibility_layer.get_system_parameters()
 
 

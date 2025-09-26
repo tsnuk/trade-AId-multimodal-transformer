@@ -22,7 +22,6 @@ import torch.nn.functional as F
 import random
 
 # Configuration will be loaded lazily when needed
-from config import fixed_values
 
 # Global configuration cache - will be populated when first accessed
 _config_cache = None
@@ -42,6 +41,7 @@ def _get_n_layer(): return _get_config()['n_layer']
 def _get_dropout(): return _get_config()['dropout']
 def _get_block_size(): return _get_config()['block_size']
 def _get_device(): return _get_config()['device']
+def _get_fixed_values(): return _get_config()['fixed_values']
 
 
 class Head(nn.Module):

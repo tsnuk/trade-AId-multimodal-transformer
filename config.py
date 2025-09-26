@@ -17,9 +17,7 @@ _yaml_config_exists = (Path('input_schemas.yaml').exists() and Path('config.yaml
 __all__ = [
     # Programmatic input schemas (always available)
     'num_input_schemas', 'input_schema_1', 'input_schema_2', 'input_schema_3', 'input_schema_4',
-    'input_schema_5', 'input_schema_6', 'input_schema_7', 'input_schema_8', 'input_schema_9', 'input_schema_10',
-    # Model-specific constants
-    'fixed_values'
+    'input_schema_5', 'input_schema_6', 'input_schema_7', 'input_schema_8', 'input_schema_9', 'input_schema_10'
 ]
 
 # Add hyperparameters to exports only if YAML config doesn't exist
@@ -28,7 +26,7 @@ if not _yaml_config_exists:
         # Training hyperparameters
         'batch_size', 'block_size', 'max_iters', 'eval_interval', 'eval_iters', 'learning_rate', 'device',
         # Model architecture
-        'n_embd', 'n_head', 'n_layer', 'dropout',
+        'n_embd', 'n_head', 'n_layer', 'dropout', 'fixed_values',
         # File paths and settings
         'project_file_path', 'model_file_name', 'output_file_name',
         # Data splitting
@@ -57,6 +55,7 @@ if not _yaml_config_exists:
     n_head = 4
     n_layer = 4
     dropout = 0.2
+    fixed_values = [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5]
 
     # File paths and settings
     project_file_path = './'
@@ -92,6 +91,3 @@ input_schema_8 = []
 input_schema_9 = []
 input_schema_10 = []
 
-# Fixed values for custom embedding layer
-fixed_values = [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5]
-# when creating the embedding table, each element of the embedding vectors is randomly selected from this fixed_values list
