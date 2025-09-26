@@ -12,7 +12,6 @@ Usage:
 """
 
 import sys
-import os
 import shutil
 from pathlib import Path
 
