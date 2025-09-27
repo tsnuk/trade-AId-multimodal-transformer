@@ -280,10 +280,51 @@ training_utils.is_percents = is_percents
 
 all_vocab_sizes = [len(vocab) for vocab in all_vocabularies]
 
-model_params = n_embd * sum(all_vocab_sizes) + n_embd * block_size + n_layer * (
-    num_modalities * (3 * n_embd * n_embd + n_embd * 4 * n_embd + 4 * n_embd + n_embd)
-    + sum(vocab_size * n_embd for vocab_size in all_vocab_sizes)
-)
+# Calculate model parameters following standard conventions
+# 1. Embeddings
+token_embeddings = sum(vocab_size * n_embd for vocab_size in all_vocab_sizes)
+positional_embeddings = block_size * n_embd
+
+# 2. Per transformer layer parameters
+def count_cross_attention_params():
+    total = 0
+    for i, modality_params in enumerate(all_modality_params):
+        if modality_params[8]:  # cross_attention enabled
+            num_other_modalities = num_modalities - 1
+            # Cross-attention has similar structure to self-attention but with multiple KV sources
+            total += num_other_modalities * (2 * (n_embd * (n_head * (n_embd // n_head) // 2) + (n_embd // n_head) // 2 * (n_embd // n_head))) + n_embd * (n_embd // 2) + (n_embd // 2) * n_embd
+            total += n_embd  # LayerNorm for cross-attention
+    return total
+
+# Per layer: self-attention + feedforward + layer norms for each modality
+per_layer_params = 0
+for i in range(num_modalities):
+    # Self-attention: each head has 3 projections (Q,K,V) + output projection
+    head_size = n_embd // n_head
+    # Each head: 3 * (n_embd * head_size//2 + head_size//2 * head_size)
+    attention_params = n_head * 3 * (n_embd * (head_size // 2) + (head_size // 2) * head_size)
+    # Output projection: head_size*n_head -> n_embd//2 -> n_embd
+    attention_params += (head_size * n_head) * (n_embd // 2) + (n_embd // 2) * n_embd
+
+    # FeedForward: n_embd -> 4*n_embd -> n_embd
+    feedforward_params = n_embd * (4 * n_embd) + (4 * n_embd) * n_embd
+
+    # LayerNorms: ln1 and ln2 (weight only, no bias by default)
+    layernorm_params = 2 * n_embd
+
+    per_layer_params += attention_params + feedforward_params + layernorm_params
+
+# Cross-attention parameters
+cross_attention_params = count_cross_attention_params()
+
+# 3. Output head parameters
+output_params = 0
+for i in range(num_modalities):
+    vocab_size = all_vocab_sizes[i]
+    # LayerNorm + two linear layers: n_embd -> vocab_size//2 -> vocab_size
+    output_params += n_embd + n_embd * (vocab_size // 2) + (vocab_size // 2) * vocab_size
+
+model_params = token_embeddings + positional_embeddings + n_layer * (per_layer_params + cross_attention_params) + output_params
 
 print("="*60)
 print("MODEL CREATION & TRAINING")
@@ -399,6 +440,7 @@ for iter in range(max_iters):
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
              print(f"\n🎯 LOSS METRICS: Step {iter}/{max_iters} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | Time: {current_time}")
+             print("─" * 80)
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
