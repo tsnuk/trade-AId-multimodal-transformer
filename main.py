@@ -27,7 +27,8 @@ from data_utils import (
 from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
 from training_utils import get_batch, estimate_loss
-print("Initializing Trade-AId Multimodal Transformer...")
+print("🚀 TRADE-AID MULTIMODAL TRANSFORMER")
+print("━" * 60)
 print("Initializing configuration system...")
 config_mode = initialize_compatibility_layer(globals())
 print(f"Configuration: {'YAML mode detected' if config_mode == 'modern' else 'Programmatic mode detected'}")
@@ -163,7 +164,7 @@ if num_modalities > 1:
                 "All modalities must have the same length for proper training."
             )
 
-print("Vocabulary Building: Creating numerical representations...")
+print("\n📊 VOCABULARY BUILDING")
 
 all_vocabularies = []
 all_numeric_reps = []
@@ -206,9 +207,7 @@ for m in range(num_modalities):
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
-  print(f"  Modality {m+1} '{this_modality_name}':")
-
-  print(f"    Vocabulary size: {raw_vocab_size:,} -> {len(this_vocabulary):,}{processing_text}")
+  print(f"  ▪ {this_modality_name:<30} {raw_vocab_size:,} → {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
@@ -374,8 +373,10 @@ if output_file_name != '':
         f.write("\\n\\n--- Evaluation Results ---\\n")
 
 print()
-print(f"Training: Starting {max_iters} iterations on {device}")
-print("*** This process involves intensive computation and may take considerable time ***")
+print(f"🔄 TRAINING PROGRESS")
+print(f"  ▪ Iterations: {max_iters}")
+print(f"  ▪ Device: {device}")
+print("  ▪ Note: Intensive computation ahead")
 print()
 
 best_val_loss = float('inf')
@@ -392,9 +393,10 @@ for iter in range(max_iters):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"{'='*70}")
-             print(f"🎯 RESULTS: Step {iter} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | {current_time}")
-             print(f"{'='*70}")
+             print(f"\n  ▪ Step: {iter}/{max_iters}")
+             print(f"  ▪ Train Loss: {losses['train']:.4f}")
+             print(f"  ▪ Val Loss: {losses['val']:.4f}")
+             print(f"  ▪ Time: {current_time}")
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
@@ -434,7 +436,7 @@ for iter in range(max_iters):
         print("Warning: Training step losses not calculated, skipping backpropagation")
 
 
-print("Training: Completed successfully")
+print("\\n✅ TRAINING COMPLETED SUCCESSFULLY")
 
 if save_model == 1:
     now = datetime.now()
