@@ -27,8 +27,11 @@ from data_utils import (
 from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
 from training_utils import get_batch, estimate_loss
+print("🚀 TRADE-AID MULTIMODAL TRANSFORMER")
+print("━" * 60)
 print("Initializing configuration system...")
 config_mode = initialize_compatibility_layer(globals())
+print(f"Configuration: {'YAML mode detected' if config_mode == 'modern' else 'Programmatic mode detected'}")
 
 system_config = get_system_configuration()
 modality_params_list = get_modality_parameters()
@@ -46,7 +49,6 @@ eval_interval = system_config['eval_interval']
 eval_iters = system_config['eval_iters']
 learning_rate = system_config['learning_rate']
 device = system_config['device']
-print(f"Trade-AId Multimodal Transformer | {'YAML' if config_mode == 'modern' else 'Programmatic'} mode | {device}")
 n_embd = system_config['n_embd']
 n_head = system_config['n_head']
 n_layer = system_config['n_layer']
@@ -164,7 +166,7 @@ if num_modalities > 1:
                 "All modalities must have the same length for proper training."
             )
 
-print("\nVOCABULARY")
+print("\n📊 VOCABULARY BUILDING")
 
 all_vocabularies = []
 all_numeric_reps = []
@@ -207,7 +209,7 @@ for m in range(num_modalities):
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
-  print(f"  {this_modality_name:<30} {raw_vocab_size:,} → {len(this_vocabulary):,}    {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
+  print(f"  ▪ {this_modality_name:<30} {raw_vocab_size:,} → {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
@@ -238,7 +240,7 @@ if system_config['num_validation_files'] > 0:
 else:
     print(f"Method: Percentage-based splitting ({system_config['validation_size']*100:.1f}% validation)")
 
-print("\nDATASET SPLITTING")
+print("\n🗂️ DATASET SPLITTING")
 all_train_sets = []
 all_val_sets = []
 
@@ -254,7 +256,7 @@ for i in range(num_modalities):
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
-  print(f"  {modality_name:<30}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
+  print(f"  ▪ {modality_name:<30}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
 
 cleanup_cache()
 
@@ -375,8 +377,10 @@ if output_file_name != '':
         f.write("\\n\\n--- Evaluation Results ---\\n")
 
 print()
-print(f"TRAINING  Iterations: {max_iters} | Device: {device}")
-print("Note: Intensive computation ahead")
+print(f"🔄 TRAINING PROGRESS")
+print(f"  ▪ Iterations: {max_iters}")
+print(f"  ▪ Device: {device}")
+print("  ▪ Note: Intensive computation ahead")
 print()
 
 best_val_loss = float('inf')
@@ -392,7 +396,11 @@ for iter in range(max_iters):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"\nStep {iter}/{max_iters} | Train {losses['train']:.4f} | Val {losses['val']:.4f} | {current_time}")
+             print(f"\n📊 EVALUATION RESULTS")
+             print(f"  ▪ Step: {iter}/{max_iters}")
+             print(f"  ▪ Train Loss: {losses['train']:.4f}")
+             print(f"  ▪ Val Loss: {losses['val']:.4f}")
+             print(f"  ▪ Time: {current_time}")
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
@@ -432,7 +440,7 @@ for iter in range(max_iters):
         print("Warning: Training step losses not calculated, skipping backpropagation")
 
 
-print("\nTraining completed successfully")
+print("\\n✅ TRAINING COMPLETED SUCCESSFULLY")
 
 if save_model == 1:
     now = datetime.now()
