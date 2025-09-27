@@ -34,6 +34,9 @@ __all__ = [
 def load_file_data(input_info):
     """Load data from CSV/TXT files and extract specified column data.
 
+    When percentage conversion is enabled, values are converted to percentage
+    changes between consecutive data points.
+
     Args:
         input_info: List of 10 elements containing path, column number, header flag,
                    percentage conversion flag, and other processing parameters.

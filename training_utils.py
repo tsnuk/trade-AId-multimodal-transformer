@@ -22,7 +22,14 @@ from datetime import datetime
 _config_cache = None
 
 def _get_config():
-    """Lazy load configuration through compatibility layer"""
+    """Lazy load system configuration through compatibility layer.
+
+    Caches configuration on first access to avoid repeated imports.
+
+    Returns:
+        dict: System configuration dictionary containing device, batch_size,
+              block_size, eval_iters, and other training parameters.
+    """
     global _config_cache
     if _config_cache is None:
         from compatibility_layer import get_system_configuration
@@ -198,7 +205,20 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
 
 
 def _get_direction_sign(current_value, previous_value, is_percentage_data):
-    """Determine direction: 1=up, -1=down, 0=flat."""
+    """Determine the directional sign of a data point for prediction analysis.
+
+    For percentage data, direction is based on the sign of the current value.
+    For regular value data, direction is based on change from previous value.
+
+    Args:
+        current_value: The current data point value (numeric).
+        previous_value: The previous data point value (numeric or None).
+        is_percentage_data: Whether this is percentage change data.
+
+    Returns:
+        int or None: 1 for upward direction, -1 for downward direction,
+                     0 for flat/no change, None if direction cannot be determined.
+    """
     if is_percentage_data:
         if current_value > 0: return 1
         elif current_value < 0: return -1
@@ -216,7 +236,25 @@ def _get_direction_sign(current_value, previous_value, is_percentage_data):
 
 
 def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, batch_size, is_percents):
-    """Calculate directional prediction metrics: wins, losses, and certainty for each modality."""
+    """Calculate directional prediction metrics for each modality.
+
+    Analyzes model predictions vs actual values to determine directional accuracy.
+    Only processes numeric modalities with sufficient sequence length.
+
+    Args:
+        logits_list: List of prediction logits tensors, one per modality.
+        yb_list: List of target tensors, one per modality.
+        num_modalities: Number of modalities to process.
+        all_vocabularies: List of vocabulary lists, one per modality.
+        all_modality_params: List of modality parameter tuples.
+        all_file_info: List of file information for each modality.
+        batch_size: Size of the current batch.
+        is_percents: Whether any modality uses percentage data.
+
+    Returns:
+        Tuple[List[int], List[int], List[float], List[int]]: Lists containing
+        wins, losses, certainty scores, and batches processed counts per modality.
+    """
     batch_wins_list = [0] * num_modalities
     batch_losses_list = [0] * num_modalities
     batch_certainty_list = [0.0] * num_modalities
@@ -317,7 +355,20 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
 
 
 def get_batch(split, is_training):
-    # Generate for all modalities batches of data of inputs (xb_list) and targets (yb_list)
+    """Generate batches of input and target data for all modalities.
+
+    Creates batches by extracting sequences from the specified dataset split.
+    Applies randomness to training data if configured for any modality.
+
+    Args:
+        split: Dataset split to use ('train' or 'val').
+        is_training: Whether this is for training (1) or evaluation (0).
+                     Randomness is only applied when is_training=1.
+
+    Returns:
+        Tuple[List[torch.Tensor], List[torch.Tensor]]: Lists of input and target
+        tensors, one per modality. Each tensor has shape (batch_size, block_size).
+    """
 
     # Create a temporary list for train sets to potentially apply randomness
     temp_all_train_sets_processed = [t for t in all_train_sets]
@@ -358,6 +409,18 @@ def get_batch(split, is_training):
 
 
 def estimate_loss():
+    """Estimate model loss and calculate directional prediction metrics.
+
+    Evaluates the model on both training and validation sets, computing:
+    - Average loss per modality
+    - Directional prediction accuracy (correct/total predictions)
+    - Directional certainty scores
+
+    Writes validation metrics to output file if configured.
+
+    Returns:
+        dict: Dictionary with 'train' and 'val' keys containing average losses.
+    """
     out = {}
     m.eval() # Use 'm' instead of 'model'
     for state in ['train', 'val']:
