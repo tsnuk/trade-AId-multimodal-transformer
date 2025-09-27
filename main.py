@@ -287,6 +287,11 @@ positional_embeddings = block_size * n_embd
 
 # 2. Per transformer layer parameters
 def count_cross_attention_params():
+    """Count total parameters used by cross-attention mechanisms across all modalities.
+
+    Returns:
+        int: Total number of cross-attention parameters.
+    """
     total = 0
     for i, modality_params in enumerate(all_modality_params):
         if modality_params[8]:  # cross_attention enabled

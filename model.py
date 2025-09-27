@@ -75,6 +75,7 @@ class Head(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
+    """Multi-head self-attention mechanism for transformer blocks."""
 
     def __init__(self, num_heads, head_size):
         super().__init__()
@@ -93,6 +94,8 @@ class MultiHeadAttention(nn.Module):
 
 
 class CrossAttention(nn.Module):
+    """Cross-modal attention mechanism for attending across different modalities."""
+
     def __init__(self, num_heads, head_size, num_kv_modalities):
         super().__init__()
         self.num_kv_modalities = num_kv_modalities
@@ -174,6 +177,8 @@ class FeedForward(nn.Module):
 
 
 class MultimodalBlock(nn.Module):
+    """Single transformer block with self-attention, cross-attention, and feed-forward layers."""
+
     def __init__(self, n_embd, n_head, num_modalities, all_modality_params):
         super().__init__()
         self.num_modalities = num_modalities
@@ -347,6 +352,7 @@ class MultimodalPostBlock(nn.Module):
 
 
 class MultimodalTransformer(nn.Module):
+    """Main multimodal transformer model with cross-attention between modalities."""
 
     def __init__(self, num_modalities, vocab_sizes, all_modality_params):
         super().__init__()
