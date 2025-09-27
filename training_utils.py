@@ -482,7 +482,8 @@ def estimate_loss(current_step=None, max_steps=None):
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"\n📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
+        print(f"\nDIRECTIONAL METRICS (Correct/Total)")
+        first_modality = True
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
@@ -496,16 +497,28 @@ def estimate_loss(current_step=None, max_steps=None):
                 total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                 if total_predictions > 0:
                     overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                    print(f"  ▪ {modality_name:<30}{correct}/{total_predictions} ({overall_success_rate_modality}%)")
+                    if first_modality:
+                        print(f"  {print_state:<11}{modality_name}: {correct}/{total_predictions} ({overall_success_rate_modality}%)")
+                        first_modality = False
+                    else:
+                        print(f"              {modality_name}: {correct}/{total_predictions} ({overall_success_rate_modality}%)")
                 else:
-                    print(f"  ▪ {modality_name}: No directional predictions")
+                    if first_modality:
+                        print(f"  {print_state:<11}{modality_name}: No directional predictions")
+                        first_modality = False
+                    else:
+                        print(f"              {modality_name}: No directional predictions")
 
                 # Calculate and report overall average directional certainty
                 overall_average_certainty_modality = all_modalities_total_certainty[modality_index] / (this_num_batches_processed * _get_batch_size()) # Assuming _get_batch_size() is constant and used for certainty accumulation
                 #print(f"  Overall Average Directional Certainty: {round(overall_average_certainty_modality * 100, 1)}%") # Not displaying at the moment
 
             else:
-                print(f"  ▪ {modality_name}: No data processed (non-numeric)")
+                if first_modality:
+                    print(f"  {print_state:<11}{modality_name}: No data processed (non-numeric)")
+                    first_modality = False
+                else:
+                    print(f"              {modality_name}: No data processed (non-numeric)")
 
         # Write validation metrics to file
         system_config = _get_config()
