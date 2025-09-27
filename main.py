@@ -150,6 +150,8 @@ for i, modality_params in enumerate(modality_params_list):
     data_length = len(this_modality_data)
     file_count = len(this_file_info) // 2 if this_file_info else 0
     print(f"  Summary: {data_length:,} data points ({file_count} files loaded)")
+    if i < len(modality_params_list) - 1:  # Add separator except after last modality
+        print()
 
 print("Data Loading and Processing: Complete")
 print()
@@ -237,6 +239,7 @@ if system_config['num_validation_files'] > 0:
 else:
     print(f"Method: Percentage-based splitting ({system_config['validation_size']*100:.1f}% validation)")
 
+print("\n🗂️ DATASET SPLITTING")
 all_train_sets = []
 all_val_sets = []
 
@@ -252,7 +255,7 @@ for i in range(num_modalities):
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
-  print(f"  Modality {i+1} '{modality_name}': Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
+  print(f"  ▪ {modality_name:<30}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
 
 cleanup_cache()
 
@@ -393,7 +396,7 @@ for iter in range(max_iters):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"\n  ▪ Step: {iter}/{max_iters}")
+             print(f"\n📊 EVALUATION RESULTS")\n             print(f"  ▪ Step: {iter}/{max_iters}")
              print(f"  ▪ Train Loss: {losses['train']:.4f}")
              print(f"  ▪ Val Loss: {losses['val']:.4f}")
              print(f"  ▪ Time: {current_time}")

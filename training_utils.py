@@ -480,7 +480,7 @@ def estimate_loss():
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"\n📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
+        print(f"📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
@@ -494,7 +494,7 @@ def estimate_loss():
                 total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                 if total_predictions > 0:
                     overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                    print(f"  ▪ {modality_name}: {correct}/{total_predictions} ({overall_success_rate_modality}%)")
+                    print(f"  ▪ {modality_name:<30}{correct}/{total_predictions} ({overall_success_rate_modality}%)")
                 else:
                     print(f"  ▪ {modality_name}: No directional predictions")
 
@@ -528,7 +528,9 @@ def estimate_loss():
                 else:
                     f.write(f"{print_state} set (Modality {modality_index+1}: {modality_name}): Total Batches=0, Directional Correct=0, Directional Incorrect=0, Directional Success Rate (correct/incorrect)=NA\\n")
 
-        # Remove excessive separator line
+        # Add space between train and val sections
+        if state == 'train':
+            print()
 
 
     m.train() # Set the model back to training mode
