@@ -21,27 +21,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random
 
-# Configuration will be loaded lazily when needed
-
-# Global configuration cache - will be populated when first accessed
-_config_cache = None
-
-def _get_config():
-    """Lazy load configuration through compatibility layer"""
-    global _config_cache
-    if _config_cache is None:
-        from compatibility_layer import get_system_configuration
-        _config_cache = get_system_configuration()
-    return _config_cache
-
-# Create property-like accessors for configuration values
-def _get_n_embd(): return _get_config()['n_embd']
-def _get_n_head(): return _get_config()['n_head']
-def _get_n_layer(): return _get_config()['n_layer']
-def _get_dropout(): return _get_config()['dropout']
-def _get_block_size(): return _get_config()['block_size']
-def _get_device(): return _get_config()['device']
-def _get_fixed_values(): return _get_config()['fixed_values']
+# Import configuration utilities
+from config_utils import (
+    _get_config, _get_device, _get_block_size, _get_n_embd, _get_n_head,
+    _get_n_layer, _get_dropout, _get_fixed_values
+)
 
 
 class Head(nn.Module):

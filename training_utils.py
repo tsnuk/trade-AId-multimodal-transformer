@@ -18,29 +18,8 @@ import os
 from datetime import datetime
 # Configuration will be loaded lazily when needed
 
-# Global configuration cache - will be populated when first accessed
-_config_cache = None
-
-def _get_config():
-    """Lazy load system configuration through compatibility layer.
-
-    Caches configuration on first access to avoid repeated imports.
-
-    Returns:
-        dict: System configuration dictionary containing device, batch_size,
-              block_size, eval_iters, and other training parameters.
-    """
-    global _config_cache
-    if _config_cache is None:
-        from compatibility_layer import get_system_configuration
-        _config_cache = get_system_configuration()
-    return _config_cache
-
-# Create property-like accessors for configuration values
-def _get_device(): return _get_config()['device']
-def _get_block_size(): return _get_config()['block_size']
-def _get_batch_size(): return _get_config()['batch_size']
-def _get_eval_iters(): return _get_config()['eval_iters']
+# Import configuration utilities
+from config_utils import _get_config, _get_device, _get_block_size, _get_batch_size, _get_eval_iters
 
 # Export only the functions that should be publicly available
 __all__ = [
