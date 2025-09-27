@@ -482,10 +482,7 @@ def estimate_loss(current_step=None, max_steps=None):
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"\nDIRECTIONAL METRICS - {print_state.upper()}")
-        print("┌" + "─" * 34 + "┬" + "─" * 13 + "┐")
-        print("│ Modality" + " " * 26 + "│ Correct/Total │")
-        print("├" + "─" * 34 + "┼" + "─" * 13 + "┤")
+        print(f"\n📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
@@ -499,19 +496,18 @@ def estimate_loss(current_step=None, max_steps=None):
                 total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                 if total_predictions > 0:
                     overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                    result_text = f"{correct}/{total_predictions} ({overall_success_rate_modality}%)"
-                    print(f"│ {modality_name:<32} │ {result_text:>11} │")
+                    print(f"  ▪ {modality_name:<30}{correct}/{total_predictions} ({overall_success_rate_modality}%)")
                 else:
-                    print(f"│ {modality_name:<32} │ {'No data':>11} │")
+                    print(f"  ▪ {modality_name}: No directional predictions")
 
                 # Calculate and report overall average directional certainty
                 overall_average_certainty_modality = all_modalities_total_certainty[modality_index] / (this_num_batches_processed * _get_batch_size()) # Assuming _get_batch_size() is constant and used for certainty accumulation
                 #print(f"  Overall Average Directional Certainty: {round(overall_average_certainty_modality * 100, 1)}%") # Not displaying at the moment
 
             else:
-                print(f"│ {modality_name:<32} │ {'Non-numeric':>11} │")
+                print(f"  ▪ {modality_name}: No data processed (non-numeric)")
 
-        print(\"\u2514\" + \"\u2500\" * 34 + \"\u2534\" + \"\u2500\" * 13 + \"\u2518\")\n\n        # Write validation metrics to file
+        # Write validation metrics to file
         system_config = _get_config()
         output_file_name = system_config['output_file_name']
         project_file_path = system_config['project_file_path']

@@ -27,12 +27,12 @@ from data_utils import (
 from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
 from training_utils import get_batch, estimate_loss
-print("═" * 79)
-print("║ TRADE-AID MULTIMODAL TRANSFORMER" + " " * 41 + "║")
-print("═" * 79)
+print("🚀 TRADE-AID MULTIMODAL TRANSFORMER")
+print("═" * 45)
 print("Initializing configuration system...")
 config_mode = initialize_compatibility_layer(globals())
 print(f"Configuration: {'YAML mode detected' if config_mode == 'modern' else 'Programmatic mode detected'}")
+print()
 
 system_config = get_system_configuration()
 modality_params_list = get_modality_parameters()
@@ -167,10 +167,7 @@ if num_modalities > 1:
                 "All modalities must have the same length for proper training."
             )
 
-print("\nVOCABULARY BUILDING")
-print("┌" + "─" * 34 + "┬" + "─" * 13 + "┬" + "─" * 13 + "┬" + "─" * 13 + "┐")
-print("│ Modality" + " " * 26 + "│ Raw Size    │ Final Size  │ Processing  │")
-print("├" + "─" * 34 + "┼" + "─" * 13 + "┼" + "─" * 13 + "┼" + "─" * 13 + "┤")
+print("\n📊 VOCABULARY BUILDING")
 
 all_vocabularies = []
 all_numeric_reps = []
@@ -213,17 +210,16 @@ for m in range(num_modalities):
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
-  # Format the processing text
-  proc_text = processing_text.strip('() ') if processing_text.strip() else 'no processing'
-  print(f"│ {this_modality_name:<32} │ {raw_vocab_size:>11,} │ {len(this_vocabulary):>11,} │ {proc_text:<11} │")
+  print(f"  ▪ {this_modality_name:<30} {raw_vocab_size:,} → {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
   else:
     truncated_vocab = this_vocabulary[:10] + ['...']
-    print(f"    Vocabulary: {truncated_vocab}")
+    vocab_str = str(truncated_vocab).replace("'...'", "...")
+    print(f"    Vocabulary: {vocab_str}")
 
-print(\"\u2514\" + \"\u2500\" * 34 + \"\u2534\" + \"\u2500\" * 13 + \"\u2534\" + \"\u2500\" * 13 + \"\u2534\" + \"\u2500\" * 13 + \"\u2518\")\n\nfile_lengths = []
+file_lengths = []
 if all_file_info and len(all_file_info) > 0:
   for f_idx in range(1, len(all_file_info[0]), 2):
     file_lengths.append(all_file_info[0][f_idx])
@@ -383,7 +379,10 @@ if output_file_name != '':
         f.write("\\n\\n--- Evaluation Results ---\\n")
 
 print()
-print(f"TRAINING: Starting {max_iters} iterations on {device}")
+print(f"🔄 TRAINING PROGRESS")
+print(f"  ▪ Iterations: {max_iters}")
+print(f"  ▪ Device: {device}")
+print("  ▪ Note: Intensive computation ahead")
 print()
 
 best_val_loss = float('inf')
@@ -399,7 +398,7 @@ for iter in range(max_iters):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"\nTRAINING: Step {iter}/{max_iters} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | {current_time}")
+             print(f"\n🎯 LOSS METRICS: Step {iter}/{max_iters} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | Time: {current_time}")
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
@@ -421,6 +420,7 @@ for iter in range(max_iters):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         torch.save(m.state_dict(), model_file_name)
+        print()
         print(f'Saved: Model checkpoint ({round(os.path.getsize(model_file_name)/1024**2,2)} MB) | {current_time}')
         print()
 
@@ -439,7 +439,7 @@ for iter in range(max_iters):
         print("Warning: Training step losses not calculated, skipping backpropagation")
 
 
-print("\\nTRAINING COMPLETED SUCCESSFULLY")
+print("\\n✅ TRAINING COMPLETED SUCCESSFULLY")
 
 if save_model == 1:
     now = datetime.now()
