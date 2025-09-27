@@ -526,7 +526,38 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
         group_counts[assignment] = group_counts.get(assignment, 0) + 1
 
 
-    # Group distribution details removed for cleaner output
+    # Display binning statistics
+    print(f"      → Binning statistics:")
+
+    # Display negative bins (from most negative to least negative)
+    for i in range(-num_groups, 0):
+        if i in group_counts:
+            j = num_groups + i  # Convert to boundary index
+            lower_bound = negative_group_boundaries[j]
+            upper_bound = negative_group_boundaries[j + 1] if j + 1 < len(negative_group_boundaries) else 0
+            count = group_counts[i]
+
+            if i == -num_groups:  # Most negative bin contains outliers
+                print(f"        Bin {i}: (-∞, {upper_bound:.3f}) - {count} elements")
+            else:
+                print(f"        Bin {i}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
+
+    # Display zero bin
+    if 0 in group_counts:
+        count = group_counts[0]
+        print(f"        Bin  0: [0.000, 0.000] - {count} elements")
+
+    # Display positive bins
+    for i in range(1, num_groups + 1):
+        if i in group_counts:
+            lower_bound = positive_group_boundaries[i - 1]
+            upper_bound = positive_group_boundaries[i] if i < len(positive_group_boundaries) else float('inf')
+            count = group_counts[i]
+
+            if i == num_groups:  # Most positive bin contains outliers
+                print(f"        Bin {i:2d}: [{lower_bound:.3f}, +∞) - {count} elements")
+            else:
+                print(f"        Bin {i:2d}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
 
 
     total_assigned = sum(group_assignments.count(i) for i in range(-num_groups, num_groups + 1))

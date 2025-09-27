@@ -102,10 +102,23 @@ for i, modality_params in enumerate(modality_params_list):
     if num_whole_digits is not None or decimal_places is not None:
         data_is_numeric = all(isinstance(item, numbers.Number) for item in this_modality_data)
         if data_is_numeric:
-            range_details = f"{num_whole_digits} digits" if num_whole_digits else ""
-            decimal_details = f"{decimal_places} decimals" if decimal_places else ""
-            details = ", ".join(filter(None, [range_details, decimal_details]))
-            print(f"    Processing: Ranging ({details})")
+            # Calculate and display range information
+            if num_whole_digits is not None:
+                apply_dec_places_for_print_range = decimal_places if decimal_places is not None else 0
+                lower_bound_print = 10**(num_whole_digits - 1)
+                upper_bound_print = 10**num_whole_digits - (10**(-apply_dec_places_for_print_range) if apply_dec_places_for_print_range > 0 else 1)
+
+                range_str = f'{lower_bound_print:.{apply_dec_places_for_print_range}f}-{upper_bound_print:.{apply_dec_places_for_print_range}f}'
+
+                range_details = f"{num_whole_digits} whole digits" if num_whole_digits else ""
+                decimal_details = f"{decimal_places} decimals" if decimal_places else ""
+                details = ", ".join(filter(None, [range_details, decimal_details]))
+
+                print(f"    Processing: Ranging to {range_str} ({details})")
+            else:
+                # Only decimal places specified
+                print(f"    Processing: Rounding to {decimal_places} decimal places (no ranging)")
+
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
             processing_applied = True
         else:
