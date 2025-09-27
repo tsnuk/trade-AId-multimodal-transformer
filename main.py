@@ -432,6 +432,12 @@ for i in range(num_modalities):
     modality_configs.append(config_dict)
 
 output_file_path = project_file_path + 'output/' + output_file_name
+
+# Ensure output directory exists
+output_dir = os.path.dirname(output_file_path)
+if output_dir and not os.path.exists(output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+
 if output_file_name != '':
     write_initial_run_details(output_file_path, hyperparams, data_info, modality_configs, run_stats)
     with open(output_file_path, 'a', encoding='utf-8') as f:
@@ -477,6 +483,11 @@ for iter in range(max_iters):
                 break
 
     if save_model == 1 and (iter % eval_interval == 0 or iter == max_iters - 1):
+        # Ensure model directory exists
+        model_dir = os.path.dirname(model_file_name)
+        if model_dir and not os.path.exists(model_dir):
+            os.makedirs(model_dir, exist_ok=True)
+
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         torch.save(m.state_dict(), model_file_name)
@@ -502,6 +513,11 @@ for iter in range(max_iters):
 print("\\n✅ TRAINING COMPLETED SUCCESSFULLY")
 
 if save_model == 1:
+    # Ensure model directory exists
+    model_dir = os.path.dirname(model_file_name)
+    if model_dir and not os.path.exists(model_dir):
+        os.makedirs(model_dir, exist_ok=True)
+
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     print(f'Final Save: Model checkpoint | {current_time}')

@@ -172,6 +172,10 @@ model_architecture:
 python main.py
 ```
 
+The system automatically creates an `output/` directory for:
+- **Training logs**: `output/training_log.txt` (comprehensive training progress and metrics)
+- **Model weights**: `output/TransformerModel.pth` (saved model checkpoints)
+
 ### Important Data Loading Considerations
 
 **File Boundary Handling**: When loading multiple files, the system ensures training sequences never cross file boundaries, maintaining data integrity.
@@ -212,8 +216,11 @@ multimodal_1/
 ├── config_manager.py          # YAML configuration management
 ├── compatibility_layer.py     # Configuration compatibility
 ├── experimental_utils.py      # Experimental functions
-└── data_1/                    # Data directory
-    └── tick_10m/             # Sample data files
+├── data_1/                    # Data directory
+│   └── tick_10m/             # Sample data files
+└── output/                    # Output directory (auto-created)
+    ├── training_log.txt      # Training logs and results
+    └── TransformerModel.pth  # Saved model weights
 ```
 
 ## ⚙️ Configuration
