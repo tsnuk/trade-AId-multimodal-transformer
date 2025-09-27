@@ -537,7 +537,10 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
 
 
 def convert_to_percent_changes(data, decimal_places=2):
-    """Convert data to percentage changes between adjacent data points.
+    """Convert data to percentage changes between adjacent data points (backward-looking).
+
+    Calculates percentage change from previous value to current value:
+    ((current - previous) / previous) * 100
 
     Args:
         data: List of numeric data points.
@@ -545,6 +548,7 @@ def convert_to_percent_changes(data, decimal_places=2):
 
     Returns:
         List of percentage changes with first element as 0.0.
+        Length matches input data length for consistent batch generation.
 
     Raises:
         TypeError: If inputs are not of expected types.
@@ -564,18 +568,18 @@ def convert_to_percent_changes(data, decimal_places=2):
     else:
         decimal_places = 2 # Default value
 
-    # Convert to percentage changes
-    percent_changes = [0.0] # Prepend 0 as the first element (in order to keep the processed data at the same length as the input data)
+    # Convert to percentage changes (backward-looking)
+    percent_changes = [0.0] # First element is always 0 (no previous value to compare against)
                             # (this element will later be skipped over when generating batch starting indices)
 
-    for i in range(len(data) - 1):
+    for i in range(1, len(data)):
         current_value = data[i]
-        next_value = data[i+1]
+        previous_value = data[i-1]
 
-        if current_value == 0:
-            raise ZeroDivisionError(f"Cannot calculate percentage change: division by zero at index {i} (current value is 0).")
+        if previous_value == 0:
+            raise ZeroDivisionError(f"Cannot calculate percentage change: previous value is zero at index {i-1}.")
 
-        percentage_change = ((next_value - current_value) / current_value) * 100
+        percentage_change = ((current_value - previous_value) / previous_value) * 100
         rounded_percentage = round(percentage_change, decimal_places)
         percent_changes.append(rounded_percentage)
 

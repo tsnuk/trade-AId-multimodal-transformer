@@ -269,6 +269,7 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
     column_number = input_info[1]
     has_header = input_info[2]
     convert_to_percentages = input_info[3]
+    num_dec_places = input_info[5]
 
     cache = get_file_cache()
 
@@ -297,17 +298,65 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
 
     # Apply percentage conversion if requested
     if convert_to_percentages:
-        all_data = _convert_to_percentage_changes(all_data)
+        if os.path.isfile(data_path):
+            # Single file - apply conversion directly
+            all_data = _convert_to_percentage_changes(all_data, num_dec_places if num_dec_places else 2)
+        else:
+            # Multiple files - apply conversion per file segment, then concatenate
+            converted_data = []
+            data_index = 0
+
+            # Process each file segment separately using file_info
+            for i in range(0, len(file_info), 2):
+                file_name = file_info[i]
+                file_length = file_info[i + 1]
+
+                # Extract this file's data segment
+                file_segment = all_data[data_index:data_index + file_length]
+
+                # Apply percentage conversion to this segment only
+                converted_segment = _convert_to_percentage_changes(file_segment, num_dec_places if num_dec_places else 2)
+
+                # Add to final result
+                converted_data.extend(converted_segment)
+
+                data_index += file_length
+
+            all_data = converted_data
 
     return all_data, file_info
 
 
-def _convert_to_percentage_changes(data: List) -> List[float]:
-    """Convert data to percentage changes from a list of numeric values."""
-    if not data:
-        return []
+def _convert_to_percentage_changes(data: List, decimal_places: int = 2) -> List[float]:
+    """Convert data to percentage changes between adjacent data points (backward-looking).
 
-    percentages = [0.0]  # First element is always 0 (no previous value)
+    Calculates percentage change from previous value to current value:
+    ((current - previous) / previous) * 100
+
+    Args:
+        data: List of numeric data points.
+        decimal_places: Number of decimal places to round to (default: 2).
+
+    Returns:
+        List of percentage changes with first element as 0.0.
+        Length matches input data length for consistent batch generation.
+
+    Raises:
+        ValueError: If data is empty or contains non-numeric values.
+        ZeroDivisionError: If any value is zero (division by zero in calculation).
+    """
+    # Input validation
+    if not isinstance(data, list) or not data:
+        raise ValueError("'data' must be a non-empty list.")
+
+    if decimal_places is not None:
+        if not isinstance(decimal_places, int) or decimal_places < 0:
+            raise ValueError("'decimal_places' must be a non-negative integer or None.")
+    else:
+        decimal_places = 2  # Default value
+
+    percentages = [0.0]  # First element is always 0 (no previous value to compare against)
+                         # (this element will later be skipped over when generating batch starting indices)
 
     for i in range(1, len(data)):
         try:
@@ -318,11 +367,15 @@ def _convert_to_percentage_changes(data: List) -> List[float]:
                 raise ZeroDivisionError(f"Cannot calculate percentage change: previous value is zero at index {i-1}")
 
             percentage_change = ((current - previous) / previous) * 100
-            percentages.append(percentage_change)
+            rounded_percentage = round(percentage_change, decimal_places)
+            percentages.append(rounded_percentage)
 
         except (ValueError, TypeError) as e:
             raise ValueError(f"Non-numeric data encountered at index {i}: {data[i]}. "
                            f"Cannot calculate percentage change: {e}")
+
+    if len(percentages) != len(data):
+        print(f"Warning: Returned list length ({len(percentages)}) does not match input list length ({len(data)}).")
 
     return percentages
 
