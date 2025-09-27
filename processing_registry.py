@@ -21,14 +21,14 @@ from typing import Callable, Dict, Any, List
 from data_utils import (
     range_numeric_data,
     bin_numeric_data,
-    calculate_percent_changes,
+    convert_to_percent_changes,
     add_rand_to_data_points
 )
 
 builtin_processing_functions: Dict[str, Callable] = {
     'range_numeric_data': range_numeric_data,
     'bin_numeric_data': bin_numeric_data,
-    'calculate_percent_changes': calculate_percent_changes,
+    'convert_to_percent_changes': convert_to_percent_changes,
     'add_rand_to_data_points': add_rand_to_data_points,
 }
 
@@ -171,7 +171,7 @@ BUILTIN_FUNCTION_VALIDATION = {
             'exponent': lambda x: isinstance(x, (int, float)) and x > 0
         }
     },
-    'calculate_percent_changes': {
+    'convert_to_percent_changes': {
         'required': [],
         'optional': ['decimal_places'],
         'types': {

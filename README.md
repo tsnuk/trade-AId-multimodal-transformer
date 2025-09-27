@@ -260,7 +260,7 @@ modalities:
     column_number: 13
     has_header: true
     processing_steps:
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
         args: {}
       - function: bin_numeric_data
         args:
@@ -497,7 +497,7 @@ configure_for_dataset('./new_data/', 512)
 
 #### Data Transformation
 
-**`calculate_percent_changes`**: Convert to percentage changes
+**`convert_to_percent_changes`**: Convert to percentage changes
 - **Purpose**: Focus on relative movement rather than absolute values
 - **Benefit**: Often more meaningful for prediction tasks than raw prices
 - **Parameters**:
@@ -507,11 +507,11 @@ configure_for_dataset('./new_data/', 512)
   ```yaml
   # Convert prices to percentage changes with 2 decimal places
   # [100, 105, 102] → [0, 5.00, -2.86]
-  - function: calculate_percent_changes
+  - function: convert_to_percent_changes
     args: {decimal_places: 2}
 
   # Higher precision for small movements
-  - function: calculate_percent_changes
+  - function: convert_to_percent_changes
     args: {decimal_places: 4}
   ```
 - **Output**: Same-length list with first element as 0 (no previous value to compare)
@@ -959,7 +959,7 @@ modalities:
     path: "./data/sp500_daily.csv"
     column_number: 4
     processing_steps:
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
       - function: bin_numeric_data
         args: {num_bins: 7}
     cross_attention: true
@@ -1047,7 +1047,7 @@ modalities:
     path: "./data/semiconductor_sector/"  # Folder with multiple stock files
     column_number: 4  # Close price column
     processing_steps:
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
       - function: range_numeric_data
         args: {num_whole_digits: 2, decimal_places: 2}
     cross_attention: true
@@ -1080,7 +1080,7 @@ modalities:
     path: "./data/pairs_trading/ko_daily.csv"
     column_number: 4
     processing_steps:
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
       - function: add_rand_to_data_points
         args: {rand_size: 1}
     cross_attention: true
@@ -1089,7 +1089,7 @@ modalities:
     path: "./data/pairs_trading/pep_daily.csv"
     column_number: 4
     processing_steps:
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
       - function: add_rand_to_data_points
         args: {rand_size: 1}
     cross_attention: true

@@ -297,13 +297,13 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
 
     # Apply percentage conversion if requested
     if convert_to_percentages:
-        all_data = _calculate_percentage_changes(all_data)
+        all_data = _convert_to_percentage_changes(all_data)
 
     return all_data, file_info
 
 
-def _calculate_percentage_changes(data: List) -> List[float]:
-    """Calculate percentage changes from a list of numeric values."""
+def _convert_to_percentage_changes(data: List) -> List[float]:
+    """Convert data to percentage changes from a list of numeric values."""
     if not data:
         return []
 

@@ -25,7 +25,7 @@ __all__ = [
     # Data processing functions
     'numerical_representation', 'create_train_val_datasets',
     # Built-in processing functions
-    'range_numeric_data', 'bin_numeric_data', 'calculate_percent_changes', 'add_rand_to_data_points',
+    'range_numeric_data', 'bin_numeric_data', 'convert_to_percent_changes', 'add_rand_to_data_points',
     # Utility functions
     'report_non_numeric_error'
 ]
@@ -141,11 +141,11 @@ def load_file_data(input_info):
         if convert_to_percentages is True:
             data_is_numeric = all(isinstance(item, numbers.Number) for item in column_data_list)
             if not data_is_numeric:
-                print(f"\\nError: Percentage calculation specified for Modality '{modality_name if modality_name else data_name_from_path}' from file '{filename}', but data is not entirely numeric.")
+                print(f"\\nError: Percentage conversion specified for Modality '{modality_name if modality_name else data_name_from_path}' from file '{filename}', but data is not entirely numeric.")
                 report_non_numeric_error(column_data_list, data_info + [filename, len(column_data_list)], modality_name if modality_name else data_name_from_path)
 
             try:
-                percentages = calculate_percent_changes(column_data_list, num_dec_places if num_dec_places else 2)
+                percentages = convert_to_percent_changes(column_data_list, num_dec_places if num_dec_places else 2)
                 loaded_data.extend(percentages)
             except ZeroDivisionError as e:
                 print(f"\\nError: Division by zero encountered when calculating percentage changes for Modality '{modality_name if modality_name else data_name_from_path}' from file '{filename}'.")
@@ -536,8 +536,8 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
     return group_assignments
 
 
-def calculate_percent_changes(data, decimal_places=2):
-    """Calculate percentage changes between adjacent data points.
+def convert_to_percent_changes(data, decimal_places=2):
+    """Convert data to percentage changes between adjacent data points.
 
     Args:
         data: List of numeric data points.
@@ -564,7 +564,7 @@ def calculate_percent_changes(data, decimal_places=2):
     else:
         decimal_places = 2 # Default value
 
-    # Calculate percentage changes
+    # Convert to percentage changes
     percent_changes = [0.0] # Prepend 0 as the first element (in order to keep the processed data at the same length as the input data)
                             # (this element will later be skipped over when generating batch starting indices)
 

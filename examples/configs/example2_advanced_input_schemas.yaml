@@ -49,7 +49,7 @@ modalities:
     has_header: true
     processing_steps:
       # Step 1: Convert to percentage changes
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
         args:
           decimal_places: 3  # High precision for volatility analysis
         enabled: true

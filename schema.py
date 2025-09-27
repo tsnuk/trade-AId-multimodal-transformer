@@ -113,7 +113,7 @@ class InputSchema:
 
         if len(legacy_list) > 3 and legacy_list[3]:
             processing_steps.append(ProcessingStep(
-                function='calculate_percent_changes',
+                function='convert_to_percent_changes',
                 args={}
             ))
 
@@ -225,7 +225,7 @@ class InputSchema:
         num_bins = None
 
         for step in self.processing_steps:
-            if step.function == 'calculate_percent_changes':
+            if step.function == 'convert_to_percent_changes':
                 convert_to_percents = True
             elif step.function == 'range_numeric_data':
                 num_whole_digits = step.args.get('num_whole_digits')

@@ -188,7 +188,7 @@ for m in range(num_modalities):
         schema = schemas[m]
         for step in schema.processing_steps:
           if step.enabled:
-            if step.function == 'calculate_percent_changes':
+            if step.function == 'convert_to_percent_changes':
               processing_applied.append("percentages")
             elif step.function == 'range_numeric_data':
               processing_applied.append("ranging")

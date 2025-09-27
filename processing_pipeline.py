@@ -188,7 +188,7 @@ class ProcessingPipeline:
             metadata: Dictionary to store tracking information.
         """
         special_functions = {
-            'calculate_percent_changes': 'is_percent_data',
+            'convert_to_percent_changes': 'is_percent_data',
             'bin_numeric_data': 'is_binned_data',
             'range_numeric_data': 'is_ranged_data'
         }

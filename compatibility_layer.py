@@ -255,7 +255,7 @@ class CompatibilityMode:
             if modality_index < len(schemas):
                 schema = schemas[modality_index]
                 for step in schema.processing_steps:
-                    if step.function == 'calculate_percent_changes' and step.enabled:
+                    if step.function == 'convert_to_percent_changes' and step.enabled:
                         return True
                 return False
         else:

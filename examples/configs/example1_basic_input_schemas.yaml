@@ -45,7 +45,7 @@ modalities:
     has_header: true
     processing_steps:
       # First convert to percentage changes
-      - function: calculate_percent_changes
+      - function: convert_to_percent_changes
         args: {}
         enabled: true
       # Then bin the percentages into 5 categories
