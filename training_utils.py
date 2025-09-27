@@ -419,7 +419,7 @@ def estimate_loss():
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"Directional Metrics - {print_state}:")
+        print(f"Directional Metrics - {print_state} (Correct/Total):")
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
@@ -433,7 +433,7 @@ def estimate_loss():
                 total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                 if total_predictions > 0:
                     overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                    print(f"  '{modality_name}': {correct}/{incorrect} ({overall_success_rate_modality}%)")
+                    print(f"  '{modality_name}': {correct}/{total_predictions} ({overall_success_rate_modality}%)")
                 else:
                     print(f"  '{modality_name}': No directional predictions")
 

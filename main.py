@@ -415,9 +415,8 @@ for iter in range(max_iters):
     if save_model == 1 and (iter % eval_interval == 0 or iter == max_iters - 1):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        print(f'Saving: Model checkpoint | {current_time}')
         torch.save(m.state_dict(), model_file_name)
-        print(f"Saved: {round(os.path.getsize(model_file_name)/1024**2,2)} MB")
+        print(f'Saved: Model checkpoint ({round(os.path.getsize(model_file_name)/1024**2,2)} MB) | {current_time}')
         print()
 
 
