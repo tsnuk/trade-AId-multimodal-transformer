@@ -208,7 +208,7 @@ for m in range(num_modalities):
 
   print(f"  Modality {m+1} '{this_modality_name}':")
 
-  print(f"    Vocabulary size: {raw_vocab_size:,} → {len(this_vocabulary):,}{processing_text}")
+  print(f"    Vocabulary size: {raw_vocab_size:,} -> {len(this_vocabulary):,}{processing_text}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
@@ -281,7 +281,7 @@ model_params = n_embd * sum(all_vocab_sizes) + n_embd * block_size + n_layer * (
 )
 
 print("="*60)
-print("🤖 MODEL CREATION & TRAINING")
+print("MODEL CREATION & TRAINING")
 print("="*60)
 print()
 print("Model Configuration:")

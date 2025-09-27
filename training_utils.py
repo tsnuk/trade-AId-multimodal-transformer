@@ -47,8 +47,48 @@ __all__ = [
 
 
 def generate_batch_starting_indices(data_size, block_size, batch_size, split, file_lengths, is_percents):
-    """Generate random starting indices for batch sequences, respecting file boundaries."""
-    # Validate inputs
+    '''
+    Generates a batch of random starting indices for extracting sequences from split datasets,
+    ensuring that sequences don't cross file boundaries and have sufficient length for both
+    input and target sequences.
+
+    The function works with train/val splits by using the 'split' parameter to determine
+    which portion of the original files corresponds to the current dataset:
+    - For 'train': Uses files from the beginning of file_lengths
+    - For 'val': Uses files from the end of file_lengths (working backwards)
+
+    Each generated index ensures that both the input sequence (block_size) and target
+    sequence (block_size, offset by 1) fit entirely within a single file boundary.
+
+    Args:
+        data_size: The total size of the current split dataset ('train' or 'val').
+                   Must be a positive integer.
+        block_size: The length of input sequences to be extracted (context window size).
+                    Must be a positive integer and less than data_size.
+                    Note: Actual space needed is block_size + 1 for both input and target.
+        batch_size: The number of starting indices to generate.
+                    Must be a positive integer.
+        split: Specifies which dataset split this is ('train' or 'val').
+               Determines which files from file_lengths to use for boundary calculation.
+        file_lengths: Complete list of file lengths from the original full dataset.
+                      Used to determine file boundaries within the current split.
+                      Must be a list of positive integers.
+        is_percents: Whether percentage conversion is used for any modality.
+                     If True, skips the first element of each file as a starting candidate
+                     (since first element = 0 for percentage data).
+
+    Returns:
+        torch.Tensor: A tensor of shape (batch_size,) containing random starting indices
+                      that respect file boundaries within the current split dataset.
+
+    Raises:
+        TypeError: If inputs are not of the expected types.
+        ValueError: If inputs have invalid values (non-positive sizes, invalid split,
+                    empty file_lengths, block_size >= data_size, or insufficient valid
+                    starting positions available).
+    '''
+
+    # --- Input Validation ---
     if not isinstance(data_size, int) or data_size <= 0:
         raise TypeError("'data_size' must be a positive integer.")
     if not isinstance(block_size, int) or block_size <= 0:
@@ -57,55 +97,102 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
         raise ValueError("'block_size' cannot be equal to or greater than 'data_size'.")
     if not isinstance(batch_size, int) or batch_size <= 0:
         raise TypeError("'batch_size' must be a positive integer.")
-    if split not in ['train', 'val']:
+    if not isinstance(split, str) or (split != 'train' and split != 'val'):
         raise ValueError("'split' must be 'train' or 'val'.")
-    if not isinstance(file_lengths, list) or not all(isinstance(length, int) and length > 0 for length in file_lengths):
-        raise TypeError("'file_lengths' must be a list of positive integers.")
+    if not isinstance(file_lengths, list) or not len(file_lengths) >= 1:
+        raise TypeError("'file_lengths' must be a list containing at least 1 element.")
     if not isinstance(is_percents, bool):
         raise TypeError("'is_percents' must be a boolean.")
 
-    first_element_offset = 1 if is_percents else 0
-    block_size_xy = block_size + 1
+
+    block_size_xy = block_size + 1  # Space needed for both input and target sequences
+
+
+    if is_percents:
+        # The 1st element in each file will be skipped when generating starting indices
+        first_element_offset = 1
+    else:
+        first_element_offset = 0
+
 
     if len(file_lengths) == 1:
-        # Single file case
+        # Single file case - generate indices with boundary checks
         return torch.randint(first_element_offset, data_size - block_size_xy + 1, (batch_size,))
-    else:
-        # Multiple files case - calculate valid positions per file
-        valid_positions_per_file = []
-        total_valid_ix_positions = 0
 
-        for file_length in file_lengths:
-            valid_positions_in_file = max(0, file_length - block_size_xy - first_element_offset + 1)
-            valid_positions_per_file.append(valid_positions_in_file)
-            total_valid_ix_positions += valid_positions_in_file
 
-        if total_valid_ix_positions == 0:
-            raise ValueError("No valid starting positions available. All files are too short for the given block_size.")
+    if len(file_lengths) > 1:
+        # When dealing with a combined dataset of multiple files, we need to ensure sequences don't cross file boundaries.
+        dataset_file_lengths = []  # File lengths for current split only
+        num_files_loaded = len(file_lengths)
+        file_size_accum = 0
 
-        # Generate and map indices back to correct starting positions
+        for f in range(num_files_loaded):
+
+            if split == 'train':
+                this_file_size = file_lengths[f]
+
+            if split == 'val':
+                # Work backwards from end of file_lengths (validation set uses end of dataset)
+                this_file_size = file_lengths[num_files_loaded - 1 - f]
+
+            file_size_accum += this_file_size
+
+            if file_size_accum <= data_size:
+                dataset_file_lengths.append(this_file_size)
+
+            if file_size_accum > data_size:
+                # Add the portion of the last loaded file making this data set
+                dataset_file_lengths.append(data_size - (file_size_accum - this_file_size))
+
+            if file_size_accum >= data_size:
+                if split == 'val':
+                    # Now we reverse the order of lengths because we accumulated file sizes from the end of file_lengths backwards
+                    dataset_file_lengths.reverse()
+                break
+
+
+        # Calculate the total number of valid starting positions across all relevant files
+        # A valid starting position for a file of length L is from first_element_offset to L - block_size_xy.
+        # Total valid positions in a file of length L is L - block_size_xy - first_element_offset + 1.
+        total_valid_ix_positions = sum(max(0, length - block_size_xy - first_element_offset + 1) for length in dataset_file_lengths)
+
+
+        # Handle the case where there are no valid starting positions
+        if total_valid_ix_positions <= 0:
+            raise ValueError(f"No valid starting positions available for the given block size and file lengths.")
+
+
+        # Generate initial random indices within the range of total valid positions
         initial_indices = torch.randint(total_valid_ix_positions, (batch_size,))
+
+        # Now, map these initial indices back to the correct starting positions in the
+        # combined data, ensuring they fall within the valid range of a specific file.
         actual_indices = torch.empty(batch_size, dtype=torch.long)
 
         for i in range(batch_size):
             cumulative_valid_ix_positions = 0
             found_position = False
-            selected_index = initial_indices[i].item()
 
-            cumulative_data_length = 0
-            for file_idx, (file_length, valid_positions_in_file) in enumerate(zip(file_lengths, valid_positions_per_file)):
-                if cumulative_valid_ix_positions <= selected_index < cumulative_valid_ix_positions + valid_positions_in_file:
-                    relative_index_in_file = selected_index - cumulative_valid_ix_positions
-                    actual_starting_position = cumulative_data_length + first_element_offset + relative_index_in_file
-                    actual_indices[i] = actual_starting_position
+            # Iterate through only the relevant file lengths
+            for k, length in enumerate(dataset_file_lengths):
+                valid_ix_positions_in_this_file = max(0, length - block_size_xy - first_element_offset + 1)
+
+                if initial_indices[i] < cumulative_valid_ix_positions + valid_ix_positions_in_this_file:
+                    # Map to actual position within the file
+                    position_within_file = initial_indices[i] - cumulative_valid_ix_positions
+                    start_of_this_file = sum(dataset_file_lengths[:k])
+                    actual_indices[i] = start_of_this_file + position_within_file + first_element_offset
+
                     found_position = True
                     break
 
-                cumulative_valid_ix_positions += valid_positions_in_file
-                cumulative_data_length += file_length
+                cumulative_valid_ix_positions += valid_ix_positions_in_this_file
+
+
 
             if not found_position:
-                raise RuntimeError(f"Could not map random index {selected_index} to a valid starting position.")
+                 raise ValueError(f"Could not map initial index {initial_indices[i]} to a valid ix position.")
+
 
         return actual_indices
 
@@ -232,86 +319,37 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
 def get_batch(split, is_training):
     # Generate for all modalities batches of data of inputs (xb_list) and targets (yb_list)
 
-    # ORIGINAL CORRECT APPROACH: Use full datasets for index generation and batch extraction
-    # This preserves file boundary logic and then applies train/val split correctly
+    # Create a temporary list for train sets to potentially apply randomness
+    temp_all_train_sets_processed = [t for t in all_train_sets]
 
-    # Generate starting indices using FULL datasets (preserves file boundary logic)
-    full_data_size = len(all_full_datasets[0])
-    ix = generate_batch_starting_indices(full_data_size, _get_block_size(), _get_batch_size(), split, file_lengths, is_percents)
+    for r in range(num_modalities):
+        this_rand_size = all_modality_params[r][2]
+        this_vocab_size = len(all_vocabularies[r])
 
-    # Determine train/val boundaries from the split configuration
-    # This should match the logic used in create_train_val_datasets
-    from compatibility_layer import get_system_configuration
-    system_config = get_system_configuration()
-    validation_size = system_config['validation_size']
-    num_validation_files = system_config['num_validation_files']
+        # Randomness would only be applied to training sets (is_training = 1)
+        if this_rand_size is not None and is_training == 1:
+            # Apply randomness to the temporary list for this modality
+            from data_utils import add_rand_to_data_points
+            temp_all_train_sets_processed[r] = add_rand_to_data_points(temp_all_train_sets_processed[r], this_rand_size, this_vocab_size)
 
-    if num_validation_files > 0:
-        # File-based splitting logic would go here (not implemented in this fix)
-        raise NotImplementedError("File-based validation splitting not yet restored")
-    else:
-        # Percentage-based splitting
-        val_start_idx = int(full_data_size * (1 - validation_size))
+    # Convert processed training data lists to tensors
+    temp_all_train_sets_tensors = [torch.tensor(t, dtype=torch.long) for t in temp_all_train_sets_processed]
 
-        # Filter indices based on split type
-        if split == 'train':
-            # Keep only indices that fall in training portion
-            valid_indices = ix[ix < val_start_idx]
-        else:  # split == 'val'
-            # Keep only indices that fall in validation portion
-            valid_indices = ix[ix >= val_start_idx]
-            # Adjust indices to be relative to validation start
-            valid_indices = valid_indices - val_start_idx
+    # all_val_sets are already tensors from create_train_val_datasets
+    temp_data_list = temp_all_train_sets_tensors if split == 'train' else all_val_sets
 
-        # If we don't have enough valid indices, regenerate
-        # (This is a simplified approach; proper implementation would regenerate until enough valid indices)
-        if len(valid_indices) < _get_batch_size():
-            # For now, pad with valid indices (not ideal but prevents crash)
-            if len(valid_indices) > 0:
-                # Repeat existing valid indices to reach _get_batch_size()
-                repeats_needed = (_get_batch_size() + len(valid_indices) - 1) // len(valid_indices)
-                valid_indices = valid_indices.repeat(repeats_needed)[:_get_batch_size()]
-            else:
-                # No valid indices found, use boundary-safe indices
-                if split == 'train':
-                    max_safe_idx = val_start_idx - _get_block_size() - 1
-                    valid_indices = torch.randint(0, max(1, max_safe_idx), (_get_batch_size(),))
-                else:
-                    val_size = full_data_size - val_start_idx
-                    max_safe_idx = val_size - _get_block_size() - 1
-                    if max_safe_idx > 0:
-                        valid_indices = torch.randint(0, max_safe_idx, (_get_batch_size(),))
-                    else:
-                        raise ValueError("Validation set too small for _get_block_size()")
-        else:
-            valid_indices = valid_indices[:_get_batch_size()]
+    # Generate starting indices for the first modality (assuming all modalities have the same length and structure)
+    # (we might need to adjust this if modalities have different structures/lengths)
+    data_size = len(temp_data_list[0])
+    ix = generate_batch_starting_indices(data_size, _get_block_size(), _get_batch_size(), split, file_lengths, is_percents)
 
-    # Use the appropriate dataset portion for extraction
-    if split == 'train':
-        # Extract from full datasets for training
-        dataset_tensors = [torch.tensor(all_full_datasets[r][:val_start_idx], dtype=torch.long) for r in range(num_modalities)]
-    else:
-        # Extract from full datasets for validation
-        dataset_tensors = [torch.tensor(all_full_datasets[r][val_start_idx:], dtype=torch.long) for r in range(num_modalities)]
-
-    # Apply randomness to training data if needed
-    if split == 'train' and is_training == 1:
-        for r in range(num_modalities):
-            this_rand_size = all_modality_params[r][2] if len(all_modality_params[r]) > 2 else None
-            this_vocab_size = len(all_vocabularies[r])
-
-            if this_rand_size is not None:
-                from data_utils import add_rand_to_data_points
-                randomized_data = add_rand_to_data_points(dataset_tensors[r].tolist(), this_rand_size, this_vocab_size)
-                dataset_tensors[r] = torch.tensor(randomized_data, dtype=torch.long)
-
-    # Create batches for all modalities using valid indices
+    # Create batches for all modalities
     xb_list = []
     yb_list = []
     for r in range(num_modalities):
-        temp_data = dataset_tensors[r]
-        xb = torch.stack([temp_data[i:i+_get_block_size()] for i in valid_indices])
-        yb = torch.stack([temp_data[i+1:i+_get_block_size()+1] for i in valid_indices])
+        temp_data = temp_data_list[r]
+        xb = torch.stack([temp_data[i:i+_get_block_size()] for i in ix])
+        yb = torch.stack([temp_data[i+1:i+_get_block_size()+1] for i in ix])
         xb, yb = xb.to(_get_device()), yb.to(_get_device())
         xb_list.append(xb)
         yb_list.append(yb)
