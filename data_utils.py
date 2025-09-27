@@ -560,9 +560,12 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
                 print(f"        Bin {i:2d}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
 
 
-    total_assigned = sum(group_assignments.count(i) for i in range(-num_groups, num_groups + 1))
+    # Verify all data points were assigned to bins
+    total_assigned = sum(group_counts.values())
     if total_assigned != len(data):
-        print(f"Warning: Total assigned data points ({total_assigned}) does not match input data length ({len(data)}) for {display_modality_name}.")
+        print(f"        ⚠️  Warning: Total assigned elements ({total_assigned}) ≠ input data length ({len(data)})")
+    else:
+        print(f"        ✓ All {len(data)} elements successfully assigned to bins")
 
     return group_assignments
 
