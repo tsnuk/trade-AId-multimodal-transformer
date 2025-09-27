@@ -387,7 +387,10 @@ hyperparams = {
     "block_size": block_size,
     "batch_size": batch_size,
     "dropout": dropout,
-    "learning_rate": learning_rate
+    "learning_rate": learning_rate,
+    "device": device,
+    "max_iters": max_iters,
+    "eval_interval": eval_interval
 }
 
 modality_vocab_sizes_summary = ", ".join([f"Modality {i+1}={len(all_vocabularies[i])}" for i in range(num_modalities)])
@@ -441,13 +444,13 @@ if output_dir and not os.path.exists(output_dir):
 if output_file_name != '':
     write_initial_run_details(output_file_path, hyperparams, data_info, modality_configs, run_stats)
     with open(output_file_path, 'a', encoding='utf-8') as f:
-        f.write("\\n\\n--- Evaluation Results ---\\n")
+        f.write("\n\n--- Evaluation Results ---\n")
 
 print()
 print(f"🔄 TRAINING PROGRESS")
 print(f"  ▪ Iterations: {max_iters}")
 print(f"  ▪ Device: {device}")
-print("  ▪ Note: Intensive computation ahead")
+print("  ▪ Note: ** Intensive computation ahead **")
 print()
 
 best_val_loss = float('inf')
@@ -467,7 +470,13 @@ for iter in range(max_iters):
              print("─" * 80)
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
-                   f.write(f"Step {iter} Summary: Training Loss: {losses['train']:.4f} | Validation Loss: {losses['val']:.4f} | Time: {current_time}\\n\\n")
+                   progress_pct = (iter / max_iters) * 100
+                   f.write(f"📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | {current_time}\n")
+                   f.write(f"   Training Loss: {losses['train']:.6f}\n")
+                   f.write(f"   Validation Loss: {losses['val']:.6f}\n")
+                   if 'directional_accuracy' in losses:
+                       f.write(f"   Directional Accuracy: {losses.get('directional_accuracy', 'N/A')}\n")
+                   f.write("\n")
         else:
              print(f"Warning: Step {iter} losses are NaN, skipping save | {current_time}")
 

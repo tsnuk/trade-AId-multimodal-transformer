@@ -624,45 +624,84 @@ def convert_to_percent_changes(data, decimal_places=2):
 
 
 def write_initial_run_details(file_path, hyperparams, data_info, modality_configs, run_stats):
-    """Write initial run details to specified output file.
+    """Write comprehensive training run details to log file.
 
     Args:
         file_path: Full path to the output file.
         hyperparams: Dictionary containing model hyperparameters.
-        data_info: Dictionary containing general data information (e.g., split sizes).
-        modality_configs: List of dictionaries with modality configuration details.
-        run_stats: Dictionary containing overall run statistics (e.g., number of parameters).
+        data_info: Dictionary containing data loading information.
+        modality_configs: List of modality configuration dictionaries.
+        run_stats: Dictionary containing run statistics.
     """
-    if file_path: # Only write if a file path is provided
-        with open(file_path, 'a', encoding='utf-8') as f:
+    if file_path:  # Only write if a file path is provided
+        with open(file_path, 'w', encoding='utf-8') as f:
             from datetime import datetime
             now = datetime.now()
             current_time_date = now.strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"\\n\\n{current_time_date}\\n")
-            f.write("\\nModel Settings and Data Information:\\n")
 
-            # Write hyperparameters
-            f.write("Hyperparameters:\\n")
-            for key, value in hyperparams.items():
-                f.write(f"  {key}: {value}\\n")
+            # Header
+            f.write("="*80 + "\n")
+            f.write("🚀 TRADE-AID MULTIMODAL TRANSFORMER TRAINING LOG\n")
+            f.write("="*80 + "\n")
+            f.write(f"Training Started: {current_time_date}\n")
+            f.write("="*80 + "\n\n")
 
-            # Write run statistics
-            f.write("\\nRun Statistics:\\n")
-            for key, value in run_stats.items():
-                f.write(f"  {key}: {value}\\n")
+            # System Configuration
+            f.write("📊 SYSTEM CONFIGURATION\n")
+            f.write("-" * 50 + "\n")
+            f.write(f"Model Parameters: {run_stats.get('Model parameter size (M)', 'Unknown')} million\n")
+            f.write(f"Device: {hyperparams.get('device', 'Unknown')}\n")
+            f.write(f"Training Iterations: {hyperparams.get('max_iters', 'Unknown')}\n")
+            f.write(f"Evaluation Interval: {hyperparams.get('eval_interval', 'Unknown')}\n\n")
 
-            # Write data information
-            f.write("\\nData Information:\\n")
-            for key, value in data_info.items():
-                f.write(f"  {key}: {value}\\n")
+            # Model Architecture
+            f.write("🏗️ MODEL ARCHITECTURE\n")
+            f.write("-" * 50 + "\n")
+            f.write(f"Embedding Dimension: {hyperparams.get('n_embd', 'Unknown')}\n")
+            f.write(f"Attention Heads: {hyperparams.get('n_head', 'Unknown')}\n")
+            f.write(f"Transformer Layers: {hyperparams.get('n_layer', 'Unknown')}\n")
+            f.write(f"Block Size (Sequence Length): {hyperparams.get('block_size', 'Unknown')}\n")
+            f.write(f"Dropout Rate: {hyperparams.get('dropout', 'Unknown')}\n\n")
 
-            # Write modality configurations
-            f.write("\\nInput Schemas (Modality Configurations):\\n")
+            # Training Parameters
+            f.write("⚙️ TRAINING PARAMETERS\n")
+            f.write("-" * 50 + "\n")
+            f.write(f"Batch Size: {hyperparams.get('batch_size', 'Unknown')}\n")
+            f.write(f"Learning Rate: {hyperparams.get('learning_rate', 'Unknown')}\n")
+            f.write(f"Validation Size: {data_info.get('Split method', 'Unknown')}\n\n")
+
+            # Dataset Information
+            f.write("📋 DATASET INFORMATION\n")
+            f.write("-" * 50 + "\n")
+            f.write(f"Number of Modalities: {data_info.get('Number of modalities', 'Unknown')}\n")
+            f.write(f"Training Set Size: {data_info.get('Train set size', 'Unknown'):,} samples\n")
+            f.write(f"Validation Set Size: {data_info.get('Val set size', 'Unknown'):,} samples\n")
+            f.write(f"Vocabulary Sizes: {data_info.get('Modality vocabulary sizes', 'Unknown')}\n")
+            f.write(f"Data Lengths: {data_info.get('Modality data lengths', 'Unknown')}\n\n")
+
+            # Modality Configurations
+            f.write("🔧 MODALITY CONFIGURATIONS\n")
+            f.write("-" * 50 + "\n")
             for i, config in enumerate(modality_configs):
-                f.write(f"  Modality {i+1}:\\n")
-                for key, value in config.items():
-                    f.write(f"    {key}: {value}\\n")
-            f.write("\\n")
+                f.write(f"\n📁 {config.get('Modality Name', f'Modality {i+1}')}\n")
+                f.write(f"   Source File: {config.get('Source', 'Unknown')}\n")
+
+                # Processing applied
+                processing_steps = []
+                if config.get('Convert to Percents'):
+                    processing_steps.append("Percentage Conversion")
+                if config.get('Num Whole Digits') or config.get('Decimal Places'):
+                    range_info = f"Ranging ({config.get('Num Whole Digits', 'N/A')} digits, {config.get('Decimal Places', 'N/A')} decimals)"
+                    processing_steps.append(range_info)
+                if config.get('Num Bins'):
+                    processing_steps.append(f"Binning ({config.get('Num Bins')} groups)")
+                if config.get('Rand Size'):
+                    processing_steps.append(f"Randomness (size {config.get('Rand Size')})")
+
+                f.write(f"   Processing: {', '.join(processing_steps) if processing_steps else 'None'}\n")
+                f.write(f"   Cross-Attention: {'Enabled' if config.get('Cross-Attend') else 'Disabled'}\n")
+
+            f.write("\n" + "="*80 + "\n\n")
 
 
 # Add required imports that may be missing

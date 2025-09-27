@@ -503,11 +503,11 @@ def estimate_loss(current_step=None, max_steps=None):
                     total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                     if total_predictions > 0:
                         overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                        f.write(f"{print_state} set (Modality {modality_index+1}: {modality_name}): Total Batches={this_num_batches_processed}, Directional Correct={all_modalities_total_correct[modality_index]}, Directional Incorrect={all_modalities_total_incorrect[modality_index]}, Directional Success Rate (correct/incorrect)={overall_success_rate_modality}%\\n")
+                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Batches={this_num_batches_processed:,} | Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
                     else:
-                        f.write(f"{print_state} set (Modality {modality_index+1}: {modality_name}): Total Batches={this_num_batches_processed}, Directional Correct={all_modalities_total_correct[modality_index]}, Directional Incorrect={all_modalities_total_incorrect[modality_index]}, Directional Success Rate (correct/incorrect)=NA\\n")
+                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Batches={this_num_batches_processed:,} | Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
                 else:
-                    f.write(f"{print_state} set (Modality {modality_index+1}: {modality_name}): Total Batches=0, Directional Correct=0, Directional Incorrect=0, Directional Success Rate (correct/incorrect)=NA\\n")
+                    f.write(f"   📊 {print_state.upper()} - {modality_name}: Batches=0 | Correct=0 | Incorrect=0 | Accuracy=N/A\n")
 
         # Add space between train and val sections
         if state == 'train':
