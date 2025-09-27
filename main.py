@@ -391,12 +391,12 @@ for iter in range(max_iters):
     current_time = now.strftime("%H:%M:%S")
     if iter % 100 == 0 : print(f'Training: Iteration {iter}/{max_iters}')
     if iter % eval_interval == 0 or iter == max_iters - 1:
-        print(f"Evaluation: Step {iter}...")
-        losses = estimate_loss()
+        losses = estimate_loss(iter, max_iters)
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"\n📊 EVALUATION RESULTS")\n             print(f"  ▪ Step: {iter}/{max_iters}")
+             print(f"\n📊 EVALUATION RESULTS")
+             print(f"  ▪ Step: {iter}/{max_iters}")
              print(f"  ▪ Train Loss: {losses['train']:.4f}")
              print(f"  ▪ Val Loss: {losses['val']:.4f}")
              print(f"  ▪ Time: {current_time}")

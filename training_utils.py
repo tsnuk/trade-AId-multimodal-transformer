@@ -406,7 +406,7 @@ def get_batch(split, is_training):
     return xb_list, yb_list
 
 
-def estimate_loss():
+def estimate_loss(current_step=None, max_steps=None):
     """Estimate model loss and calculate directional prediction metrics.
 
     Evaluates the model on both training and validation sets, computing:
@@ -425,7 +425,9 @@ def estimate_loss():
         print_state = "Training" if state == 'train' else "Validation"
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        print(f'Evaluation: {state.title()} set ({_get_eval_iters()} iterations) | {current_time}')
+        step_info = f'Step {current_step}/{max_steps} | ' if current_step is not None else ''
+        batch_calc = f' * {_get_batch_size()} batches = {_get_eval_iters() * _get_batch_size()} total'
+        print(f'Evaluation: {step_info}{state.title()} set ({_get_eval_iters()} iterations{batch_calc}) | {current_time}')
         # Initialize counters for success rate and certainty calculation for all modalities
         all_modalities_total_batches_processed = [0] * num_modalities
         all_modalities_total_correct = [0] * num_modalities
@@ -480,7 +482,7 @@ def estimate_loss():
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
+        print(f"\n📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
