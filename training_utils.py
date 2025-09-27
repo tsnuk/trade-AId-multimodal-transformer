@@ -47,9 +47,7 @@ __all__ = [
     # Batch generation functions
     'generate_batch_starting_indices', 'get_batch',
     # Training utilities
-    'estimate_loss', 'calculate_evaluation_metrics',
-    # Logging functions
-    'save_loss_to_file', 'generate_and_save_output'
+    'estimate_loss', 'calculate_evaluation_metrics'
 ]
 
 
