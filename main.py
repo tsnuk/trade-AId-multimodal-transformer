@@ -214,7 +214,8 @@ for m in range(num_modalities):
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
   else:
-    print(f"    Vocabulary (first 10): {this_vocabulary[:10]}")
+    truncated_vocab = this_vocabulary[:10] + ['...']
+    print(f"    Vocabulary: {truncated_vocab}")
 
 file_lengths = []
 if all_file_info and len(all_file_info) > 0:
