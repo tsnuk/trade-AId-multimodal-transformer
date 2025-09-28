@@ -50,7 +50,7 @@ modalities:
   # EXAMPLE 1: Stock price data with ranging and scaling
   # -------------------------------------------------------------------------
   - modality_name: "S&P 500 Stock Prices"
-    path: "./data_1/tick_10m/"
+    path: "./data_1/moved from tick_10m/"
     column_number: 13  # Close price column
     has_header: true
     processing_steps:
@@ -58,16 +58,16 @@ modalities:
       - function: range_numeric_data
         args:
           num_whole_digits: 2    # Number of digits before decimal
-          decimal_places: 1      # Number of digits after decimal
+          decimal_places: 2      # Number of digits after decimal
         enabled: true
     cross_attention: true  # Enable cross-attention with other modalities
-    randomness_size: null  # No randomness added
+    randomness_size: 2  # No randomness added
 
   # -------------------------------------------------------------------------
   # EXAMPLE 2: Stock price data converted to percentages and binned
   # -------------------------------------------------------------------------
   - modality_name: "S&P 500 Percentage Changes"
-    path: "./data_1/tick_10m/"
+    path: "./data_1/moved from tick_10m/"
     column_number: 13  # Same data, different processing
     has_header: true
     processing_steps:
@@ -79,8 +79,8 @@ modalities:
       # Step 2: Group percentages into 6 bins
       - function: bin_numeric_data
         args:
-          num_bins: 6              # Number of bins to create
-          outlier_percentile: 0.1  # Exclude extreme 10% values from binning
+          num_bins: 6              # Number of positive bins (creates +n, -n, and zero bins)
+          outlier_percentile: 0.1  # Percentile threshold for outlier exclusion from binning
           exponent: 2.2           # Controls bin distribution (higher = more non-uniform)
         enabled: true
     cross_attention: false  # Disable cross-attention for this modality
@@ -90,7 +90,7 @@ modalities:
   # EXAMPLE 3: Time data (no processing needed)
   # -------------------------------------------------------------------------
   - modality_name: "Trading Time"
-    path: "./data_1/tick_10m/"
+    path: "./data_1/moved from tick_10m/"
     column_number: 9   # Time column
     has_header: true
     processing_steps: []  # No processing steps - use raw time data
@@ -101,7 +101,7 @@ modalities:
   # EXAMPLE 4: Day of week data (categorical)
   # -------------------------------------------------------------------------
   - modality_name: "Day of Week"
-    path: "./data_1/tick_10m/"
+    path: "./data_1/moved from tick_10m/"
     column_number: 5   # Day of week column
     has_header: true
     processing_steps: []  # Categorical data typically doesn't need processing
