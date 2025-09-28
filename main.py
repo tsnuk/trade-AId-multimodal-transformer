@@ -418,19 +418,36 @@ modality_configs = []
 for i in range(num_modalities):
     modality_params = all_modality_params[i]
     modality_file_info = all_file_info[i]
-    source_file = modality_file_info[0] if modality_file_info else "Unknown"
+
+    # Determine source information
+    if modality_file_info:
+        source_path = modality_params[0]  # Original path from modality_params
+        if os.path.isdir(source_path):
+            files_loaded = len(modality_file_info) // 2  # modality_file_info contains [file1, length1, file2, length2, ...]
+            source_info = f"Source Folder: {os.path.basename(source_path)} ({files_loaded} files loaded)"
+        else:
+            source_info = f"Source File: {modality_file_info[0]}"
+    else:
+        source_info = "Unknown"
+
+    # Extract actual processing parameters (correct indices)
+    convert_to_percents = modality_params[3] if len(modality_params) > 3 else False
+    num_whole_digits = modality_params[4] if len(modality_params) > 4 else None
+    decimal_places = modality_params[5] if len(modality_params) > 5 else None
+    num_bins = modality_params[6] if len(modality_params) > 6 else None
+    rand_size = modality_params[7] if len(modality_params) > 7 else None
+    cross_attend = modality_params[8] if len(modality_params) > 8 else False
+    modality_name = modality_params[9] if len(modality_params) > 9 else f"Modality {i+1}"
 
     config_dict = {
-        "Source": source_file,
-        "Modality Name": modality_params[6] if modality_params[6] else f"Modality {i+1}",
-        "Num Whole Digits": modality_params[0],
-        "Decimal Places": modality_params[1],
-        "Rand Size": modality_params[2],
-        "Cross-Attend": modality_params[3],
-        "Convert to Percents": modality_params[4],
-        "Num Bins": modality_params[5],
-        "Original Col Num": "N/A (not in processed params)",
-        "Original Has Header": "N/A (not in processed params)"
+        "Source": source_info,
+        "Modality Name": modality_name,
+        "Convert to Percents": convert_to_percents,
+        "Num Whole Digits": num_whole_digits,
+        "Decimal Places": decimal_places,
+        "Num Bins": num_bins,
+        "Rand Size": rand_size,
+        "Cross-Attend": cross_attend
     }
     modality_configs.append(config_dict)
 
@@ -444,7 +461,8 @@ if output_dir and not os.path.exists(output_dir):
 if output_file_name != '':
     write_initial_run_details(output_file_path, hyperparams, data_info, modality_configs, run_stats)
     with open(output_file_path, 'a', encoding='utf-8') as f:
-        f.write("\n\n--- Evaluation Results ---\n")
+        f.write("\n--- TRAINING & EVALUATION RESULTS ---\n\n")
+        f.write(f"Directional Prediction Analysis ({eval_iters} iterations × {batch_size} batch_size = {eval_iters * batch_size:,} samples per evaluation)\n")
 
 print()
 print(f"🔄 TRAINING PROGRESS")
@@ -471,7 +489,7 @@ for iter in range(max_iters):
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    progress_pct = (iter / max_iters) * 100
-                   f.write(f"📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | {current_time}\n")
+                   f.write(f"\n📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | {current_time}\n")
                    f.write(f"   Training Loss: {losses['train']:.6f}\n")
                    f.write(f"   Validation Loss: {losses['val']:.6f}\n")
                    if 'directional_accuracy' in losses:

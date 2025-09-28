@@ -212,7 +212,7 @@ def _get_direction_sign(current_value, previous_value, is_percentage_data):
         else: return 0 # Handles change == 0
 
 
-def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, batch_size, is_percents):
+def calculate_evaluation_metrics(logits_list, xb_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, batch_size, is_percents):
     """Calculate directional prediction metrics for each modality.
 
     Analyzes model predictions vs actual values to determine directional accuracy.
@@ -220,6 +220,7 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
 
     Args:
         logits_list: List of prediction logits tensors, one per modality.
+        xb_list: List of input tensors, one per modality.
         yb_list: List of target tensors, one per modality.
         num_modalities: Number of modalities to process.
         all_vocabularies: List of vocabulary lists, one per modality.
@@ -275,10 +276,10 @@ def calculate_evaluation_metrics(logits_list, yb_list, num_modalities, all_vocab
                         actual_token_index = targets_modality[j].item()
                         actual_token_value = modality_vocab[actual_token_index]
 
-                        # Get previous value for direction calculation
+                        # Get previous value for direction calculation (last token from input sequence)
                         prev_actual_token_value = None
-                        if not is_percentage_data and yb_list[modality_index].shape[1] >= 2:
-                            prev_actual_token_value = modality_vocab[yb_list[modality_index][j, -2].item()]
+                        if not is_percentage_data and xb_list[modality_index].shape[1] >= 1:
+                            prev_actual_token_value = modality_vocab[xb_list[modality_index][j, -1].item()]
 
                         # Calculate direction signs
                         predicted_direction_sign = _get_direction_sign(predicted_token_value, prev_actual_token_value, is_percentage_data)
@@ -437,7 +438,7 @@ def estimate_loss(current_step=None, max_steps=None):
             # is_percents argument is now redundant and can be removed from the function signature and calls
             # The calculate_evaluation_metrics function accesses percentage status from all_modality_params
             batch_correct, batch_incorrect, batch_certainty, batches_processed_list = calculate_evaluation_metrics(
-                logits_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, _get_batch_size(), is_percents
+                logits_list, xb_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, _get_batch_size(), is_percents
             )
 
             # Check if any modality was skipped due to non-numeric data and print a warning once per eval run
@@ -486,11 +487,11 @@ def estimate_loss(current_step=None, max_steps=None):
             else:
                 print(f"  ▪ {modality_name}: No data processed (non-numeric)")
 
-        # Write validation metrics to file
+        # Write training and validation metrics to file
         system_config = _get_config()
         output_file_name = system_config['output_file_name']
         project_file_path = system_config['project_file_path']
-        if state == 'val' and output_file_name != '':
+        if output_file_name != '':
           output_file_path = project_file_path + 'output/' + output_file_name
           with open(output_file_path, 'a', encoding='utf-8') as f:
             for modality_index in range(num_modalities):
@@ -503,11 +504,15 @@ def estimate_loss(current_step=None, max_steps=None):
                     total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                     if total_predictions > 0:
                         overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Batches={this_num_batches_processed:,} | Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
+                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
                     else:
-                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Batches={this_num_batches_processed:,} | Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
+                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
                 else:
-                    f.write(f"   📊 {print_state.upper()} - {modality_name}: Batches=0 | Correct=0 | Incorrect=0 | Accuracy=N/A\n")
+                    f.write(f"   📊 {print_state.upper()} - {modality_name}: Correct=0 | Incorrect=0 | Accuracy=N/A\n")
+
+            # Add spacing between TRAINING and VALIDATION sections in file
+            if state == 'train':
+                f.write("\n")
 
         # Add space between train and val sections
         if state == 'train':

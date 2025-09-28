@@ -634,7 +634,7 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
         run_stats: Dictionary containing run statistics.
     """
     if file_path:  # Only write if a file path is provided
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, 'a', encoding='utf-8') as f:
             from datetime import datetime
             now = datetime.now()
             current_time_date = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -684,18 +684,22 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write("-" * 50 + "\n")
             for i, config in enumerate(modality_configs):
                 f.write(f"\n📁 {config.get('Modality Name', f'Modality {i+1}')}\n")
-                f.write(f"   Source File: {config.get('Source', 'Unknown')}\n")
+                f.write(f"   {config.get('Source', 'Unknown')}\n")
 
                 # Processing applied
                 processing_steps = []
                 if config.get('Convert to Percents'):
                     processing_steps.append("Percentage Conversion")
-                if config.get('Num Whole Digits') or config.get('Decimal Places'):
-                    range_info = f"Ranging ({config.get('Num Whole Digits', 'N/A')} digits, {config.get('Decimal Places', 'N/A')} decimals)"
-                    processing_steps.append(range_info)
-                if config.get('Num Bins'):
+                if config.get('Num Whole Digits') is not None or config.get('Decimal Places') is not None:
+                    digits_text = f"{config.get('Num Whole Digits', 'N/A')} digits" if config.get('Num Whole Digits') is not None else ""
+                    decimals_text = f"{config.get('Decimal Places', 'N/A')} decimals" if config.get('Decimal Places') is not None else ""
+                    range_parts = [part for part in [digits_text, decimals_text] if part and part != "N/A digits" and part != "N/A decimals"]
+                    if range_parts:
+                        range_info = f"Ranging ({', '.join(range_parts)})"
+                        processing_steps.append(range_info)
+                if config.get('Num Bins') is not None:
                     processing_steps.append(f"Binning ({config.get('Num Bins')} groups)")
-                if config.get('Rand Size'):
+                if config.get('Rand Size') is not None:
                     processing_steps.append(f"Randomness (size {config.get('Rand Size')})")
 
                 f.write(f"   Processing: {', '.join(processing_steps) if processing_steps else 'None'}\n")
