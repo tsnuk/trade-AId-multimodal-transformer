@@ -212,7 +212,7 @@ def _get_direction_sign(current_value, previous_value, is_percentage_data):
         else: return 0 # Handles change == 0
 
 
-def calculate_evaluation_metrics(logits_list, xb_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, batch_size, is_percents):
+def calculate_evaluation_metrics(logits_list, xb_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info):
     """Calculate directional prediction metrics for each modality.
 
     Analyzes model predictions vs actual values to determine directional accuracy.
@@ -226,8 +226,6 @@ def calculate_evaluation_metrics(logits_list, xb_list, yb_list, num_modalities, 
         all_vocabularies: List of vocabulary lists, one per modality.
         all_modality_params: List of modality parameter tuples.
         all_file_info: List of file information for each modality.
-        batch_size: Size of the current batch.
-        is_percents: Whether any modality uses percentage data.
 
     Returns:
         Tuple[List[int], List[int], List[float], List[int]]: Lists containing
@@ -435,10 +433,8 @@ def estimate_loss(current_step=None, max_steps=None):
                 print(f"Warning: Iteration {k} losses not calculated, skipping")
 
             # Call calculate_evaluation_metrics to calculate evaluation metrics for this batch
-            # is_percents argument is now redundant and can be removed from the function signature and calls
-            # The calculate_evaluation_metrics function accesses percentage status from all_modality_params
             batch_correct, batch_incorrect, batch_certainty, batches_processed_list = calculate_evaluation_metrics(
-                logits_list, xb_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info, _get_batch_size(), is_percents
+                logits_list, xb_list, yb_list, num_modalities, all_vocabularies, all_modality_params, all_file_info
             )
 
             # Check if any modality was skipped due to non-numeric data and print a warning once per eval run
@@ -462,7 +458,8 @@ def estimate_loss(current_step=None, max_steps=None):
         losses = sum(total_losses) / len(total_losses) if total_losses else float('nan')
         out[state] = losses
 
-        print(f"\n📈 DIRECTIONAL METRICS - {print_state.upper()} (Correct/Total)")
+        print_state_display = 'Train Set' if state == 'train' else 'Val Set'
+        print(f"\n📈 DIRECTIONAL METRICS - {print_state_display} (Correct/Total)")
         for modality_index in range(num_modalities):
             modality_name = all_modality_params[modality_index][9] if all_modality_params[modality_index][9] else f"Modality {modality_index+1}"
 
@@ -504,11 +501,11 @@ def estimate_loss(current_step=None, max_steps=None):
                     total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                     if total_predictions > 0:
                         overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
+                        f.write(f"   📊 {print_state_display} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
                     else:
-                        f.write(f"   📊 {print_state.upper()} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
+                        f.write(f"   📊 {print_state_display} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
                 else:
-                    f.write(f"   📊 {print_state.upper()} - {modality_name}: Correct=0 | Incorrect=0 | Accuracy=N/A\n")
+                    f.write(f"   📊 {print_state_display} - {modality_name}: Correct=0 | Incorrect=0 | Accuracy=N/A\n")
 
             # Add spacing between TRAINING and VALIDATION sections in file
             if state == 'train':
