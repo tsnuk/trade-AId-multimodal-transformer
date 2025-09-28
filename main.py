@@ -462,7 +462,7 @@ if output_file_name != '':
     write_initial_run_details(output_file_path, hyperparams, data_info, modality_configs, run_stats)
     with open(output_file_path, 'a', encoding='utf-8') as f:
         f.write("\n--- TRAINING & EVALUATION RESULTS ---\n\n")
-        f.write(f"Directional Prediction Analysis ({eval_iters} iterations × {batch_size} batch_size = {eval_iters * batch_size:,} samples per evaluation)\n")
+        f.write(f"Directional Prediction Analysis ({eval_iters} iterations × {batch_size} batches = {eval_iters * batch_size:,} samples per evaluation)\n")
 
 print()
 print(f"🔄 TRAINING PROGRESS")
