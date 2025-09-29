@@ -68,7 +68,7 @@ modalities:
         args:
           num_whole_digits: 2    # Number of digits before decimal
                                  # Expected values: positive integer or null
-          decimal_places: 2      # Number of digits after decimal
+          decimal_places: 1      # Number of digits after decimal
                                # Expected values: non-negative integer or null
         enabled: true
     cross_attention: true  # Enable cross-attention with other modalities
@@ -185,6 +185,7 @@ modalities:
 # - Must accept data as first parameter
 # - Must accept additional arguments via **kwargs
 # - Must return processed data in same format
+# - Must preserve data length (same number of elements as input)
 # - Function signature: def my_function(data, **kwargs): return processed_data
 #
 # Examples:
