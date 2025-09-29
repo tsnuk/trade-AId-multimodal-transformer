@@ -492,7 +492,7 @@ for iter in range(max_iters):
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    progress_pct = (iter / max_iters) * 100
-                   f.write(f"\n📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | {current_time} | Training Loss: {losses['train']:.6f} | Validation Loss: {losses['val']:.6f}\n\n")
+                   f.write(f"\n📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | Training Loss: {losses['train']:.6f} | Validation Loss: {losses['val']:.6f} | {current_time}\n\n")
         else:
              print(f"Warning: Step {iter} losses are NaN, skipping save | {current_time}")
 
