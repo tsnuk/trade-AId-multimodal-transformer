@@ -751,7 +751,7 @@ modalities:
 
 **Randomness Injection**: Applied only during training to create synthetic variations
 - **Purpose**: Overcomes scarcity of financial market data by creating slight variations of existing patterns
-- **Configuration**: Set `randomness_size` (1-3) in input schema
+- **Configuration**: Set `randomness_size` (1-3 or null) in input schema
 - **How it Works**: Adds small random variations to numerical values during training
   - **Example**: Original price $152.34 with `randomness_size=2` becomes randomly:
     - $152.32 (original - 2 cents)

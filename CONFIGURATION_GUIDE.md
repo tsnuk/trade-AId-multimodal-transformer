@@ -90,9 +90,9 @@ num_bins = 50  # Creates 50 evenly-distributed bins
 ```
 
 ### 4. Randomness (`randomness_size`)
-```python
-# Add noise for data augmentation (1-3 scale)
-randomness_size = 2  # Moderate randomization
+```yaml
+# Add noise for data augmentation (1-3 or null)
+randomness_size: 2  # Moderate randomization, or null for none
 ```
 
 ### 5. Cross-Attention (`cross_attention`)

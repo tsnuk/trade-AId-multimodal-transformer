@@ -86,7 +86,7 @@ class InputSchema:
 
         if self.randomness_size is not None:
             if not isinstance(self.randomness_size, int) or not (1 <= self.randomness_size <= 3):
-                raise ValueError("randomness_size must be an integer between 1-3 or None")
+                raise ValueError("randomness_size must be an integer between 1-3 or null")
 
     @classmethod
     def from_legacy_list(cls, legacy_list: List[Any], modality_name: str = "") -> 'InputSchema':
