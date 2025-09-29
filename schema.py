@@ -15,9 +15,8 @@ Features:
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Union, Callable
+from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
-import os
 import yaml
 
 
