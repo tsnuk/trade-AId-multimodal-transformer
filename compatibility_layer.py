@@ -14,14 +14,12 @@ Features:
 - Support for both standard users and advanced automation needs
 """
 
-import os
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Tuple
 from pathlib import Path
 import logging
 
-from schema import InputSchema, SchemaManager
-from config_manager import ConfigManager, SystemConfig
-from processing_pipeline import ProcessingPipeline, execute_processing_pipeline
+from config_manager import ConfigManager
+from processing_pipeline import ProcessingPipeline
 
 logger = logging.getLogger(__name__)
 
