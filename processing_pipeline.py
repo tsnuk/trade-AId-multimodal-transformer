@@ -14,7 +14,7 @@ Features:
 - Support for function arguments and configuration
 """
 
-from typing import List, Dict, Any, Optional, Callable, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 import logging
 from dataclasses import dataclass, field
 from processing_registry import resolve_function
