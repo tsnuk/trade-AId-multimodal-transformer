@@ -697,10 +697,12 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
                         processing_steps.append(range_info)
                 if config.get('Num Bins') is not None:
                     processing_steps.append(f"Binning ({config.get('Num Bins')} groups)")
-                if config.get('Rand Size') is not None:
-                    processing_steps.append(f"Randomness (size {config.get('Rand Size')})")
 
                 f.write(f"   Processing: {', '.join(processing_steps) if processing_steps else 'None'}\n")
+
+                # Randomness on separate line
+                if config.get('Rand Size') is not None:
+                    f.write(f"   Randomness: size {config.get('Rand Size')}\n")
                 f.write(f"   Cross-Attention: {'Enabled' if config.get('Cross-Attend') else 'Disabled'}\n")
 
             f.write("\n" + "="*80 + "\n\n")
