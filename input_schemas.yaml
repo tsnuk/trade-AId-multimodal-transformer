@@ -25,9 +25,9 @@
 #         enabled:    # Optional: Whether this step is enabled (allows temporary disabling)
 #                     # Expected values: true/false (default: true)
 #                     # When false: Step is completely skipped, data flows to next enabled step
+#     randomness_size: # Optional: Add randomness to data points (1-3 or null)
 #     cross_attention: # Optional: Enable cross-attention for this modality
 #                     # Expected values: true/false (default: false)
-#     randomness_size: # Optional: Add randomness to data points (1-3 or null)
 #
 # PROCESSING FUNCTIONS:
 # --------------------
@@ -82,36 +82,36 @@ modalities:
           decimal_places: 1      # Number of digits after decimal
                                # Expected values: non-negative integer or null
         enabled: true
+    randomness_size: 2  # Add randomness with size 2
+                           # Expected values: 1-3 or null
     cross_attention: true  # Enable cross-attention with other modalities
                            # Expected values: true/false (default: false)
-    randomness_size: 2  # No randomness added
-                           # Expected values: 1-3 or null
 
   # -------------------------------------------------------------------------
   # EXAMPLE 2: Stock price data converted to percentages and binned
   # -------------------------------------------------------------------------
-#  - modality_name: "NASDAQ Percentage Changes"
-#    path: "./data/10min_candles/"
-#    column_number: 13  # Same data, different processing
-#    has_header: true
-#    processing_steps:
-#      # Step 1: Convert to percentage changes
-#      - function: convert_to_percent_changes
-#        args: {}  # No additional arguments needed
-#        enabled: true
-#
-#      # Step 2: Group percentages into 6 bins
-#      - function: bin_numeric_data
-#        args:
-#          num_bins: 6              # Number of positive bins (creates +n, -n, and zero bins)
-#                                   # Expected values: positive integer
-#          outlier_percentile: 0.1  # Percentile threshold for outlier exclusion from binning
-#                                   # Expected values: float, 0.0-1.0
-#          exponent: 2.2           # Controls bin distribution (higher = more non-uniform)
-#                                   # Expected values: float
-#        enabled: true
-#    cross_attention: false  # Disable cross-attention for this modality
-#    randomness_size: null
+  - modality_name: "NASDAQ Percentage Changes"
+    path: "./data/10min_candles/"
+    column_number: 13  # Same data, different processing
+    has_header: true
+    processing_steps:
+      # Step 1: Convert to percentage changes
+      - function: convert_to_percent_changes
+        args: {}  # No additional arguments needed
+        enabled: true
+
+      # Step 2: Group percentages into 6 bins
+      - function: bin_numeric_data
+        args:
+          num_bins: 6              # Number of positive bins (creates +n, -n, and zero bins)
+                                   # Expected values: positive integer
+          outlier_percentile: 0.1  # Percentile threshold for outlier exclusion from binning
+                                   # Expected values: float, 0.0-1.0
+          exponent: 2.2           # Controls bin distribution (higher = more non-uniform)
+                                   # Expected values: float
+        enabled: true
+    randomness_size: null
+    cross_attention: false  # Disable cross-attention for this modality
 
   # -------------------------------------------------------------------------
   # EXAMPLE 3: Time data (no processing needed)
@@ -121,8 +121,8 @@ modalities:
 #    column_number: 5   # Time column
 #    has_header: true
 #    processing_steps: []  # No processing steps - use raw time data
-#    cross_attention: false
 #    randomness_size: null
+#    cross_attention: false
 
   # -------------------------------------------------------------------------
   # EXAMPLE 4: Custom external processing function
@@ -145,8 +145,8 @@ modalities:
   #         num_whole_digits: 3
   #         decimal_places: 2
   #       enabled: true
-  #   cross_attention: true
   #   randomness_size: 2  # Add randomness with size 2
+  #   cross_attention: true
 
 # =============================================================================
 # FUNCTION REFERENCE
