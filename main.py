@@ -38,7 +38,9 @@ system_config = get_system_configuration()
 modality_params_list = get_modality_parameters()
 
 if not modality_params_list:
-    raise ValueError("No modalities configured. Please check your configuration files.")
+    print("\n[ERROR] No modalities configured")
+    print("Please check that input_schemas.yaml exists and contains at least one modality")
+    exit(1)
 
 print(f"Modalities: Loaded {len(modality_params_list)} configurations")
 print()
