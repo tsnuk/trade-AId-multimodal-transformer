@@ -20,9 +20,8 @@ from compatibility_layer import (
     get_system_configuration, is_modern_mode
 )
 from data_utils import (
-    load_file_data, range_numeric_data, report_non_numeric_error,
-    bin_numeric_data, numerical_representation, create_train_val_datasets,
-    write_initial_run_details
+    range_numeric_data, report_non_numeric_error, bin_numeric_data,
+    numerical_representation, create_train_val_datasets, write_initial_run_details
 )
 from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
