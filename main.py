@@ -225,7 +225,7 @@ for m in range(num_modalities):
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
-  print(f"  ▪ {this_modality_name}  Vocab: {raw_vocab_size:,} → {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
+  print(f"  ▪ {this_modality_name}  Vocab size: {raw_vocab_size:,} → {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")

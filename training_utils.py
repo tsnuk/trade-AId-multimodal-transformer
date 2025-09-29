@@ -404,7 +404,7 @@ def estimate_loss(current_step=None, max_steps=None):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         step_info = f'Step {current_step}/{max_steps} | ' if current_step is not None else ''
-        batch_calc = f' * {_get_batch_size()} batches = {_get_eval_iters() * _get_batch_size()} total'
+        batch_calc = f' * {_get_batch_size()} batches = {_get_eval_iters() * _get_batch_size()} samples'
         print(f'Evaluation: {step_info}{state.title()} set ({_get_eval_iters()} iterations{batch_calc}) | {current_time}')
         # Initialize counters for success rate and certainty calculation for all modalities
         all_modalities_total_batches_processed = [0] * num_modalities
