@@ -23,8 +23,7 @@ import random
 
 # Import configuration utilities
 from config_utils import (
-    _get_config, _get_device, _get_block_size, _get_n_embd, _get_n_head,
-    _get_n_layer, _get_dropout, _get_fixed_values
+    _get_block_size, _get_n_embd, _get_n_head, _get_n_layer, _get_dropout
 )
 
 
