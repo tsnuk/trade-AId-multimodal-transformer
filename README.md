@@ -115,6 +115,7 @@ The system supports two configuration approaches to suit different use cases:
 - **Built-in Functions**: Range scaling, binning, percentage changes
 - **External Functions**: Import and use custom processing functions from any Python module
 - **Sequential Data Flow**: `raw_data → function1 → function2 → function3 → processed_data`
+- **Step Control**: Use `enabled: false` to temporarily skip processing steps without deleting configuration
 - **Error Handling**: Comprehensive validation and clear error messages
 
 ### Configuration System
@@ -931,19 +932,32 @@ processing_steps:
   # Data preprocessing
   - function: my_preprocessing.remove_outliers
     args: {method: "iqr", factor: 1.5}
+    enabled: true
 
-  # Feature engineering
+  # Feature engineering (temporarily disabled for testing)
   - function: my_features.technical_indicators
     args: {indicators: ["rsi", "macd", "bollinger"]}
+    enabled: false  # Skip this step without deleting configuration
 
   # Data augmentation
   - function: add_rand_to_data_points
     args: {rand_size: 2}
+    enabled: true
 
   # Final scaling
   - function: range_numeric_data
     args: {num_whole_digits: 3, decimal_places: 2}
+    # enabled defaults to true when omitted
 ```
+
+**Step Control Options:**
+- `enabled: true` - Step executes normally (default if omitted)
+- `enabled: false` - Step is skipped, data flows to next enabled step
+
+**Use Cases for `enabled: false`:**
+- Temporarily disable steps for debugging or testing
+- A/B test different processing configurations
+- Keep alternative processing options readily available
 
 ### Example Modality Configurations
 
