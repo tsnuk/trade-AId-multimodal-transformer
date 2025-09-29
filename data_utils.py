@@ -527,7 +527,7 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
 
 
     # Display binning statistics
-    print(f"      → Binning statistics:")
+    print(f"      → Binning breakdown:")
 
     # Display negative bins (from most negative to least negative)
     for i in range(-num_groups, 0):
