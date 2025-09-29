@@ -326,9 +326,9 @@ def add_rand_to_data_points(numeric_data, rand_size, vocab_size):
 
     # Input validation for rand_size
     if not isinstance(rand_size, (int, type(None))):
-        raise TypeError("rand_size must be an integer or None.")
+        raise TypeError("rand_size must be an integer or null.")
     if rand_size is not None and (rand_size < 1 or rand_size > 3):
-        raise ValueError("rand_size must be an integer between 1 and 3, or None.")
+        raise ValueError("rand_size must be an integer between 1 and 3, or null.")
 
     # Input validation for vocab_size
     if not isinstance(vocab_size, int) or vocab_size <= 0:
