@@ -348,7 +348,15 @@ class SchemaManager:
             config = yaml.safe_load(f)
 
         self.schemas = []
-        for modality_config in config.get('modalities', []):
+        modalities = config.get('modalities', [])
+
+        # Check if no modalities are configured or all are commented out
+        if not modalities:
+            print("\n[ERROR] No modalities found in input_schemas.yaml")
+            print("Please ensure at least one modality is configured")
+            exit(1)
+
+        for modality_config in modalities:
             schema = InputSchema.from_dict(modality_config)
             self.add_schema(schema)
 
