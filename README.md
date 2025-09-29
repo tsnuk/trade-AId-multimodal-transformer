@@ -450,8 +450,8 @@ configure_for_dataset('./new_data/', 512)
 - **Purpose**: Normalizes data magnitude and **controls vocabulary size** by limiting decimal precision
 - **Why important**: Smaller vocabularies improve training efficiency and reduce memory usage
 - **Parameters**:
-  - `num_whole_digits` (int or None): Desired number of digits before decimal point
-  - `decimal_places` (int or None): Number of decimal places to round to
+  - `num_whole_digits` (int or null): Desired number of digits before decimal point
+  - `decimal_places` (int or null): Number of decimal places to round to
 - **Examples**:
   ```yaml
   # Scale stock prices to 3 whole digits, 2 decimal places
@@ -508,7 +508,7 @@ configure_for_dataset('./new_data/', 512)
 - **Purpose**: Focus on relative movement rather than absolute values
 - **Benefit**: Often more meaningful for prediction tasks than raw prices
 - **Parameters**:
-  - `decimal_places` (int, default=2): Number of decimal places for percentage values
+  - `decimal_places` (int or null, default=2): Number of decimal places for percentage values
 - **How it works**: Calculates `(current - previous) / previous × 100` for each adjacent pair
 - **Examples**:
   ```yaml

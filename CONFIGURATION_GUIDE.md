@@ -73,15 +73,23 @@ convert_to_percentages = True
 ### 2. Ranging (`num_whole_digits`, `decimal_places`)
 Controls vocabulary size by standardizing numeric precision:
 
-```python
+```yaml
 # Examples:
-num_whole_digits = 2, decimal_places = 1  # Range: 10.0 to 99.9
-num_whole_digits = 3, decimal_places = 2  # Range: 100.00 to 999.99
+num_whole_digits: 2
+decimal_places: 1  # Range: 10.0 to 99.9
+
+num_whole_digits: 3
+decimal_places: 2  # Range: 100.00 to 999.99
+
+# Skip processing entirely
+num_whole_digits: null
+decimal_places: null
 ```
 
 **Special cases**:
 - Only specify `num_whole_digits`: System assumes that's what you want
-- Specify only `decimal_places`: Set `num_whole_digits = 0`
+- Specify only `decimal_places`: Set `num_whole_digits: null`
+- Both `null`: No ranging applied
 
 ### 3. Binning (`num_bins`)
 ```python

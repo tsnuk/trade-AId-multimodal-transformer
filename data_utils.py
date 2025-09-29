@@ -365,8 +365,8 @@ def range_numeric_data(numeric_data, num_whole_digits, decimal_places):
 
     Args:
         numeric_data: List of numeric data points to process.
-        num_whole_digits: Target number of whole digits, or None.
-        decimal_places: Target number of decimal places, or None.
+        num_whole_digits: Target number of whole digits, or null.
+        decimal_places: Target number of decimal places, or null.
 
     Returns:
         List of processed numeric values as floats.
@@ -387,11 +387,11 @@ def range_numeric_data(numeric_data, num_whole_digits, decimal_places):
 
     if num_whole_digits is not None:
         if not isinstance(num_whole_digits, int) or num_whole_digits <= 0:
-            raise TypeError("'num_whole_digits' must be a positive integer or None.")
+            raise TypeError("'num_whole_digits' must be a positive integer or null.")
 
     if decimal_places is not None:
         if not isinstance(decimal_places, int) or decimal_places < 0:
-            raise TypeError("'decimal_places' must be a non-negative integer or None.")
+            raise TypeError("'decimal_places' must be a non-negative integer or null.")
 
     processed_data = []
 
@@ -598,7 +598,7 @@ def convert_to_percent_changes(data, decimal_places=2):
 
     if decimal_places is not None:
         if not isinstance(decimal_places, int) or decimal_places < 0:
-            raise ValueError("'decimal_places' must be a non-negative integer or None.")
+            raise ValueError("'decimal_places' must be a non-negative integer or null.")
     else:
         decimal_places = 2 # Default value
 

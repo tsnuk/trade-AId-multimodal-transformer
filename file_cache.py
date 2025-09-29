@@ -351,7 +351,7 @@ def _convert_to_percentage_changes(data: List, decimal_places: int = 2) -> List[
 
     if decimal_places is not None:
         if not isinstance(decimal_places, int) or decimal_places < 0:
-            raise ValueError("'decimal_places' must be a non-negative integer or None.")
+            raise ValueError("'decimal_places' must be a non-negative integer or null.")
     else:
         decimal_places = 2  # Default value
 

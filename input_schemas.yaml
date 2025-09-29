@@ -131,8 +131,8 @@ modalities:
 # 1. range_numeric_data:
 #    Purpose: Scale numeric values to specified range and decimal places
 #    Arguments:
-#      - num_whole_digits: Number of digits before decimal (e.g., 2 for 10-99)
-#      - decimal_places: Number of digits after decimal (e.g., 1 for X.X)
+#      - num_whole_digits: Number of digits before decimal (e.g., 2 for 10-99) or null
+#      - decimal_places: Number of digits after decimal (e.g., 1 for X.X) or null
 #    Example: Scales prices from various ranges to 10.0-99.9 format
 #
 # 2. bin_numeric_data:
