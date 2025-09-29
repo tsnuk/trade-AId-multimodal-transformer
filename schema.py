@@ -51,7 +51,7 @@ class InputSchema:
     - column_number: int (required)
     - has_header: bool (required)
     - processing_steps: List[ProcessingStep] (optional, sequential pipeline)
-    - cross_attention: bool (optional, default True)
+    - cross_attention: bool (optional, default False)
     - randomness_size: Optional[int] (optional)
     """
     modality_name: str
@@ -59,7 +59,7 @@ class InputSchema:
     column_number: int
     has_header: bool = True
     processing_steps: List[ProcessingStep] = field(default_factory=list)
-    cross_attention: bool = True
+    cross_attention: bool = False
     randomness_size: Optional[int] = None
 
     def __post_init__(self):
@@ -138,7 +138,7 @@ class InputSchema:
         if len(legacy_list) > 7 and legacy_list[7] is not None:
             randomness_size = legacy_list[7]
 
-        cross_attention = True
+        cross_attention = False
         if len(legacy_list) > 8 and legacy_list[8] is not None:
             cross_attention = legacy_list[8]
 
@@ -178,7 +178,7 @@ class InputSchema:
             column_number=config_dict['column_number'],
             has_header=config_dict.get('has_header', True),
             processing_steps=processing_steps,
-            cross_attention=config_dict.get('cross_attention', True),
+            cross_attention=config_dict.get('cross_attention', False),
             randomness_size=config_dict.get('randomness_size')
         )
 

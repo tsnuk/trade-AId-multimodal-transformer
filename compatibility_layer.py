@@ -231,7 +231,7 @@ class CompatibilityMode:
             programmatic_schema = self.legacy_schemas[modality_index]
             return {
                 'modality_name': programmatic_schema[9] if len(programmatic_schema) > 9 else f'Modality {modality_index + 1}',
-                'cross_attention': programmatic_schema[8] if len(programmatic_schema) > 8 else True,
+                'cross_attention': programmatic_schema[8] if len(programmatic_schema) > 8 else False,
                 'randomness_size': programmatic_schema[7] if len(programmatic_schema) > 7 else None,
                 'processing_steps_count': 0,
                 'mode': 'programmatic'

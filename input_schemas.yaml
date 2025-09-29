@@ -9,15 +9,23 @@
 # YAML STRUCTURE:
 # ---------------
 # modalities:         # Root key containing list of all modality configurations
-#   - modality_name:  # Required: Descriptive name for this modality (moved to top)
+#   - modality_name:  # Required: Descriptive name for this modality
+#                     # Expected values: string
 #     path:           # Required: Path to data file or folder containing data files
+#                     # Expected values: string
 #     column_number:  # Required: Column number to extract (1-based indexing)
+#                     # Expected values: positive integer
 #     has_header:     # Required: Whether the data files have header rows (true/false)
 #     processing_steps: # Optional: List of sequential data processing functions
+#                     # Expected values: list
 #       - function:   # Function name (built-in) or fully qualified name (external)
+#                     # Expected values: string
 #         args:       # Dictionary of arguments to pass to the function
-#         enabled:    # Optional: Whether this step is enabled (default: true)
-#     cross_attention: # Optional: Enable cross-attention for this modality (default: true)
+#                     # Expected values: dict
+#         enabled:    # Optional: Whether this step is enabled
+#                     # Expected values: true/false (default: true)
+#     cross_attention: # Optional: Enable cross-attention for this modality
+#                     # Expected values: true/false (default: false)
 #     randomness_size: # Optional: Add randomness to data points (1-3 or null)
 #
 # PROCESSING FUNCTIONS:
@@ -49,19 +57,24 @@ modalities:
   # -------------------------------------------------------------------------
   # EXAMPLE 1: Stock price data with ranging and scaling
   # -------------------------------------------------------------------------
-  - modality_name: "NASDAQ Stock Prices"
-    path: "./data/10min_candles/"
+  - modality_name: "NASDAQ Stock Prices"  # Expected values: string
+    path: "./data/10min_candles/"  # Expected values: string
     column_number: 13  # Close price column
-    has_header: true
+                       # Expected values: positive integer
+    has_header: true  # Expected values: true/false
     processing_steps:
       # Scale prices to 2 whole digits with 1 decimal place (10.0 to 99.9)
       - function: range_numeric_data
         args:
           num_whole_digits: 2    # Number of digits before decimal
+                                 # Expected values: positive integer or null
           decimal_places: 2      # Number of digits after decimal
+                               # Expected values: non-negative integer or null
         enabled: true
     cross_attention: true  # Enable cross-attention with other modalities
+                           # Expected values: true/false (default: false)
     randomness_size: null  # No randomness added
+                           # Expected values: 1-3 or null
 
   # -------------------------------------------------------------------------
   # EXAMPLE 2: Stock price data converted to percentages and binned
@@ -131,16 +144,21 @@ modalities:
 # 1. range_numeric_data:
 #    Purpose: Scale numeric values to specified range and decimal places
 #    Arguments:
-#      - num_whole_digits: Number of digits before decimal (e.g., 2 for 10-99) or null
-#      - decimal_places: Number of digits after decimal (e.g., 1 for X.X) or null
+#      - num_whole_digits: Number of digits before decimal
+#                           Expected values: positive integer or null
+#      - decimal_places: Number of digits after decimal
+#                         Expected values: non-negative integer or null
 #    Example: Scales prices from various ranges to 10.0-99.9 format
 #
 # 2. bin_numeric_data:
 #    Purpose: Group numeric data into discrete bins/clusters
 #    Arguments:
 #      - num_bins: Number of bins to create
-#      - outlier_percentile: Percentage of extreme values to exclude (0.0-1.0)
+#                  Expected values: positive integer
+#      - outlier_percentile: Percentage of extreme values to exclude
+#                             Expected values: float, 0.0-1.0
 #      - exponent: Controls bin distribution (1.0=uniform, >1.0=non-uniform)
+#                  Expected values: float
 #    Example: Groups percentage changes into 6 categories
 #
 # 3. convert_to_percent_changes:
@@ -151,7 +169,8 @@ modalities:
 # 4. add_rand_to_data_points:
 #    Purpose: Add controlled randomness to data values
 #    Arguments:
-#      - rand_size: Size/magnitude of randomness to add (1-3)
+#      - rand_size: Size/magnitude of randomness to add
+#                   Expected values: integer, 1-3
 #    Example: Adds small random variations for data augmentation
 #
 # EXTERNAL FUNCTIONS:

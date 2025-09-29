@@ -266,7 +266,7 @@ for i in range(num_modalities):
   rand_size = all_modality_params[i][7] if len(all_modality_params[i]) > 7 and all_modality_params[i][7] is not None else None
   rand_text = f" | Randomness: {rand_size}" if rand_size is not None else ""
 
-  cross_attention = all_modality_params[i][8] if len(all_modality_params[i]) > 8 and all_modality_params[i][8] is not None else True
+  cross_attention = all_modality_params[i][8] if len(all_modality_params[i]) > 8 and all_modality_params[i][8] is not None else False
   cross_text = " | Cross-attention: ON" if cross_attention else " | Cross-attention: OFF"
 
   this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)

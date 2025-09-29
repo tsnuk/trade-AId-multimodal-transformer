@@ -25,25 +25,31 @@
 
 project_settings:
   # Base directory for the project (relative to where main.py is run)
+  # Expected values: string
   project_file_path: ./
 
   # Training log output file name (created in project directory)
+  # Expected values: string
   output_file_name: training_log.txt
 
   # Relative path to model file for saving/loading trained weights
+  # Expected values: string
   model_file_name: ./output/TransformerModel.pth
 
   # Model creation/loading behavior:
+  # Expected values: 0 or 1
   # 1 = Create new model from scratch (ignores existing model file)
   # 0 = Load existing model from model_file_name (must exist)
   create_new_model: 1
 
   # Model saving behavior:
+  # Expected values: 0 or 1
   # 1 = Save model during training (at eval_interval) and at completion
   # 0 = Don't save model (training session only)
   save_model: 1
 
-  # Training device - options: 'cpu', 'cuda', 'auto'
+  # Training device
+  # Expected values: 'cpu', 'cuda', 'auto'
   # 'auto' will use CUDA if available, otherwise CPU
   device: auto
 
@@ -53,16 +59,18 @@ project_settings:
 # Configuration for training/validation data allocation
 
 data_splitting:
-  # Validation size as proportion of total data (0.0 to 1.0)
+  # Validation size as proportion of total data
+  # Expected values: float, 0.0 to 1.0
   # Example: 0.1 = 10% for validation, 90% for training
   # Note: Only used if num_validation_files is 0
   validation_size: 0.1
 
   # Alternative validation method: specify number of files for validation
+  # Expected values: integer >= 0
   # When > 0: Uses the last N files from each folder entirely for validation
   # When 0: Uses validation_size proportion from all data
   # IMPORTANT: Only applies to the first modality's data
-  num_validation_files: 0
+  num_validation_files: 1
 
 # =============================================================================
 # TRAINING PARAMETERS
@@ -73,19 +81,22 @@ training_parameters:
   # Number of training examples processed together in each batch
   # Larger values: Better GPU utilization, more stable gradients, more memory usage
   # Smaller values: Less memory usage, more frequent updates, potentially noisier gradients
+  # Expected values: positive integer
   # Typical values: 16, 32, 64, 128
-  batch_size: 32  # Adjusted for development/testing
+  batch_size: 16 #32  # Adjusted for development/testing
 
   # Context window size - number of previous tokens considered for prediction
   # This is the sequence length that the model processes at once
   # Larger values: Model can see more context, but requires more memory
   # Must be less than the length of your data sequences
+  # Expected values: positive integer
   # Typical values: 64, 128, 256, 512, 1024
-  block_size: 64  # Adjusted for development/testing
+  block_size: 96 #24 #120 #78 #64  # Adjusted for development/testing
 
-  # Maximum number of training iterations (epochs)
+  # Maximum number of training iterations
   # Training will stop when this limit is reached
   # Monitor training loss to determine appropriate stopping point
+  # Expected values: positive integer
   max_iters: 20000
 
   # Evaluation frequency - how often to run evaluation (every N training iterations)
@@ -93,6 +104,7 @@ training_parameters:
   # Model is also saved at these intervals (if save_model=1)
   # Example: eval_interval=50 means evaluate after every 50 training steps
   # More frequent evaluation provides better monitoring but slows training
+  # Expected values: positive integer
   # Typical values: 50, 100, 200, 500
   eval_interval: 50
 
@@ -101,12 +113,14 @@ training_parameters:
   # More batches provide more accurate loss estimates but take longer per evaluation
   # Example: eval_iters=40 means use 40 validation batches to calculate loss
   # Balance: Higher values = more accurate validation loss, but slower evaluation
+  # Expected values: positive integer
   # Typical values: 20, 40, 100, 200
   eval_iters: 40
 
   # Learning rate - controls the step size for weight updates
   # Higher values: Faster learning but risk of overshooting optimal weights
   # Lower values: More stable learning but slower convergence
+  # Expected values: float
   # Typical range: 1e-5 to 1e-3
   learning_rate: 0.0003
 
@@ -120,31 +134,36 @@ model_architecture:
   # This determines the model's capacity to represent complex relationships
   # Larger values: More expressive model, but more parameters and memory
   # Should be divisible by n_head for efficient attention computation
+  # Expected values: positive integer, divisible by n_head
   # Typical values: 128, 256, 384, 512, 768
-  n_embd: 16  # Adjusted for development/testing
+  n_embd: 64  # Adjusted for development/testing
 
   # Number of attention heads in multi-head attention mechanism
   # More heads allow the model to attend to different types of relationships
   # Must divide evenly into n_embd (each head gets n_embd/n_head dimensions)
+  # Expected values: positive integer, must divide n_embd
   # Typical values: 4, 6, 8, 12, 16
-  n_head: 4
+  n_head: 6 #4
 
   # Number of transformer layers (blocks) in the model
   # More layers: Deeper model that can learn more complex patterns
   # Fewer layers: Faster training and inference, less overfitting risk
+  # Expected values: positive integer
   # Typical values: 4, 6, 8, 12, 24
-  n_layer: 4
+  n_layer: 4 #4
 
   # Dropout rate - probability of randomly setting neurons to zero during training
   # Regularization technique to prevent overfitting
   # Higher values: More regularization, less overfitting, potentially underfitting
   # Lower values: Less regularization, risk of overfitting
+  # Expected values: float, 0.0 to 1.0
   # Typical range: 0.1 to 0.3
   dropout: 0.2
 
   # Fixed values for custom embedding layer initialization (experimental feature)
   # Currently not used by main model but available for research/testing
   # Each element of embedding vectors is randomly selected from this list when using FixedEmbedding
+  # Expected values: list of floats
   fixed_values: [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5]
 
 # =============================================================================
