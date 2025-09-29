@@ -242,7 +242,7 @@ else:
   file_lengths = [len(all_modality_data[0])]
 
 print()
-print("Dataset Splitting: Creating train/validation sets...")
+print("Dataset Splitting: Creating training/validation sets...")
 
 if system_config['num_validation_files'] > 0:
     file_count = system_config['num_validation_files']
@@ -492,12 +492,7 @@ for iter in range(max_iters):
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    progress_pct = (iter / max_iters) * 100
-                   f.write(f"\n📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | {current_time}\n")
-                   f.write(f"   Training Loss: {losses['train']:.6f}\n")
-                   f.write(f"   Validation Loss: {losses['val']:.6f}\n")
-                   if 'directional_accuracy' in losses:
-                       f.write(f"   Directional Accuracy: {losses.get('directional_accuracy', 'N/A')}\n")
-                   f.write("\n")
+                   f.write(f"\n📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | {current_time} | Training Loss: {losses['train']:.6f} | Validation Loss: {losses['val']:.6f}\n\n")
         else:
              print(f"Warning: Step {iter} losses are NaN, skipping save | {current_time}")
 
