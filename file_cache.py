@@ -7,8 +7,7 @@ use different columns from the same source files.
 
 import os
 import pandas as pd
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 import glob
 
 
