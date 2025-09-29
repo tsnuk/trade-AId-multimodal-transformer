@@ -235,8 +235,10 @@ class MultimodalBlock(nn.Module):
 
             if cross_attention_enabled and self.cross_attention_layers[i] is not None:
                 other_modality_indices = [j for j in range(self.num_modalities) if j != i]
-                key_value_x_list = [attended_x_list[j] for j in other_modality_indices]
-                x = x + self.cross_attention_layers[i](self.ln_cross_layers[i](x), key_value_x_list)
+                # Only apply cross-attention if there are other modalities to attend to
+                if other_modality_indices:
+                    key_value_x_list = [attended_x_list[j] for j in other_modality_indices]
+                    x = x + self.cross_attention_layers[i](self.ln_cross_layers[i](x), key_value_x_list)
 
             cross_attended_x_list.append(x)
 
