@@ -263,8 +263,6 @@ def create_train_val_datasets(numeric_rep_data, val_size, num_val_files, file_le
         val_num_elements = sum(file_lengths[-num_val_files:])
         train_num_elements = len(numeric_rep_data) - val_num_elements
 
-        print(f"  File-based splitting: Last {num_val_files} file(s) for validation.")
-        print(f"    Files for validation:")
 
         # Sum the lengths of the last 'num_val_files' file_lengths for the validation set
         start_index = len(file_lengths) - 1

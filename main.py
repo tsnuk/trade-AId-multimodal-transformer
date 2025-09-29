@@ -242,13 +242,11 @@ else:
   file_lengths = [len(all_modality_data[0])]
 
 print()
-print("🗂️ DATASET SPLITTING")
+print("Dataset Splitting: Creating train/validation sets...")
 
 if system_config['num_validation_files'] > 0:
     file_count = system_config['num_validation_files']
-    file_word = "file" if file_count == 1 else "files"
-    print(f"Method: File-based (last {file_count} file(s) for validation)")
-    print("Files allocated to validation:")
+    print(f"Method: File-based: Last {file_count} file(s) for validation")
     val_files_counter = 0
     for j in range(len(all_file_info[0]) - 2, -1, -2):
         this_file_name = all_file_info[0][j]
@@ -256,10 +254,11 @@ if system_config['num_validation_files'] > 0:
         val_files_counter += 1
         if val_files_counter >= system_config['num_validation_files']:
             break
-    print()  # Add spacing before modality breakdown
 else:
     print(f"Method: Percentage-based ({system_config['validation_size']*100:.1f}% validation)")
-    print()
+
+print()
+print("🗂️ DATASET SPLITTING")
 all_train_sets = []
 all_val_sets = []
 
