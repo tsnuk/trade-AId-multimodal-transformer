@@ -18,9 +18,9 @@ from typing import Dict, Any, List, Optional, Union
 from pathlib import Path
 import yaml
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from schema import InputSchema, SchemaManager
+from schema import SchemaManager
 from processing_registry import validate_function_exists
 
 # Set up logging
