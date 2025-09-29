@@ -67,9 +67,9 @@ data_splitting:
 
   # Alternative validation method: specify number of files for validation
   # Expected values: integer >= 0
-  # When > 0: Uses the last N files from each folder entirely for validation
+  # When > 0: Uses the last N files loaded for validation (overrides validation_size)
   # When 0: Uses validation_size proportion from all data
-  # IMPORTANT: Only applies to the first modality's data
+  # NOTE: Uses first modality's data structure and applies to all modalities
   num_validation_files: 1
 
 # =============================================================================
