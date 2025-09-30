@@ -103,11 +103,11 @@ modalities:
       # Step 2: Group percentages into 6 bins
       - function: bin_numeric_data
         args:
-          num_bins: 6              # Number of positive bins (creates +n, -n, and zero bins)
+          num_bins: 8              # Number of positive bins (creates +n, -n, and zero bins)
                                    # Expected values: positive integer
-          outlier_percentile: 0.1  # Percentile threshold for outlier exclusion from binning
+          outlier_percentile: 5    # Percentile threshold for outlier exclusion from binning
                                    # Expected values: float, 0.0-1.0
-          exponent: 2.2           # Controls bin distribution (higher = more non-uniform)
+          exponent: 1.6           # Controls bin distribution (higher = more non-uniform)
                                    # Expected values: float
         enabled: true
     randomness_size: null

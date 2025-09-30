@@ -220,6 +220,8 @@ class InputSchema:
         num_whole_digits = None
         decimal_places = None
         num_bins = None
+        outlier_percentile = None
+        exponent = None
 
         for step in self.processing_steps:
             if step.function == 'convert_to_percent_changes':
@@ -229,6 +231,8 @@ class InputSchema:
                 decimal_places = step.args.get('decimal_places')
             elif step.function == 'bin_numeric_data':
                 num_bins = step.args.get('num_bins')
+                outlier_percentile = step.args.get('outlier_percentile')
+                exponent = step.args.get('exponent')
 
         legacy_list.extend([
             convert_to_percents,
@@ -237,7 +241,9 @@ class InputSchema:
             num_bins,
             self.randomness_size,
             self.cross_attention,
-            self.modality_name
+            self.modality_name,
+            outlier_percentile,
+            exponent
         ])
 
         return legacy_list

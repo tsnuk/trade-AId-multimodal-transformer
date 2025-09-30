@@ -261,8 +261,8 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
     Returns:
         Tuple of (data, file_info) - same format as original
     """
-    if not isinstance(input_info, list) or len(input_info) != 10:
-        raise ValueError("'input_info' must contain 10 elements")
+    if not isinstance(input_info, list) or len(input_info) < 10:
+        raise ValueError("'input_info' must contain at least 10 elements")
 
     data_path = input_info[0]
     column_number = input_info[1]

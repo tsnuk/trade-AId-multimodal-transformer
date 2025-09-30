@@ -127,8 +127,14 @@ for i, modality_params in enumerate(modality_params_list):
             report_non_numeric_error(this_modality_data, this_file_info, modality_num)
 
     if num_bins is not None:
-        outlier_percentile = 0.1
-        exponent = 2.2
+        # Extract outlier_percentile and exponent from YAML parameters
+        outlier_percentile_param = modality_params[10] if len(modality_params) > 10 else None
+        exponent_param = modality_params[11] if len(modality_params) > 11 else None
+
+        # Use YAML values if available, otherwise use defaults
+        outlier_percentile = outlier_percentile_param if outlier_percentile_param is not None else 0.1
+        exponent = exponent_param if exponent_param is not None else 2.2
+
         print(f"    Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
