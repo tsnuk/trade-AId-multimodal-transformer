@@ -337,7 +337,7 @@ for i in range(num_modalities):
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
-  print(f"  - {modality_name:<30}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
+  print(f"  - {modality_name:<25}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
 
 cleanup_cache()
 
