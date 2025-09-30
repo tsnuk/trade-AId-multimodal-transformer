@@ -66,7 +66,7 @@ Each input schema contains 10 elements:
 ### 1. Percentage Changes (`convert_to_percentages`)
 ```python
 # Convert raw prices to percentage changes
-# 100.0, 102.0, 101.0 → 0%, 2%, -0.98%
+# 100.0, 102.0, 101.0 -> 0%, 2%, -0.98%
 convert_to_percentages = True
 ```
 
@@ -134,7 +134,7 @@ input_schema_1 = [path, column, header, percentages, digits, decimals, bins, ran
 - **Data Alignment**: All modalities must have same-length, temporally synchronized datasets
 - **Vocabulary Control**: Use ranging/binning to balance precision vs. learning efficiency
 - **Cross-Attention**: Enable for related data, disable for independent context (time, categorical)
-- **Processing Order**: Percentages → Ranging → Binning
+- **Processing Order**: Percentages -> Ranging -> Binning
 
 ---
 

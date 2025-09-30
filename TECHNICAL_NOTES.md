@@ -150,8 +150,8 @@ if split == 'train' and is_training == 1:
 ```
 
 **Mathematical Expansion**:
-- **Formula**: `(rand_size × 2 + 1)^sequence_length` possible variations
-- **Example**: Window=24, rand_size=2 → `5^24 = 59,604,644,775,390,625` sequence variations
+- **Formula**: `(rand_size x 2 + 1)^sequence_length` possible variations
+- **Example**: Window=24, rand_size=2 -> `5^24 = 59,604,644,775,390,625` sequence variations
 - **Memory Efficiency**: Variations created on-demand, not stored
 
 **Data Integrity Preservation**:
@@ -269,9 +269,9 @@ for k, vocab_value in enumerate(modality_vocab):
 
 ### Computational Complexity
 
-**Index Generation**: O(batch_size × num_files) for mapping operations
-**Loss Calculation**: O(num_modalities × batch_size × sequence_length)
-**Directional Analysis**: O(num_modalities × batch_size × vocabulary_size)
+**Index Generation**: O(batch_size x num_files) for mapping operations
+**Loss Calculation**: O(num_modalities x batch_size x sequence_length)
+**Directional Analysis**: O(num_modalities x batch_size x vocabulary_size)
 
 ---
 

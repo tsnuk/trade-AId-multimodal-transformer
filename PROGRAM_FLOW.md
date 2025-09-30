@@ -1,22 +1,22 @@
-# 📈 MULTIMODAL TRANSFORMER TRAINING FLOW
+# MULTIMODAL TRANSFORMER TRAINING FLOW
 
 ## Complete Program Execution Flow
 
 ```
-🏁 START: main.py execution
+START: main.py execution
 │
-├─ 1️⃣ CONFIGURATION LOADING (main.py:30-60)
-│   ├─ config_manager.py → load_config()
-│   │   ├─ Loads config.yaml → system settings
-│   │   └─ Loads input_schemas.yaml → modality configurations
-│   ├─ schema.py → SchemaManager.load_from_yaml()
-│   │   ├─ Validates modality configurations
-│   │   └─ Creates InputSchema objects
-│   └─ Sets global config variables
+|- 1. CONFIGURATION LOADING (main.py:30-60)
+|   |- config_manager.py -> load_config()
+|   |   |- Loads config.yaml -> system settings
+|   |   '- Loads input_schemas.yaml -> modality configurations
+|   |- schema.py -> SchemaManager.load_from_yaml()
+|   |   |- Validates modality configurations
+|   |   '- Creates InputSchema objects
+|   '- Sets global config variables
 │
-├─ 2️⃣ DATA LOADING & PROCESSING (main.py:61-235)
-│   ├─ For each modality:
-│   │   ├─ data_utils.py → load_and_process_data()
+|- 2. DATA LOADING & PROCESSING (main.py:61-235)
+|   |- For each modality:
+|   |   |- data_utils.py -> load_and_process_data()
 │   │   │   ├─ Loads CSV/TXT files from path
 │   │   │   ├─ Extracts specified column
 │   │   │   └─ Returns raw numeric data + file info
