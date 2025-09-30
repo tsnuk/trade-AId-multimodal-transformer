@@ -98,7 +98,7 @@ modalities:
       # Step 1: Convert to percentage changes
       - function: convert_to_percent_changes
         args: {}  # No additional arguments needed
-        enabled: false #true
+        enabled: true
 
       # Step 2: Group percentages into 6 bins
       - function: bin_numeric_data

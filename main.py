@@ -309,9 +309,12 @@ for m in range(num_modalities):
     if len(modality_params) > 6 and modality_params[6] is not None:
       processing_applied.append("binning")
 
-  processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
+  if processing_applied:
+    processing_text = f"({'+'.join(processing_applied)})"
+  else:
+    processing_text = "(no processing)"
 
-  print(f"  - {this_modality_name}  Vocab size: {raw_vocab_size:,} -> {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
+  print(f"  - {this_modality_name}  Vocab size: {raw_vocab_size:,} -> {len(this_vocabulary):,}  {processing_text}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
