@@ -68,9 +68,9 @@ modalities:
   # -------------------------------------------------------------------------
   # EXAMPLE 1: Stock price data with ranging and scaling
   # -------------------------------------------------------------------------
-  - modality_name: "NASDAQ Stock Prices"  # Expected values: string
-    path: "./data/10min_candles/"  # Expected values: string
-    column_number: 13  # Close price column
+  - modality_name: "S&P500 1-day Close"  # Expected values: string
+    path: "./data/1day_candles/"  # Expected values: string
+    column_number: 7  # Close price column
                        # Expected values: positive integer
     has_header: true  # Expected values: true/false
     processing_steps:
@@ -79,7 +79,7 @@ modalities:
         args:
           num_whole_digits: 2    # Number of digits before decimal
                                  # Expected values: positive integer or null
-          decimal_places: 1      # Number of digits after decimal
+          decimal_places: 2      # Number of digits after decimal
                                # Expected values: non-negative integer or null
         enabled: true
     randomness_size: 2  # Add randomness with size 2
@@ -90,9 +90,9 @@ modalities:
   # -------------------------------------------------------------------------
   # EXAMPLE 2: Stock price data converted to percentages and binned
   # -------------------------------------------------------------------------
-  - modality_name: "NASDAQ Percentage Changes"
-    path: "./data/10min_candles/"
-    column_number: 13  # Same data, different processing
+  - modality_name: "Percentage Changes"
+    path: "./data/1day_candles/"
+    column_number: 7  # Same data, different processing
     has_header: true
     processing_steps:
       # Step 1: Convert to percentage changes
@@ -116,9 +116,9 @@ modalities:
   # -------------------------------------------------------------------------
   # EXAMPLE 3: Time data (no processing needed)
   # -------------------------------------------------------------------------
-#  - modality_name: "Trade Times"
-#    path: "./data/10min_candles/"
-#    column_number: 5   # Time column
+#  - modality_name: "Day of Month"
+#    path: "./data/1day_candles/"
+#    column_number: 2   # Day column
 #    has_header: true
 #    processing_steps: []  # No processing steps - use raw time data
 #    randomness_size: null

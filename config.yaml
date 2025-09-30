@@ -97,7 +97,7 @@ training_parameters:
   # Training will stop when this limit is reached
   # Monitor training loss to determine appropriate stopping point
   # Expected values: positive integer
-  max_iters: 1000
+  max_iters: 20000
 
   # Evaluation frequency - how often to run evaluation (every N training iterations)
   # Controls WHEN evaluation happens during training
@@ -143,14 +143,14 @@ model_architecture:
   # Must divide evenly into n_embd (each head gets n_embd/n_head dimensions)
   # Expected values: positive integer, must divide n_embd
   # Typical values: 4, 6, 8, 12, 16
-  n_head: 4
+  n_head: 6 #4
 
   # Number of transformer layers (blocks) in the model
   # More layers: Deeper model that can learn more complex patterns
   # Fewer layers: Faster training and inference, less overfitting risk
   # Expected values: positive integer
   # Typical values: 4, 6, 8, 12, 24
-  n_layer: 2
+  n_layer: 4 #2
 
   # Dropout rate - probability of randomly setting neurons to zero during training
   # Regularization technique to prevent overfitting

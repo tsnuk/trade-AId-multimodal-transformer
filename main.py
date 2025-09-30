@@ -405,13 +405,29 @@ run_stats = {
 
 train_size = len(all_train_sets[0])
 val_size_actual = len(all_val_sets[0])
-split_method = f"validation_size={validation_size}" if num_validation_files == 0 else f"num_validation_files={num_validation_files}"
+
+# Create split method description and collect validation filenames if file-based splitting is used
+validation_filenames = []
+if num_validation_files == 0:
+    split_method = f"validation_size={validation_size}"
+else:
+    # Collect validation filenames for logging
+    if all_file_info and len(all_file_info) > 0:
+        val_files_counter = 0
+        for j in range(len(all_file_info[0]) - 2, -1, -2):
+            validation_filenames.append(all_file_info[0][j])
+            val_files_counter += 1
+            if val_files_counter >= num_validation_files:
+                break
+
+    split_method = f"num_validation_files={num_validation_files}"
 
 data_info = {
     "Number of modalities": num_modalities,
     "Train set size": train_size,
     "Val set size": val_size_actual,
     "Split method": split_method,
+    "Validation filenames": validation_filenames,
     "Modality vocabulary sizes": modality_vocab_sizes_summary,
     "Modality data lengths": modality_data_lengths_summary
 }
@@ -534,7 +550,7 @@ for iter in range(max_iters):
         print("Warning: Training step losses not calculated, skipping backpropagation")
 
 
-print("\\n✅ TRAINING COMPLETED SUCCESSFULLY")
+print("\n✅ TRAINING COMPLETED SUCCESSFULLY")
 
 if save_model == 1:
     # Ensure model directory exists

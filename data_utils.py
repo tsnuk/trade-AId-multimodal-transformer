@@ -535,7 +535,7 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
             count = group_counts[i]
 
             if i == -num_groups:  # Most negative bin contains outliers
-                print(f"        Bin {i}: (-∞, {upper_bound:.3f}) - {count} elements")
+                print(f"        Bin {i}: (-inf, {upper_bound:.3f}) - {count} elements")
             else:
                 print(f"        Bin {i}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
 
@@ -552,7 +552,7 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
             count = group_counts[i]
 
             if i == num_groups:  # Most positive bin contains outliers
-                print(f"        Bin {i:2d}: [{lower_bound:.3f}, +∞) - {count} elements")
+                print(f"        Bin {i:2d}: [{lower_bound:.3f}, +inf) - {count} elements")
             else:
                 print(f"        Bin {i:2d}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
 
@@ -560,9 +560,9 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
     # Verify all data points were assigned to bins
     total_assigned = sum(group_counts.values())
     if total_assigned != len(data):
-        print(f"        ⚠️  Warning: Total assigned elements ({total_assigned}) ≠ input data length ({len(data)})")
+        print(f"        Warning: Total assigned elements ({total_assigned}) != input data length ({len(data)})")
     else:
-        print(f"        ✓ All {len(data)} elements successfully assigned to bins")
+        print(f"        All {len(data)} elements successfully assigned to bins")
 
     return group_assignments
 
@@ -638,7 +638,7 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
 
             # Header
             f.write("="*80 + "\n")
-            f.write("🚀 TRADE-AID MULTIMODAL TRANSFORMER TRAINING LOG\n")
+            f.write("TRADE-AID MULTIMODAL TRANSFORMER TRAINING LOG\n")
             f.write("="*80 + "\n")
             f.write(f"Training Started: {current_time_date}\n")
             f.write("="*80 + "\n\n")
@@ -665,7 +665,14 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write("-" * 50 + "\n")
             f.write(f"Batch Size: {hyperparams.get('batch_size', 'Unknown')}\n")
             f.write(f"Learning Rate: {hyperparams.get('learning_rate', 'Unknown')}\n")
-            f.write(f"Validation Size: {data_info.get('Split method', 'Unknown')}\n\n")
+            f.write(f"Validation Size: {data_info.get('Split method', 'Unknown')}\n")
+
+            # Add validation filenames if they exist
+            validation_filenames = data_info.get('Validation filenames', [])
+            if validation_filenames:
+                for filename in validation_filenames:
+                    f.write(f"    {filename}\n")
+            f.write("\n")
 
             # Dataset Information
             f.write("📋 DATASET INFORMATION\n")
