@@ -365,7 +365,7 @@ def _convert_to_percentage_changes(data: List, decimal_places: int = 2, filename
 
             if previous == 0:
                 # Handle zero gracefully: skip percentage calculation and use 0.0
-                print(f"Warning: Zero value found at index {i-1} in file '{filename}'. "
+                print(f"Warning: Zero value found at index {i-1} in file '{filename}' causes division by zero. "
                       f"Skipping percentage calculation for index {i}. "
                       f"Using 0.0% change instead.")
                 percentages.append(0.0)
