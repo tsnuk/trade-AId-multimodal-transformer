@@ -99,9 +99,12 @@ for i, modality_params in enumerate(modality_params_list):
     print(f"  Summary: {data_length:,} data points ({file_count} files loaded)")
 
     processing_applied = False
+    first_processing_step = True
 
     if convert_to_percents:
-        print()
+        if first_processing_step:
+            print()
+            first_processing_step = False
         print(f"  Processing: Converting to percentages")
         processing_applied = True
 
@@ -120,11 +123,15 @@ for i, modality_params in enumerate(modality_params_list):
                 decimal_details = f"{decimal_places} decimals" if decimal_places else ""
                 details = ", ".join(filter(None, [range_details, decimal_details]))
 
-                print()
+                if first_processing_step:
+                    print()
+                    first_processing_step = False
                 print(f"  Processing: Ranging to {range_str} ({details})")
             else:
                 # Only decimal places specified
-                print()
+                if first_processing_step:
+                    print()
+                    first_processing_step = False
                 print(f"  Processing: Rounding to {decimal_places} decimal places (no ranging)")
 
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
@@ -142,7 +149,9 @@ for i, modality_params in enumerate(modality_params_list):
         outlier_percentile = outlier_percentile_param if outlier_percentile_param is not None else 0.1
         exponent = exponent_param if exponent_param is not None else 2.2
 
-        print()
+        if first_processing_step:
+            print()
+            first_processing_step = False
         print(f"  Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
@@ -159,22 +168,28 @@ for i, modality_params in enumerate(modality_params_list):
                         external_functions = [step.function for step in schema.processing_steps if step.enabled]
                         if external_functions:
                             external_names = ', '.join(external_functions)
-                            print()
+                            if first_processing_step:
+                                print()
                             print(f"  Processing: External functions ({external_names})")
                         else:
-                            print()
+                            if first_processing_step:
+                                print()
                             print(f"  Processing: No processing specified")
                     else:
-                        print()
+                        if first_processing_step:
+                            print()
                         print(f"  Processing: No processing specified")
                 else:
-                    print()
+                    if first_processing_step:
+                        print()
                     print(f"  Processing: No processing specified")
             else:
-                print()
+                if first_processing_step:
+                    print()
                 print(f"  Processing: No processing specified")
         else:
-            print()
+            if first_processing_step:
+                print()
             print(f"  Processing: No processing specified")
 
     all_modality_data.append(this_modality_data)

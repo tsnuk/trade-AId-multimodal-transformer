@@ -1,22 +1,20 @@
 # =============================================================================
-# SYSTEM CONFIGURATION
+# SYSTEM CONFIGURATION - FAST DEMO SETTINGS
 # =============================================================================
 #
-# This file contains all system-wide settings for the multimodal transformer,
-# including project paths, training parameters, model architecture, and data
-# splitting configurations.
+# This configuration is optimized for fast demonstration and initial testing.
+# Values are set conservatively for quick execution on any system.
+#
+# FOR PRODUCTION USE:
+# Increase max_iters (5000-50000), batch_size (16-64), n_embd (128-512),
+# n_layer (6-12), and block_size (64-256) based on your hardware capabilities.
 #
 # CONFIGURATION SECTIONS:
 # ----------------------
 # 1. project_settings: File paths and model management
 # 2. data_splitting: Training/validation data allocation
-# 3. training_parameters: Training hyperparameters
-# 4. model_architecture: Neural network structure
-#
-# USAGE:
-# ------
-# Edit these values to customize training behavior. The system will validate
-# all settings on startup and report any configuration errors.
+# 3. training_parameters: Training hyperparameters (optimized for speed)
+# 4. model_architecture: Neural network structure (minimal for demos)
 
 # =============================================================================
 # PROJECT SETTINGS
@@ -66,38 +64,30 @@ data_splitting:
   validation_size: 0.1
 
   # Alternative validation method: specify number of files for validation
-  # Expected values: integer >= 0
-  # When > 0: Uses the last N files loaded for validation (overrides validation_size)
-  # When 0: Uses validation_size proportion from all data
-  # NOTE: Uses first modality's data structure and applies to all modalities
-  num_validation_files: 1
+  # Current: Using 5 files for fast demo startup (loads ~500 files quickly)
+  # Production: Use 10-50 files or set to 0 for percentage-based splitting
+  num_validation_files: 5
 
 # =============================================================================
-# TRAINING PARAMETERS
+# TRAINING PARAMETERS - FAST DEMO CONFIGURATION
 # =============================================================================
-# Core hyperparameters that control the training process
+# Optimized for quick demonstration and initial testing (runs in ~2-5 minutes)
 
 training_parameters:
   # Number of training examples processed together in each batch
-  # Larger values: Better GPU utilization, more stable gradients, more memory usage
-  # Smaller values: Less memory usage, more frequent updates, potentially noisier gradients
-  # Expected values: positive integer
-  # Typical values: 16, 32, 64, 128
-  batch_size: 8
+  # Current: Small value for fast demo execution
+  # Production: Use 16-64 for better performance
+  batch_size: 4
 
   # Context window size - number of previous tokens considered for prediction
-  # This is the sequence length that the model processes at once
-  # Larger values: Model can see more context, but requires more memory
-  # Must be less than the length of your data sequences
-  # Expected values: positive integer
-  # Typical values: 64, 128, 256, 512, 1024
-  block_size: 32
+  # Current: Small value for fast demo execution
+  # Production: Use 64-256 for better context understanding
+  block_size: 16
 
   # Maximum number of training iterations
-  # Training will stop when this limit is reached
-  # Monitor training loss to determine appropriate stopping point
-  # Expected values: positive integer
-  max_iters: 20000
+  # Current: Low value for quick demo completion (~2-5 minutes)
+  # Production: Use 5000-50000 for meaningful results
+  max_iters: 500
 
   # Evaluation frequency - how often to run evaluation (every N training iterations)
   # Controls WHEN evaluation happens during training
@@ -106,7 +96,7 @@ training_parameters:
   # More frequent evaluation provides better monitoring but slows training
   # Expected values: positive integer
   # Typical values: 50, 100, 200, 500
-  eval_interval: 100
+  eval_interval: 50
 
   # Evaluation thoroughness - how many batches to use for each evaluation
   # Controls HOW THOROUGH each evaluation is when it runs
@@ -115,7 +105,7 @@ training_parameters:
   # Balance: Higher values = more accurate validation loss, but slower evaluation
   # Expected values: positive integer
   # Typical values: 20, 40, 100, 200
-  eval_iters: 20
+  eval_iters: 10
 
   # Learning rate - controls the step size for weight updates
   # Higher values: Faster learning but risk of overshooting optimal weights
@@ -125,32 +115,27 @@ training_parameters:
   learning_rate: 0.0003
 
 # =============================================================================
-# MODEL ARCHITECTURE
+# MODEL ARCHITECTURE - MINIMAL DEMO CONFIGURATION
 # =============================================================================
-# Neural network structure and capacity parameters
+# Minimal model size for fast execution and low memory usage
 
 model_architecture:
   # Embedding dimension - size of the vector representation for each token
-  # This determines the model's capacity to represent complex relationships
-  # Larger values: More expressive model, but more parameters and memory
-  # Should be divisible by n_head for efficient attention computation
-  # Expected values: positive integer, divisible by n_head
-  # Typical values: 128, 256, 384, 512, 768
-  n_embd: 32
+  # Current: Minimal size for fast demo execution
+  # Production: Use 128-512 for better model capacity
+  n_embd: 24
 
   # Number of attention heads in multi-head attention mechanism
   # More heads allow the model to attend to different types of relationships
   # Must divide evenly into n_embd (each head gets n_embd/n_head dimensions)
   # Expected values: positive integer, must divide n_embd
   # Typical values: 4, 6, 8, 12, 16
-  n_head: 6 #4
+  n_head: 4
 
   # Number of transformer layers (blocks) in the model
-  # More layers: Deeper model that can learn more complex patterns
-  # Fewer layers: Faster training and inference, less overfitting risk
-  # Expected values: positive integer
-  # Typical values: 4, 6, 8, 12, 24
-  n_layer: 4 #2
+  # Current: Minimal layers for fast demo execution
+  # Production: Use 6-12 layers for better learning capacity
+  n_layer: 2
 
   # Dropout rate - probability of randomly setting neurons to zero during training
   # Regularization technique to prevent overfitting
