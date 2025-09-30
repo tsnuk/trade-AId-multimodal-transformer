@@ -102,11 +102,25 @@ for i, modality_params in enumerate(modality_params_list):
     first_processing_step = True
     processing_step_number = 1
 
+    # Count total processing steps to determine if numbering is needed
+    total_processing_steps = 0
+    if convert_to_percents:
+        total_processing_steps += 1
+    if num_whole_digits is not None or decimal_places is not None:
+        total_processing_steps += 1
+    if num_bins is not None:
+        total_processing_steps += 1
+
+    use_numbering = total_processing_steps > 1
+
     if convert_to_percents:
         if first_processing_step:
             print()
             first_processing_step = False
-        print(f"  Processing {processing_step_number}: Converting to percentages")
+        if use_numbering:
+            print(f"  Processing {processing_step_number}: Converting to percentages")
+        else:
+            print(f"  Processing: Converting to percentages")
         processing_step_number += 1
         processing_applied = True
 
@@ -128,14 +142,20 @@ for i, modality_params in enumerate(modality_params_list):
                 if first_processing_step:
                     print()
                     first_processing_step = False
-                print(f"  Processing {processing_step_number}: Ranging to {range_str} ({details})")
+                if use_numbering:
+                    print(f"  Processing {processing_step_number}: Ranging to {range_str} ({details})")
+                else:
+                    print(f"  Processing: Ranging to {range_str} ({details})")
                 processing_step_number += 1
             else:
                 # Only decimal places specified
                 if first_processing_step:
                     print()
                     first_processing_step = False
-                print(f"  Processing {processing_step_number}: Rounding to {decimal_places} decimal places (no ranging)")
+                if use_numbering:
+                    print(f"  Processing {processing_step_number}: Rounding to {decimal_places} decimal places (no ranging)")
+                else:
+                    print(f"  Processing: Rounding to {decimal_places} decimal places (no ranging)")
                 processing_step_number += 1
 
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
@@ -156,7 +176,10 @@ for i, modality_params in enumerate(modality_params_list):
         if first_processing_step:
             print()
             first_processing_step = False
-        print(f"  Processing {processing_step_number}: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
+        if use_numbering:
+            print(f"  Processing {processing_step_number}: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
+        else:
+            print(f"  Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
         processing_step_number += 1
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
@@ -175,7 +198,10 @@ for i, modality_params in enumerate(modality_params_list):
                             external_names = ', '.join(external_functions)
                             if first_processing_step:
                                 print()
-                            print(f"  Processing {processing_step_number}: External functions ({external_names})")
+                            if use_numbering:
+                                print(f"  Processing {processing_step_number}: External functions ({external_names})")
+                            else:
+                                print(f"  Processing: External functions ({external_names})")
                         else:
                             if first_processing_step:
                                 print()
