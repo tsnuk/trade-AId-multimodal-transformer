@@ -224,15 +224,16 @@ class InputSchema:
         exponent = None
 
         for step in self.processing_steps:
-            if step.function == 'convert_to_percent_changes':
-                convert_to_percents = True
-            elif step.function == 'range_numeric_data':
-                num_whole_digits = step.args.get('num_whole_digits')
-                decimal_places = step.args.get('decimal_places')
-            elif step.function == 'bin_numeric_data':
-                num_bins = step.args.get('num_bins')
-                outlier_percentile = step.args.get('outlier_percentile')
-                exponent = step.args.get('exponent')
+            if step.enabled:
+                if step.function == 'convert_to_percent_changes':
+                    convert_to_percents = True
+                elif step.function == 'range_numeric_data':
+                    num_whole_digits = step.args.get('num_whole_digits')
+                    decimal_places = step.args.get('decimal_places')
+                elif step.function == 'bin_numeric_data':
+                    num_bins = step.args.get('num_bins')
+                    outlier_percentile = step.args.get('outlier_percentile')
+                    exponent = step.args.get('exponent')
 
         legacy_list.extend([
             convert_to_percents,
