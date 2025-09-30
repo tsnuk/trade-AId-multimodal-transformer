@@ -214,13 +214,13 @@ class ConfigManager:
 
         try:
             self.load_system_config()
-            logger.info("✓ System configuration loaded successfully")
+            logger.info("System configuration loaded successfully")
 
             self.load_input_schemas()
-            logger.info(f"✓ Input schemas loaded successfully ({len(self.schema_manager.schemas)} modalities)")
+            logger.info(f"Input schemas loaded successfully ({len(self.schema_manager.schemas)} modalities)")
 
             self.validate_all_functions()
-            logger.info("✓ All processing functions validated successfully")
+            logger.info("All processing functions validated successfully")
 
             logger.info("Configuration loading completed successfully")
 

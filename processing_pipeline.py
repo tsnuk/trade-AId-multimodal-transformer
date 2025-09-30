@@ -100,9 +100,9 @@ class ProcessingPipeline:
 
                 try:
                     function = resolve_function(step.function)
-                    result.execution_log.append(f"✓ {step_name} - Function resolved successfully")
+                    result.execution_log.append(f"OK {step_name} - Function resolved successfully")
                 except Exception as e:
-                    error_msg = f"✗ {step_name} - Failed to resolve function: {e}"
+                    error_msg = f"ERROR {step_name} - Failed to resolve function: {e}"
                     result.execution_log.append(error_msg)
                     result.error = error_msg
                     logger.error(error_msg)
@@ -113,7 +113,7 @@ class ProcessingPipeline:
                     result.successful_steps += 1
 
                     args_str = f" with args {step.args}" if step.args else ""
-                    success_msg = f"✓ {step_name} - Executed successfully{args_str}"
+                    success_msg = f"OK {step_name} - Executed successfully{args_str}"
                     result.execution_log.append(success_msg)
 
                     if self.enable_logging:
@@ -121,7 +121,7 @@ class ProcessingPipeline:
                         logger.info(f"{step_name} completed. {data_info}")
 
                 except Exception as e:
-                    error_msg = f"✗ {step_name} - Execution failed: {e}"
+                    error_msg = f"ERROR {step_name} - Execution failed: {e}"
                     result.execution_log.append(error_msg)
                     result.error = error_msg
                     logger.error(error_msg)

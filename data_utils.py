@@ -686,7 +686,7 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write("="*80 + "\n\n")
 
             # System Configuration
-            f.write("📊 SYSTEM CONFIGURATION\n")
+            f.write("SYSTEM CONFIGURATION\n")
             f.write("-" * 50 + "\n")
             f.write(f"Model Parameters: {run_stats.get('Model parameter size (M)', 'Unknown')} million\n")
             f.write(f"Device: {hyperparams.get('device', 'Unknown')}\n")
@@ -694,7 +694,7 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write(f"Evaluation Interval: {hyperparams.get('eval_interval', 'Unknown')}\n\n")
 
             # Model Architecture
-            f.write("🏗️ MODEL ARCHITECTURE\n")
+            f.write("MODEL ARCHITECTURE\n")
             f.write("-" * 50 + "\n")
             f.write(f"Embedding Dimension: {hyperparams.get('n_embd', 'Unknown')}\n")
             f.write(f"Attention Heads: {hyperparams.get('n_head', 'Unknown')}\n")
@@ -703,7 +703,7 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write(f"Dropout Rate: {hyperparams.get('dropout', 'Unknown')}\n\n")
 
             # Training Parameters
-            f.write("⚙️ TRAINING PARAMETERS\n")
+            f.write("TRAINING PARAMETERS\n")
             f.write("-" * 50 + "\n")
             f.write(f"Batch Size: {hyperparams.get('batch_size', 'Unknown')}\n")
             f.write(f"Learning Rate: {hyperparams.get('learning_rate', 'Unknown')}\n")
@@ -717,7 +717,7 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write("\n")
 
             # Dataset Information
-            f.write("📋 DATASET INFORMATION\n")
+            f.write("DATASET INFORMATION\n")
             f.write("-" * 50 + "\n")
             f.write(f"Number of Modalities: {data_info.get('Number of modalities', 'Unknown')}\n")
             f.write(f"Training Set Size: {data_info.get('Train set size', 'Unknown'):,} samples\n")
@@ -726,10 +726,10 @@ def write_initial_run_details(file_path, hyperparams, data_info, modality_config
             f.write(f"Data Lengths: {data_info.get('Modality data lengths', 'Unknown')}\n\n")
 
             # Modality Configurations
-            f.write("🔧 MODALITY CONFIGURATIONS\n")
+            f.write("MODALITY CONFIGURATIONS\n")
             f.write("-" * 50 + "\n")
             for i, config in enumerate(modality_configs):
-                f.write(f"\n📁 {config.get('Modality Name', f'Modality {i+1}')}\n")
+                f.write(f"\n{config.get('Modality Name', f'Modality {i+1}')}\n")
                 f.write(f"   {config.get('Source', 'Unknown')}\n")
 
                 # Processing applied

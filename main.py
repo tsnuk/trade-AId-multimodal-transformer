@@ -199,7 +199,7 @@ if num_modalities > 1:
                 "All modalities must have the same length for proper training."
             )
 
-print("\n📊 VOCABULARY BUILDING")
+print("\nVOCABULARY BUILDING")
 
 all_vocabularies = []
 all_numeric_reps = []
@@ -242,7 +242,7 @@ for m in range(num_modalities):
 
   processing_text = f" ({'+'.join(processing_applied)})" if processing_applied else ""
 
-  print(f"  ▪ {this_modality_name}  Vocab size: {raw_vocab_size:,} → {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
+  print(f"  - {this_modality_name}  Vocab size: {raw_vocab_size:,} -> {len(this_vocabulary):,}  {processing_text.strip('() ') if processing_text.strip() else 'no processing'}")
 
   if len(this_vocabulary) <= 20:
     print(f"    Vocabulary: {this_vocabulary}")
@@ -267,7 +267,7 @@ if system_config['num_validation_files'] > 0:
     val_files_counter = 0
     for j in range(len(all_file_info[0]) - 2, -1, -2):
         this_file_name = all_file_info[0][j]
-        print(f"  ▪ {this_file_name}")
+        print(f"  - {this_file_name}")
         val_files_counter += 1
         if val_files_counter >= system_config['num_validation_files']:
             break
@@ -275,7 +275,7 @@ else:
     print(f"Method: Percentage-based ({system_config['validation_size']*100:.1f}% validation)")
 
 print()
-print("🗂️ DATASET SPLITTING")
+print("DATASET SPLITTING")
 all_train_sets = []
 all_val_sets = []
 
@@ -291,7 +291,7 @@ for i in range(num_modalities):
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
-  print(f"  ▪ {modality_name:<30}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
+  print(f"  - {modality_name:<30}Train {len(this_train_set):,} | Val {len(this_val_set):,}{rand_text}{cross_text}")
 
 cleanup_cache()
 
@@ -498,13 +498,13 @@ if output_file_name != '':
     write_initial_run_details(output_file_path, hyperparams, data_info, modality_configs, run_stats)
     with open(output_file_path, 'a', encoding='utf-8') as f:
         f.write("\n--- TRAINING & EVALUATION RESULTS ---\n\n")
-        f.write(f"Directional Prediction Analysis ({eval_iters} iterations × {batch_size} batches = {eval_iters * batch_size:,} samples per evaluation)\n")
+        f.write(f"Directional Prediction Analysis ({eval_iters} iterations x {batch_size} batches = {eval_iters * batch_size:,} samples per evaluation)\n")
 
 print()
-print(f"🔄 TRAINING PROGRESS")
-print(f"  ▪ Iterations: {max_iters}")
-print(f"  ▪ Device: {device}")
-print("  ▪ Note: ** Intensive computation ahead **")
+print(f"TRAINING PROGRESS")
+print(f"  - Iterations: {max_iters}")
+print(f"  - Device: {device}")
+print("  - Note: ** Intensive computation ahead **")
 print()
 
 best_val_loss = float('inf')
@@ -520,12 +520,12 @@ for iter in range(max_iters):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         if not torch.isnan(torch.tensor([losses['train'], losses['val']])).any():
-             print(f"\n🎯 LOSS METRICS: Step {iter}/{max_iters} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | Time: {current_time}")
-             print("─" * 80)
+             print(f"\nLOSS METRICS: Step {iter}/{max_iters} | Train: {losses['train']:.4f} | Val: {losses['val']:.4f} | Time: {current_time}")
+             print("-" * 80)
              if output_file_name != '':
                with open(output_file_path, 'a', encoding='utf-8') as f:
                    progress_pct = (iter / max_iters) * 100
-                   f.write(f"\n📈 STEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | Training Loss: {losses['train']:.6f} | Validation Loss: {losses['val']:.6f} | {current_time}\n\n")
+                   f.write(f"\nSTEP {iter:,}/{max_iters:,} ({progress_pct:.1f}% Complete) | Training Loss: {losses['train']:.6f} | Validation Loss: {losses['val']:.6f} | {current_time}\n\n")
         else:
              print(f"Warning: Step {iter} losses are NaN, skipping save | {current_time}")
 
@@ -568,7 +568,7 @@ for iter in range(max_iters):
         print("Warning: Training step losses not calculated, skipping backpropagation")
 
 
-print("\n✅ TRAINING COMPLETED SUCCESSFULLY")
+print("\nTRAINING COMPLETED SUCCESSFULLY")
 
 if save_model == 1:
     # Ensure model directory exists
