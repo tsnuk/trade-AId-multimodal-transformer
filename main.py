@@ -173,13 +173,36 @@ for i, modality_params in enumerate(modality_params_list):
         outlier_percentile = outlier_percentile_param if outlier_percentile_param is not None else 0.1
         exponent = exponent_param if exponent_param is not None else 2.2
 
+        # Check which value types exist in data
+        has_positive = any(x > 0 for x in this_modality_data if isinstance(x, numbers.Number))
+        has_negative = any(x < 0 for x in this_modality_data if isinstance(x, numbers.Number))
+        has_zero = any(x == 0 for x in this_modality_data if isinstance(x, numbers.Number))
+
+        # Build bin description based on what exists
+        bin_parts = []
+        if has_positive:
+            bin_parts.append(f"{num_bins} positive")
+        if has_negative:
+            bin_parts.append(f"{num_bins} negative")
+        if has_zero:
+            bin_parts.append("1 zero")
+
+        # If only one type, simplify output
+        if len(bin_parts) == 1:
+            if has_zero:
+                bin_description = "1 bin"
+            else:
+                bin_description = f"{num_bins} bins"
+        else:
+            bin_description = ", ".join(bin_parts) + " bins"
+
         if first_processing_step:
             print()
             first_processing_step = False
         if use_numbering:
-            print(f"  Processing {processing_step_number}: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
+            print(f"  Processing {processing_step_number}: Binning ({bin_description})")
         else:
-            print(f"  Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
+            print(f"  Processing: Binning ({bin_description})")
         processing_step_number += 1
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
