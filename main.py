@@ -26,8 +26,8 @@ from data_utils import (
 from file_cache import load_file_data_cached, cleanup_cache
 from model import MultimodalTransformer
 from training_utils import get_batch, estimate_loss
-print("🚀 TRADE-AID MULTIMODAL TRANSFORMER")
-print("═" * 45)
+print("TRADE-AID MULTIMODAL TRANSFORMER")
+print("=" * 45)
 print("Initializing configuration system...")
 config_mode = initialize_compatibility_layer(globals())
 print(f"Configuration: {'YAML mode detected' if config_mode == 'modern' else 'Programmatic mode detected'}")

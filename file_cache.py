@@ -299,7 +299,7 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
     if convert_to_percentages:
         if os.path.isfile(data_path):
             # Single file - apply conversion directly
-            all_data = _convert_to_percentage_changes(all_data, num_dec_places if num_dec_places else 2)
+            all_data = _convert_to_percentage_changes(all_data, num_dec_places if num_dec_places else 2, data_name_from_path)
         else:
             # Multiple files - apply conversion per file segment, then concatenate
             converted_data = []
@@ -314,7 +314,7 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
                 file_segment = all_data[data_index:data_index + file_length]
 
                 # Apply percentage conversion to this segment only
-                converted_segment = _convert_to_percentage_changes(file_segment, num_dec_places if num_dec_places else 2)
+                converted_segment = _convert_to_percentage_changes(file_segment, num_dec_places if num_dec_places else 2, file_name)
 
                 # Add to final result
                 converted_data.extend(converted_segment)
@@ -326,7 +326,7 @@ def load_file_data_cached(input_info: List) -> Tuple[List, List]:
     return all_data, file_info
 
 
-def _convert_to_percentage_changes(data: List, decimal_places: int = 2) -> List[float]:
+def _convert_to_percentage_changes(data: List, decimal_places: int = 2, filename: str = "unknown") -> List[float]:
     """Convert data to percentage changes between adjacent data points (backward-looking).
 
     Calculates percentage change from previous value to current value:
@@ -335,6 +335,7 @@ def _convert_to_percentage_changes(data: List, decimal_places: int = 2) -> List[
     Args:
         data: List of numeric data points.
         decimal_places: Number of decimal places to round to (default: 2).
+        filename: Name of the file being processed for error reporting (default: "unknown").
 
     Returns:
         List of percentage changes with first element as 0.0.
@@ -346,11 +347,11 @@ def _convert_to_percentage_changes(data: List, decimal_places: int = 2) -> List[
     """
     # Input validation
     if not isinstance(data, list) or not data:
-        raise ValueError("'data' must be a non-empty list.")
+        raise ValueError(f"'data' must be a non-empty list. File: {filename}")
 
     if decimal_places is not None:
         if not isinstance(decimal_places, int) or decimal_places < 0:
-            raise ValueError("'decimal_places' must be a non-negative integer or null.")
+            raise ValueError(f"'decimal_places' must be a non-negative integer or null. File: {filename}")
     else:
         decimal_places = 2  # Default value
 
@@ -363,18 +364,23 @@ def _convert_to_percentage_changes(data: List, decimal_places: int = 2) -> List[
             previous = float(data[i-1])
 
             if previous == 0:
-                raise ZeroDivisionError(f"Cannot calculate percentage change: previous value is zero at index {i-1}")
+                # Handle zero gracefully: skip percentage calculation and use 0.0
+                print(f"Warning: Zero value found at index {i-1} in file '{filename}'. "
+                      f"Skipping percentage calculation for index {i}. "
+                      f"Using 0.0% change instead.")
+                percentages.append(0.0)
+                continue
 
             percentage_change = ((current - previous) / previous) * 100
             rounded_percentage = round(percentage_change, decimal_places)
             percentages.append(rounded_percentage)
 
         except (ValueError, TypeError) as e:
-            raise ValueError(f"Non-numeric data encountered at index {i}: {data[i]}. "
+            raise ValueError(f"Non-numeric data encountered at index {i}: {data[i]} in file '{filename}'. "
                            f"Cannot calculate percentage change: {e}")
 
     if len(percentages) != len(data):
-        print(f"Warning: Returned list length ({len(percentages)}) does not match input list length ({len(data)}).")
+        print(f"Warning: Returned list length ({len(percentages)}) does not match input list length ({len(data)}). File: {filename}")
 
     return percentages
 
