@@ -1,8 +1,8 @@
-# 🚀 Multimodal Transformer Examples
+# Multimodal Transformer Examples
 
 Welcome to the example configurations for the Multimodal Transformer system! These examples are designed to help you understand and experiment with multimodal learning using realistic financial data.
 
-## 📋 Overview
+## Overview
 
 This examples package provides two complete, working configurations that demonstrate different aspects of the multimodal transformer system:
 
@@ -11,7 +11,7 @@ This examples package provides two complete, working configurations that demonst
 
 Both examples use **4 modalities** to showcase the power of multimodal learning, where the model learns relationships between different types of time-series data simultaneously.
 
-## 🎯 Quick Start
+## Quick Start
 
 ### Option 1: Run Examples Directly
 
@@ -37,9 +37,9 @@ cp examples/configs/example2_advanced_input_schemas.yaml input_schemas.yaml
 python main.py
 ```
 
-## 📚 Example Details
+## Example Details
 
-### 🌟 Example 1: Basic Multimodal Learning
+### Example 1: Basic Multimodal Learning
 
 **Perfect for: Beginners, Learning, Quick Testing**
 
@@ -68,7 +68,7 @@ python main.py
 
 ---
 
-### ⚡ Example 2: Advanced Multimodal Learning
+### Example 2: Advanced Multimodal Learning
 
 **Perfect for: Advanced Users, Production Patterns, Complex Relationships**
 
@@ -80,7 +80,7 @@ python main.py
 
 **Modalities Demonstrated:**
 1. **Multi-Stock Prices** - Combined AAPL, MSFT, GOOGL with data augmentation
-2. **Volatility Patterns** - Multi-step processing (percentages → advanced binning)
+2. **Volatility Patterns** - Multi-step processing (percentages -> advanced binning)
 3. **Trading Volume** - Scaled and categorized volume patterns
 4. **Market Timing** - Enhanced time features with maximum randomness
 
@@ -96,7 +96,7 @@ python main.py
 - Better generalization across different stocks
 - Complex pattern recognition capabilities
 
-## 📊 Sample Data
+## Sample Data
 
 ### Data Format
 All sample data follows the same format as real financial data:
@@ -115,7 +115,7 @@ datetime,year,month,day,day_of_week,hour,minute,date,time,open,high,low,close,vo
 - **Time-aligned data** - Perfect synchronization across all columns
 - **Clean formatting** - No missing values or inconsistencies
 
-## 🔧 Customization Guide
+## Customization Guide
 
 ### Modifying Examples
 
@@ -154,7 +154,7 @@ datetime,year,month,day,day_of_week,hour,minute,date,time,open,high,low,close,vo
 4. **Update processing steps** for your data types
 5. **Tune model parameters** for your dataset size
 
-## 📈 Expected Outputs
+## Expected Outputs
 
 ### Training Logs
 Both examples generate detailed training logs showing:
@@ -175,7 +175,7 @@ Both examples generate detailed training logs showing:
 - **Directional Success** - Financial prediction accuracy (up/down/flat)
 - **Validation Performance** - Generalization quality
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -206,7 +206,7 @@ Both examples generate detailed training logs showing:
 3. **Start with Example 1** - Simpler setup for debugging
 4. **Compare with working examples** - Use examples as reference templates
 
-## 🎓 Learning Path
+## Learning Path
 
 ### Recommended Progression
 
@@ -233,7 +233,7 @@ Both examples generate detailed training logs showing:
 - **Data Augmentation** - Using randomness for better generalization
 - **Validation Strategies** - Percentage vs. file-based splitting
 
-## 💡 Next Steps
+## Next Steps
 
 After working with these examples:
 
@@ -243,4 +243,4 @@ After working with these examples:
 4. **Scale up model size** - For larger datasets and complex patterns
 5. **Explore advanced features** - Custom attention patterns, external functions
 
-Happy learning! 🚀
+Happy learning!

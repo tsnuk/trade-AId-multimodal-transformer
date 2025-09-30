@@ -171,17 +171,17 @@ model_architecture:
 # =============================================================================
 #
 # MEMORY CONSIDERATIONS:
-# - GPU memory usage scales with: batch_size × block_size × n_embd × n_layer
+# - GPU memory usage scales with: batch_size x block_size x n_embd x n_layer
 # - If getting out-of-memory errors, reduce batch_size or block_size first
 # - Monitor GPU memory usage during training
 #
 # TRAINING TIME:
-# - Training time scales with: max_iters × batch_size × block_size
+# - Training time scales with: max_iters x batch_size x block_size
 # - Use smaller values for experimentation, scale up for production
 # - Consider using gradient accumulation for large effective batch sizes
 #
 # MODEL CAPACITY:
-# - Total parameters ≈ (vocab_size × n_embd) + (n_layer × 4 × n_embd²)
+# - Total parameters ~ (vocab_size x n_embd) + (n_layer x 4 x n_embd^2)
 # - Larger models need more data to train effectively
 # - Balance model size with available data and computational resources
 #

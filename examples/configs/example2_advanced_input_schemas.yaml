@@ -112,7 +112,7 @@ modalities:
 #    - Better generalization across different stocks/securities
 #
 # 2. SOPHISTICATED PROCESSING PIPELINES:
-#    - Multi-step processing chains (e.g., percentages → binning)
+#    - Multi-step processing chains (e.g., percentages -> binning)
 #    - Fine-tuned parameters for optimal data representation
 #    - Different processing strategies for different data types
 #

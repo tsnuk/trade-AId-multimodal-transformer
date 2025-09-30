@@ -44,13 +44,13 @@
 # DATA FLOW:
 # ----------
 # Data flows sequentially through processing steps:
-# raw_data → function1 → function2 → function3 → final_processed_data
+# raw_data -> function1 -> function2 -> function3 -> final_processed_data
 # Each function receives the output of the previous function.
 #
 # STEP CONTROL:
-# - enabled: true  → Step executes normally
-# - enabled: false → Step is skipped, data passes through unchanged
-# - omitted        → Defaults to true (step executes)
+# - enabled: true  -> Step executes normally
+# - enabled: false -> Step is skipped, data passes through unchanged
+# - omitted        -> Defaults to true (step executes)
 #
 # Use cases for enabled: false:
 # - Temporarily disable a step without deleting configuration
@@ -105,9 +105,9 @@ modalities:
         args:
           num_bins: 8              # Number of positive bins (creates +n, -n, and zero bins)
                                    # Expected values: positive integer
-          outlier_percentile: 5    # Percentile threshold for outlier exclusion from binning
+          outlier_percentile: 3    # Percentile threshold for outlier exclusion from binning
                                    # Expected values: float, 0.0-1.0
-          exponent: 1.6           # Controls bin distribution (higher = more non-uniform)
+          exponent: 1.7           # Controls bin distribution (higher = more non-uniform)
                                    # Expected values: float
         enabled: true
     randomness_size: null
@@ -178,7 +178,7 @@ modalities:
 # 3. convert_to_percent_changes:
 #    Purpose: Convert values to percentage changes from previous values
 #    Arguments: None
-#    Example: [100, 102, 99] → [0, 2.0, -2.94]
+#    Example: [100, 102, 99] -> [0, 2.0, -2.94]
 #
 # 4. add_rand_to_data_points:
 #    Purpose: Add controlled randomness to data values
