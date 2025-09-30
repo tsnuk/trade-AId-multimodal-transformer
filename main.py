@@ -94,10 +94,15 @@ for i, modality_params in enumerate(modality_params_list):
 
     raw_vocabulary_size = len(set(this_modality_data))
 
+    data_length = len(this_modality_data)
+    file_count = len(this_file_info) // 2 if this_file_info else 0
+    print(f"  Summary: {data_length:,} data points ({file_count} files loaded)")
+
     processing_applied = False
 
     if convert_to_percents:
-        print(f"    Processing: Converting to percentages")
+        print()
+        print(f"  Processing: Converting to percentages")
         processing_applied = True
 
     if num_whole_digits is not None or decimal_places is not None:
@@ -115,10 +120,12 @@ for i, modality_params in enumerate(modality_params_list):
                 decimal_details = f"{decimal_places} decimals" if decimal_places else ""
                 details = ", ".join(filter(None, [range_details, decimal_details]))
 
-                print(f"    Processing: Ranging to {range_str} ({details})")
+                print()
+                print(f"  Processing: Ranging to {range_str} ({details})")
             else:
                 # Only decimal places specified
-                print(f"    Processing: Rounding to {decimal_places} decimal places (no ranging)")
+                print()
+                print(f"  Processing: Rounding to {decimal_places} decimal places (no ranging)")
 
             this_modality_data = range_numeric_data(this_modality_data, num_whole_digits, decimal_places)
             processing_applied = True
@@ -135,7 +142,8 @@ for i, modality_params in enumerate(modality_params_list):
         outlier_percentile = outlier_percentile_param if outlier_percentile_param is not None else 0.1
         exponent = exponent_param if exponent_param is not None else 2.2
 
-        print(f"    Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
+        print()
+        print(f"  Processing: Binning ({num_bins} positive, {num_bins} negative, 1 zero bins)")
         this_modality_data = bin_numeric_data(this_modality_data, num_bins, outlier_percentile, exponent)
         processing_applied = True
 
@@ -151,29 +159,33 @@ for i, modality_params in enumerate(modality_params_list):
                         external_functions = [step.function for step in schema.processing_steps if step.enabled]
                         if external_functions:
                             external_names = ', '.join(external_functions)
-                            print(f"    Processing: External functions ({external_names})")
+                            print()
+                            print(f"  Processing: External functions ({external_names})")
                         else:
-                            print(f"    Processing: No processing specified")
+                            print()
+                            print(f"  Processing: No processing specified")
                     else:
-                        print(f"    Processing: No processing specified")
+                        print()
+                        print(f"  Processing: No processing specified")
                 else:
-                    print(f"    Processing: No processing specified")
+                    print()
+                    print(f"  Processing: No processing specified")
             else:
-                print(f"    Processing: No processing specified")
+                print()
+                print(f"  Processing: No processing specified")
         else:
-            print(f"    Processing: No processing specified")
+            print()
+            print(f"  Processing: No processing specified")
 
     all_modality_data.append(this_modality_data)
     all_file_info.append(this_file_info)
     all_modality_params.append(modality_params)
     all_raw_vocab_sizes.append(raw_vocabulary_size)
 
-    data_length = len(this_modality_data)
-    file_count = len(this_file_info) // 2 if this_file_info else 0
-    print(f"  Summary: {data_length:,} data points ({file_count} files loaded)")
     if i < len(modality_params_list) - 1:  # Add separator except after last modality
         print()
 
+print()
 print("Data Loading and Processing: Complete")
 print()
 num_modalities = len(all_modality_data)

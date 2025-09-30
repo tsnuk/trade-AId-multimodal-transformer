@@ -14,6 +14,7 @@ Extracted from mm_final_4.py for better code organization.
 import pandas as pd
 import numpy as np
 import numbers
+import math
 import os
 from pathlib import Path
 
@@ -358,72 +359,113 @@ def add_rand_to_data_points(numeric_data, rand_size, vocab_size):
 
 
 def range_numeric_data(numeric_data, num_whole_digits, decimal_places):
-    """Scale numeric data by factors of 10 and round to specified precision.
+    """
+    Converts numeric data to a specified range by scaling them by factors of 10
+    and/or rounds to a specified number of decimal places.
+
+    The purpose is to standardize data magnitude and precision, thereby controlling
+    vocabulary size.
+
+    This function scales numeric values to a range defined by `num_whole_digits`
+    (including 0 and negative for scaling down) and rounds to `decimal_places`
+    (or original precision if None), preserving the sign of negative numbers.
 
     Args:
-        numeric_data: List of numeric data points to process.
-        num_whole_digits: Target number of whole digits, or null.
-        decimal_places: Target number of decimal places, or null.
+      numeric_data: A list of numeric data points. Must be a list containing numeric types.
+                    The data may contain values that are positive, zero, or negative.
+                    (zero, or negative values could be expected with data types like percentages).
+      num_whole_digits: The desired number of whole digits for the value of the ranged values
+                        (e.g., 1 for ones: range of 1.00 to 9.99, 2 for tens: range of 10.00 to 99.99, etc.).
+                        Must be an integer or None. If None, no scaling based on whole digits.
+      decimal_places: The desired number of decimal places for the values (ranged or un-ranged).
+                      Must be an integer greater than or equal to 0, or None.
+                      If None, the number of decimal places will remain as is in the input data.
 
     Returns:
-        List of processed numeric values as floats.
+      A list of float values that have been ranged and/or rounded.
 
     Raises:
-        TypeError: If inputs are not of expected types.
-        ValueError: If numeric_data is empty or contains non-numeric values.
+      TypeError: If inputs are not of the expected types.
+      ValueError: If inputs have invalid values (e.g., empty list,
+                  negative decimal_places if not None, non-numeric data).
+      IndexError: If an element in 'numeric_data' is not a number.
     """
+
     # Input validation
     if not isinstance(numeric_data, list):
         raise TypeError("'numeric_data' must be a list.")
     if not numeric_data:
-        raise ValueError("'numeric_data' cannot be empty.")
+        raise TypeError("'numeric_data' must be a non-empty list.")
 
-    for i, item in enumerate(numeric_data):
-        if not isinstance(item, numbers.Number):
-            raise ValueError(f"All elements in 'numeric_data' must be numeric. Element at index {i} is {type(item).__name__}: '{item}'.")
+    for i, element in enumerate(numeric_data):
+        if not isinstance(element, numbers.Number):
+            raise IndexError(f"Element at index {i} in 'numeric_data' is not a number.")
 
-    if num_whole_digits is not None:
-        if not isinstance(num_whole_digits, int) or num_whole_digits <= 0:
-            raise TypeError("'num_whole_digits' must be a positive integer or null.")
+    if num_whole_digits is not None and not isinstance(num_whole_digits, int):
+        raise TypeError("'num_whole_digits' must be an integer or None.")
 
-    if decimal_places is not None:
-        if not isinstance(decimal_places, int) or decimal_places < 0:
-            raise TypeError("'decimal_places' must be a non-negative integer or null.")
+    if decimal_places is not None and not isinstance(decimal_places, int):
+        raise TypeError("'decimal_places' must be an integer or None.")
+    if decimal_places is not None and decimal_places < 0:
+        raise ValueError("'decimal_places' must be greater than or equal to 0.")
+
 
     processed_data = []
+    has_negative_values = any(element < 0 for element in numeric_data)
 
-    # Check if any processing is specified
-    if num_whole_digits is None and decimal_places is None:
-        return [float(item) for item in numeric_data]
+    apply_dec_places_for_print_range = 0
+    if decimal_places is not None and decimal_places >= 0:
+        apply_dec_places_for_print_range = decimal_places
+    elif numeric_data:
+        s = str(numeric_data[0])
+        if '.' in s:
+            decimal_part = s.split('.')[-1]
+            apply_dec_places_for_print_range = len(decimal_part)
 
-    # If only decimal_places specified, treat as num_whole_digits
-    if num_whole_digits is None and decimal_places is not None:
-        num_whole_digits = decimal_places
-        decimal_places = 0
+    for element in numeric_data:
+        if element == 0:
+            power_of_10 = 0
+        else:
+            abs_element = abs(element)
+            if abs_element == 0:
+                power_of_10 = 0
+            else:
+                power_of_10 = int(math.floor(math.log10(abs_element)))
 
-    for data_point in numeric_data:
-        processed_point = data_point
+        apply_dec_places = decimal_places if decimal_places is not None else (len(str(element).split('.')[-1]) if '.' in str(element) else 0)
+        apply_dec_places = max(0, apply_dec_places)
 
-        # Apply ranging if num_whole_digits is specified
+
+        scaling_factor = 1
         if num_whole_digits is not None:
-            magnitude = len(str(int(abs(processed_point))))
-            target_magnitude = num_whole_digits
+            desired_power_of_10 = num_whole_digits - 1
+            scaling_factor = 10**(desired_power_of_10 - power_of_10)
 
-            if magnitude != target_magnitude:
-                scaling_factor = 10 ** (target_magnitude - magnitude)
-                processed_point *= scaling_factor
 
-        # Apply rounding if decimal_places is specified
-        if decimal_places is not None:
-            processed_point = round(processed_point, decimal_places)
+        scaled_value = round(element * scaling_factor, apply_dec_places) if scaling_factor != 0 else 0.0
 
-            # Handle edge case: if rounding pushed value outside intended range, cap it
-            if num_whole_digits is not None:
-                max_allowed = (10 ** num_whole_digits) - (10 ** -decimal_places)
-                if processed_point >= 10 ** num_whole_digits:
-                    processed_point = max_allowed
+        if num_whole_digits is not None:
+             lower_bound_abs = 10**(num_whole_digits - 1)
+             upper_bound_abs_compare = 10**num_whole_digits
 
-        processed_data.append(processed_point)
+             abs_scaled_value = abs(scaled_value)
+
+             if abs_scaled_value < lower_bound_abs and abs_scaled_value > 0:
+                 abs_scaled_value = lower_bound_abs
+             if apply_dec_places > 0:
+                 if abs_scaled_value >= upper_bound_abs_compare:
+                    abs_scaled_value = upper_bound_abs_compare - (10**(-apply_dec_places))
+             else:
+                 if abs_scaled_value >= upper_bound_abs_compare:
+                    abs_scaled_value = 10**num_whole_digits - 1
+
+             scaled_value = abs_scaled_value * (-1 if element < 0 else 1)
+
+
+        processed_data.append(scaled_value)
+
+
+
 
     return processed_data
 
@@ -524,7 +566,7 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
 
 
     # Display binning statistics
-    print(f"      -> Binning breakdown:")
+    print(f"    -> Binning breakdown:")
 
     # Display negative bins (from most negative to least negative)
     for i in range(-num_groups, 0):
@@ -535,14 +577,14 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
             count = group_counts[i]
 
             if i == -num_groups:  # Most negative bin contains outliers
-                print(f"        Bin {i}: (-inf, {upper_bound:.3f}) - {count} elements")
+                print(f"      Bin {i}: (-inf, {upper_bound:.3f}) - {count} elements")
             else:
-                print(f"        Bin {i}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
+                print(f"      Bin {i}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
 
     # Display zero bin
     if 0 in group_counts:
         count = group_counts[0]
-        print(f"        Bin  0: [0.000, 0.000] - {count} elements")
+        print(f"      Bin  0: [0.000, 0.000] - {count} elements")
 
     # Display positive bins
     for i in range(1, num_groups + 1):
@@ -552,17 +594,17 @@ def bin_numeric_data(data, num_groups, outlier_percentile=5, exponent=2.0):
             count = group_counts[i]
 
             if i == num_groups:  # Most positive bin contains outliers
-                print(f"        Bin {i:2d}: [{lower_bound:.3f}, +inf) - {count} elements")
+                print(f"      Bin {i:2d}: [{lower_bound:.3f}, +inf) - {count} elements")
             else:
-                print(f"        Bin {i:2d}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
+                print(f"      Bin {i:2d}: [{lower_bound:.3f}, {upper_bound:.3f}) - {count} elements")
 
 
     # Verify all data points were assigned to bins
     total_assigned = sum(group_counts.values())
     if total_assigned != len(data):
-        print(f"        Warning: Total assigned elements ({total_assigned}) != input data length ({len(data)})")
+        print(f"      Warning: Total assigned elements ({total_assigned}) != input data length ({len(data)})")
     else:
-        print(f"        All {len(data)} elements successfully assigned to bins")
+        print(f"      All {len(data)} elements successfully assigned to bins")
 
     return group_assignments
 
