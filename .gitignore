@@ -16,6 +16,7 @@ output/
 
 # Data directories
 data_1/
+data_unused/
 
 # Old versions and backups
 old/
