@@ -12,7 +12,9 @@
 #   - modality_name:  # Required: Descriptive name for this modality
 #                     # Expected values: string
 #     path:           # Required: Path to data file or folder containing data files
-#                     # Expected values: string
+#                     # Expected values: string (must include file extension for files)
+#                     # Examples: "./data/stocks/AAPL.csv" or "./data/stocks/" (folder)
+#                     # IMPORTANT: Include the full filename with extension (e.g., .txt, .csv)
 #     column_number:  # Required: Column number to extract (1-based indexing)
 #                     # Expected values: positive integer
 #     has_header:     # Required: Whether the data files have header rows (true/false)
@@ -69,7 +71,7 @@ modalities:
   # EXAMPLE 1: Stock price data with ranging and scaling
   # -------------------------------------------------------------------------
   - modality_name: "S&P500 1-day Close"  # Expected values: string
-    path: "./data/1day_candles/"  # Expected values: string
+    path: "./data/1day_candles/symbol_AMAT.txt"  # Expected values: string (file must include extension like .txt or .csv)
     column_number: 7  # Close price column
                        # Expected values: positive integer
     has_header: true  # Expected values: true/false
@@ -91,7 +93,7 @@ modalities:
   # EXAMPLE 2: Stock price data converted to percentages and binned
   # -------------------------------------------------------------------------
   - modality_name: "Percentage Changes"
-    path: "./data/1day_candles/"
+    path: "./data/1day_candles/"  # Expected values: string (file must include extension like .txt or .csv)
     column_number: 7  # Same data, different processing
     has_header: true
     processing_steps:

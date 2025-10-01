@@ -147,7 +147,7 @@ pip install torch pyyaml numpy pandas
 ```yaml
 modalities:
   - modality_name: "Stock Prices"
-    path: "./data/stocks/"
+    path: "./data/stocks/"  # Folder (loads all files) OR "./data/stocks/AAPL.csv" (single file with extension)
     column_number: 4
     has_header: true
     processing_steps:
@@ -178,6 +178,11 @@ The system automatically creates an `output/` directory for:
 - **Model weights**: `output/TransformerModel.pth` (saved model checkpoints)
 
 ### Important Data Loading Considerations
+
+**Path Configuration**:
+- **Single file**: Include full filename with extension: `"./data/stocks/AAPL.csv"` or `"./data/stocks/AAPL.txt"`
+- **Multiple files (folder)**: Use folder path ending with `/`: `"./data/stocks/"`
+- **IMPORTANT**: When specifying a single file, you MUST include the file extension (`.csv`, `.txt`, etc.)
 
 **File Boundary Handling**: When loading multiple files, the system ensures training sequences never cross file boundaries, maintaining data integrity.
 
