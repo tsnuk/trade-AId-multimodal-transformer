@@ -333,7 +333,17 @@ else:
 print()
 print("Dataset Splitting: Creating training/validation sets...")
 
-if system_config['num_validation_files'] > 0:
+# Check if file-based splitting is possible
+num_files_loaded = len(file_lengths)
+use_file_based_split = system_config['num_validation_files'] > 0
+
+if use_file_based_split and num_files_loaded <= 1:
+    print(f"  NOTE: File-based splitting requested (num_validation_files={system_config['num_validation_files']})")
+    print(f"        but only {num_files_loaded} file(s) loaded. Reverting to percentage-based splitting.")
+    print(f"        (File-based splitting requires multiple files)")
+    use_file_based_split = False
+
+if use_file_based_split:
     file_count = system_config['num_validation_files']
     print(f"Method: File-based: Last {file_count} file(s) for validation")
     val_files_counter = 0
@@ -359,7 +369,9 @@ for i in range(num_modalities):
   cross_attention = all_modality_params[i][8] if len(all_modality_params[i]) > 8 and all_modality_params[i][8] is not None else False
   cross_text = " | Cross-attention: ON" if cross_attention else " | Cross-attention: OFF"
 
-  this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], system_config['num_validation_files'], file_lengths)
+  # Use 0 for num_validation_files if we fell back to percentage-based splitting
+  effective_num_validation_files = system_config['num_validation_files'] if use_file_based_split else 0
+  this_train_set, this_val_set = create_train_val_datasets(all_numeric_reps[i], system_config['validation_size'], effective_num_validation_files, file_lengths)
   all_train_sets.append(this_train_set)
   all_val_sets.append(this_val_set)
 
@@ -498,7 +510,7 @@ val_size_actual = len(all_val_sets[0])
 
 # Create split method description and collect validation filenames if file-based splitting is used
 validation_filenames = []
-if num_validation_files == 0:
+if not use_file_based_split:
     split_method = f"validation_size={validation_size}"
 else:
     # Collect validation filenames for logging

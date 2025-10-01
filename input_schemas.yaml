@@ -71,7 +71,7 @@ modalities:
   # EXAMPLE 1: Stock price data with ranging and scaling
   # -------------------------------------------------------------------------
   - modality_name: "S&P500 1-day Close"  # Expected values: string
-    path: "./data/1day_candles/symbol_AMAT.txt"  # Expected values: string (file must include extension like .txt or .csv)
+    path: "./data/1day_candles/"  # Expected values: string (file must include extension like .txt or .csv)
     column_number: 7  # Close price column
                        # Expected values: positive integer
     has_header: true  # Expected values: true/false

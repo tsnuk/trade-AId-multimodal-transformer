@@ -66,7 +66,7 @@ data_splitting:
   # Alternative validation method: specify number of files for validation
   # Current: Using 5 files for fast demo startup (loads ~500 files quickly)
   # Production: Use 10-50 files or set to 0 for percentage-based splitting
-  num_validation_files: 5
+  num_validation_files: 1
 
 # =============================================================================
 # TRAINING PARAMETERS - FAST DEMO CONFIGURATION
