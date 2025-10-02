@@ -1048,7 +1048,7 @@ modalities:
     cross_attention: true
 ```
 
-**2. High-Frequency MSFT Trading Setup**
+**2. Intraday MSFT Trading Setup**
 ```yaml
 modalities:
   - modality_name: "MSFT Open"
@@ -1056,7 +1056,7 @@ modalities:
     column_number: 2
     processing_steps:
       - function: range_numeric_data
-        args: {num_whole_digits: 3, decimal_places: 2}
+        args: {num_whole_digits: 2, decimal_places: 2}
     cross_attention: true
 
   - modality_name: "MSFT High"

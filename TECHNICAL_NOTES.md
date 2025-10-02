@@ -5,10 +5,9 @@ This document contains detailed technical information about the multimodal trans
 ## Table of Contents
 
 - [Batch Index Generation Logic](#batch-index-generation-logic)
-- [Is_Percents Handling](#is_percents-handling)
+- [File Boundary Logic](#file-boundary-logic)
 - [Multimodal Loss Calculation](#multimodal-loss-calculation)
 - [Data Augmentation Implementation](#data-augmentation-implementation)
-- [File Boundary Logic](#file-boundary-logic)
 - [Configuration System Architecture](#configuration-system-architecture)
 - [Directional Prediction Implementation](#directional-prediction-implementation)
 
@@ -18,7 +17,7 @@ This document contains detailed technical information about the multimodal trans
 
 ### Critical Design Requirements
 
-The batch index generation system handles two critical requirements that were corrupted during development and required careful restoration:
+The batch index generation system handles two critical requirements:
 
 #### 1. File Boundary Preservation
 
@@ -34,21 +33,27 @@ def generate_batch_starting_indices(data_size, block_size, batch_size, split, fi
 
 **Key Implementation Details**:
 
-- **Full Dataset Index Generation**: Indices are generated using the complete dataset, preserving file boundary logic
-- **Train/Val Split After Index Generation**: Split filtering is applied after index generation, not before
-- **File Length Information**: Function receives complete `file_lengths` list to work backwards for validation sets
-- **Training Sets**: Use data from start of full dataset (`ix < val_start_idx`)
-- **Validation Sets**: Use data from end of full dataset (`ix >= val_start_idx`)
+- **Split-Aware Index Generation**: Function receives already-split data but needs full file length information to correctly map indices
+- **File Length Information**: Function receives complete `file_lengths` list from the original full dataset
+- **Training Sets**: Uses files from the beginning of the file list
+- **Validation Sets**: Works backwards from the end of the file list
+- **Boundary Preservation**: File boundaries are correctly calculated using original file lengths even after data has been split
 
 **Why This Design**:
-- Validation sets are created from the end of the dataset
-- Training sets use the beginning of the dataset
+- Data is split before index generation, but the function needs to know which files correspond to the split
+- Validation sets come from the end of the concatenated dataset
+- Training sets come from the beginning of the concatenated dataset
 - File boundaries must be respected for both portions
-- Original file length information is required to calculate boundaries correctly
+- Original file length information is required to correctly map the split data back to file boundaries
 
 #### 2. Is_Percents First Element Exclusion
 
-**Problem**: When `is_percents=True`, the first element of each file must be excluded as a starting index candidate since percentage data starts with 0 (no previous value to compare).
+**Background**: When `is_percents=True`, it indicates that the data has been converted to percentage changes using `convert_to_percent_changes`. This function calculates `(current - previous) / previous × 100` for each data point. Since the first element in each file has no previous value to compare against, it's always set to 0.
+
+**Problem**: The first element (index 0) of each file must be excluded as a starting index candidate because:
+1. It's always 0 (no previous value exists for percentage calculation)
+2. It doesn't represent actual market movement
+3. Using it as a starting point would introduce meaningless data into training sequences
 
 **Solution**:
 ```python
@@ -63,16 +68,11 @@ actual_starting_position = cumulative_data_length + first_element_offset + relat
 ```
 
 **Mathematical Impact**:
-- When `is_percents=False`: All positions except the last `block_size` elements are valid
-- When `is_percents=True`: Position 0 (first element) of each file is excluded, reducing valid positions by 1 per file
-
-### Historical Context
-
-This logic was originally sound and working correctly but was corrupted when train/val split logic was moved before index generation instead of after. The restoration involved:
-
-1. **Moving split logic**: From before index generation to after index generation
-2. **Preserving full dataset access**: Ensuring `generate_batch_starting_indices` receives complete file information
-3. **Maintaining boundary respect**: File boundaries are calculated using original file lengths, not split portions
+- When `is_percents=False`: All positions except the last `block_size + 1` elements are valid
+  - **Why `block_size + 1`**: Need space for both input sequence (block_size) AND target sequence (block_size, offset by 1)
+  - **Example**: If `block_size=16` and file has 100 elements, valid starting positions are 0-83 (positions 84-99 are reserved for the last sequence's input+target)
+- When `is_percents=True`: Position 0 (first element) of each file is additionally excluded, reducing valid positions by 1 per file
+  - **Example**: Same file, valid starting positions are 1-83 (skip position 0, reserve 84-99)
 
 ---
 
