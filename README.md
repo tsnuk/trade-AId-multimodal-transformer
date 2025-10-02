@@ -176,7 +176,7 @@ training_parameters:
   max_iters: 5000
   learning_rate: 0.0003
 model_architecture:
-  n_embd: 256
+  n_embd: 128
   n_head: 8
   n_layer: 6
 ```
@@ -296,8 +296,8 @@ Define your data sources and processing pipelines:
 ```yaml
 modalities:
   # Stock price data with scaling
-  - modality_name: "S&P 500 Stock Prices"
-    path: "./data/tick_10m/"
+  - modality_name: "Stock Prices"
+    path: "./data/1day_candles/"
     column_number: 13
     has_header: true
     processing_steps:
@@ -309,7 +309,7 @@ modalities:
 
   # Same data converted to percentages and binned
   - modality_name: "Price Changes"
-    path: "./data/tick_10m/"
+    path: "./data/1day_candles/"
     column_number: 13
     has_header: true
     processing_steps:
@@ -318,7 +318,8 @@ modalities:
       - function: bin_numeric_data
         args:
           num_bins: 6
-          outlier_percentile: 0.1
+          outlier_percentile: 10
+          exponent: 2.0
     cross_attention: false
 ```
 
@@ -329,12 +330,12 @@ Set training parameters and model architecture:
 ```yaml
 training_parameters:
   batch_size: 32           # Training batch size
-  block_size: 256          # Sequence length
+  block_size: 64          # Sequence length
   max_iters: 10000         # Training iterations
   learning_rate: 0.0003    # Learning rate
 
 model_architecture:
-  n_embd: 384              # Embedding dimension
+  n_embd: 128              # Embedding dimension
   n_head: 6                # Attention heads
   n_layer: 6               # Transformer layers
   dropout: 0.2             # Dropout rate
@@ -374,12 +375,12 @@ Define everything in Python variables:
 ```python
 # Training parameters
 batch_size = 32
-block_size = 256
+block_size = 64
 max_iters = 10000
 learning_rate = 0.0003
 
 # Model architecture
-n_embd = 384
+n_embd = 128
 n_head = 6
 n_layer = 6
 dropout = 0.2
@@ -391,7 +392,7 @@ save_model = 1
 
 # Data sources (input schemas)
 input_schema_1 = [
-    './data/tick_10m/',      # path
+    './data/1day_candles/',  # path
     13,                      # column number
     True,                    # has header
     False,                   # convert to percentages
@@ -404,7 +405,7 @@ input_schema_1 = [
 ]
 
 input_schema_2 = [
-    './data/tick_10m/',      # same data, different processing
+    './data/1day_candles/',  # same data, different processing
     13,                      # column number
     True,                    # has header
     True,                    # convert to percentages
@@ -493,7 +494,7 @@ configure_for_dataset('./new_data/', 512)
 #### Data Normalization & Vocabulary Control
 
 **`range_numeric_data`**: Scale values to specified digits and decimal places
-- **Purpose**: Normalizes data magnitude and **controls vocabulary size** by limiting decimal precision
+- **Purpose**: Normalizes data magnitude and **controls vocabulary size** by ranging data and limiting decimal precision
 - **Why important**: Smaller vocabularies improve training efficiency and reduce memory usage
 - **Parameters**:
   - `num_whole_digits` (int or null): Desired number of digits before decimal point
@@ -501,7 +502,7 @@ configure_for_dataset('./new_data/', 512)
 - **Examples**:
   ```yaml
   # Scale stock prices to 3 whole digits, 2 decimal places
-  # $1,234.5678 -> 123.46
+  # 1,234.5678 -> 123.46
   - function: range_numeric_data
     args: {num_whole_digits: 3, decimal_places: 2}
 
@@ -515,7 +516,7 @@ configure_for_dataset('./new_data/', 512)
   - **Example**: Reducing decimal places from 2 to 1 truncates vocab size by factor of 10
   - **Trade-off**: Comes at a cost - rounding reduces data resolution, which reduces learnt accuracy from the data
   - **Data Conforming**: Ensures uniformity when datasets contain inconsistent decimal places
-    - **Problem**: Some price datasets mix 2-decimal ($45.67) and 3+ decimal ($45.678) prices
+    - **Problem**: Some price datasets mix 2-decimal (45.67) and 3+ decimal (45.678) prices
     - **Solution**: Rounding to 2 decimal places ensures uniformity and eliminates unnecessary vocabulary additions
     - **Result**: Cleaner data and more efficient vocabulary without precision artifacts
     - **Why this matters**: Real financial datasets often have inconsistent precision that creates artificial vocabulary expansion - rounding solves data quality issues while improving model efficiency
@@ -526,7 +527,7 @@ configure_for_dataset('./new_data/', 512)
 - **Use case**: When exact values matter less than relative ranges or trends
 - **Ideal for**: Percentage changes, volume data, VIX (volatility index), RSI, MACD, and other indicators where relative magnitude is more important than precise values
 - **Parameters**:
-  - `num_bins` (int): Number of groups for positive values (total = 2xnum_bins + 1 including zero)
+  - `num_bins` (int): Number of groups for positive values (total = 2 x num_bins + 1 including zero)
   - `outlier_percentile` (float, default=5): Excludes extreme values from influencing bin boundaries
     - **Purpose**: Prevents data spikes from skewing bin boundary calculations
     - **How it works**: Calculates bin boundaries using only values between specified percentiles
@@ -833,7 +834,9 @@ The system combines learning from all data types by summing individual modality 
 - **Per-Modality Analysis**: Individual modality performance breakdown during evaluation
 
 #### Directional Success Analysis
-The system includes sophisticated **directional prediction evaluation** specifically designed for financial applications:
+The system includes sophisticated **directional prediction evaluation** specifically designed for financial applications.
+
+**IMPORTANT:** This analysis is **only performed on numeric modalities** (prices, indicators, volumes). Categorical data (time, days, text labels) is excluded from directional analysis.
 
 **What is Directional Success?**
 - Instead of requiring exact price predictions, measures whether the model correctly predicts **movement direction**
@@ -876,10 +879,9 @@ The system includes sophisticated **directional prediction evaluation** specific
 
 **Example Output:**
 ```
-Modality 1: 'S&P 500 Close Prices'
-  Correct direction predictions: 847
-  Incorrect direction predictions: 523
-  Overall directional success rate: 61.8%
+Directional Prediction Analysis (20 iterations × 8 batches = 160 samples per evaluation)
+   Train Set - Stock Prices: Correct=93 | Incorrect=67 | Accuracy=58.1%
+   Val Set - Stock Prices: Correct=92 | Incorrect=68 | Accuracy=57.5%
 ```
 
 **Key Features:**
@@ -984,11 +986,6 @@ processing_steps:
     args: {indicators: ["rsi", "macd", "bollinger"]}
     enabled: false  # Skip this step without deleting configuration
 
-  # Data augmentation
-  - function: add_rand_to_data_points
-    args: {rand_size: 2}
-    enabled: true
-
   # Final scaling
   - function: range_numeric_data
     args: {num_whole_digits: 3, decimal_places: 2}
@@ -1018,7 +1015,7 @@ modalities:
     column_number: 4
     processing_steps:
       - function: range_numeric_data
-        args: {num_whole_digits: 4, decimal_places: 2}
+        args: {num_whole_digits: 3, decimal_places: 2}
     cross_attention: true
 
   - modality_name: "Price Changes (%)"
