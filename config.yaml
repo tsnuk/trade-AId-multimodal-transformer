@@ -1,187 +1,90 @@
 # =============================================================================
-# SYSTEM CONFIGURATION - FAST DEMO SETTINGS
+# EXAMPLE 2: ADVANCED MULTIMODAL CONFIGURATION
 # =============================================================================
+# This is an advanced example demonstrating sophisticated multimodal features
+# with 4 modalities using multiple data files and complex processing pipelines.
 #
-# This configuration is optimized for fast demonstration and initial testing.
-# Values are set conservatively for quick execution on any system.
-#
-# FOR PRODUCTION USE:
-# Increase max_iters (5000-50000), batch_size (16-64), n_embd (128-512),
-# n_layer (6-12), and block_size (64-256) based on your hardware capabilities.
-#
-# CONFIGURATION SECTIONS:
-# ----------------------
-# 1. project_settings: File paths and model management
-# 2. data_splitting: Training/validation data allocation
-# 3. training_parameters: Training hyperparameters (optimized for speed)
-# 4. model_architecture: Neural network structure (minimal for demos)
+# Features demonstrated:
+# - Multiple data files loaded into single modalities
+# - Advanced processing pipelines with multiple steps
+# - File-based validation splitting
+# - Larger model architecture
+# - GPU-optimized settings
+# - Data augmentation during training
 
 # =============================================================================
 # PROJECT SETTINGS
 # =============================================================================
-# File paths, model management, and device configuration
-
 project_settings:
-  # Base directory for the project (relative to where main.py is run)
-  # Expected values: string
-  project_file_path: ./
+  # Main project directory - change this to your project path
+  project_file_path: "./examples/"
 
-  # Training log output file name (created in project directory)
-  # Expected values: string
-  output_file_name: training_log.txt
+  # Output file for training logs and results
+  output_file_name: "advanced_example_training_log.txt"
 
-  # Relative path to model file for saving/loading trained weights
-  # Expected values: string
-  model_file_name: ./output/TransformerModel.pth
+  # Model file name for saving/loading trained models
+  model_file_name: "advanced_example_model.pth"
 
-  # Model creation/loading behavior:
-  # Expected values: 0 or 1
-  # 1 = Create new model from scratch (ignores existing model file)
-  # 0 = Load existing model from model_file_name (must exist)
+  # Model creation and saving behavior:
+  # 1 = Create new model (recommended for examples)
+  # 0 = Load existing model
   create_new_model: 1
 
   # Model saving behavior:
-  # Expected values: 0 or 1
-  # 1 = Save model during training (at eval_interval) and at completion
+  # 1 = Save model during training and at completion
   # 0 = Don't save model (training session only)
   save_model: 1
 
-  # Training device
-  # Expected values: 'cpu', 'cuda', 'auto'
-  # 'auto' will use CUDA if available, otherwise CPU
+  # Training device - options: 'cpu', 'cuda', 'auto'
+  # 'auto' will use GPU if available, otherwise CPU
   device: auto
 
 # =============================================================================
 # DATA SPLITTING
 # =============================================================================
-# Configuration for training/validation data allocation
-
 data_splitting:
-  # Validation size as proportion of total data
-  # Expected values: float, 0.0 to 1.0
-  # Example: 0.1 = 10% for validation, 90% for training
-  # Note: Only used if num_validation_files is 0
-  validation_size: 0.1
+  # Use percentage-based splitting
+  validation_size: 0.15
 
-  # Alternative validation method: specify number of files for validation
-  # Current: Using 5 files for fast demo startup (loads ~500 files quickly)
-  # Production: Use 10-50 files or set to 0 for percentage-based splitting
+  # Use file-based validation: last 1 file for validation
+  # This demonstrates using specific files for validation
+  # (useful for evaluating generalization across different stocks)
   num_validation_files: 1
 
 # =============================================================================
-# TRAINING PARAMETERS - FAST DEMO CONFIGURATION
+# TRAINING PARAMETERS
 # =============================================================================
-# Optimized for quick demonstration and initial testing (runs in ~2-5 minutes)
-
+# More substantial settings for a realistic training scenario
 training_parameters:
-  # Number of training examples processed together in each batch
-  # Current: Small value for fast demo execution
-  # Production: Use 16-64 for better performance
-  batch_size: 4
+  # Larger batch size for more stable gradients
+  batch_size: 16
 
-  # Context window size - number of previous tokens considered for prediction
-  # Current: Small value for fast demo execution
-  # Production: Use 64-256 for better context understanding
+  # Longer context window for learning longer-term patterns
   block_size: 16
 
-  # Maximum number of training iterations
-  # Current: Low value for quick demo completion (~2-5 minutes)
-  # Production: Use 5000-50000 for meaningful results
+  # More training iterations for better convergence
   max_iters: 500
 
-  # Evaluation frequency - how often to run evaluation (every N training iterations)
-  # Controls WHEN evaluation happens during training
-  # Model is also saved at these intervals (if save_model=1)
-  # Example: eval_interval=50 means evaluate after every 50 training steps
-  # More frequent evaluation provides better monitoring but slows training
-  # Expected values: positive integer
-  # Typical values: 50, 100, 200, 500
+  # Less frequent evaluation for efficiency
   eval_interval: 50
 
-  # Evaluation thoroughness - how many batches to use for each evaluation
-  # Controls HOW THOROUGH each evaluation is when it runs
-  # More batches provide more accurate loss estimates but take longer per evaluation
-  # Example: eval_iters=40 means use 40 validation batches to calculate loss
-  # Balance: Higher values = more accurate validation loss, but slower evaluation
-  # Expected values: positive integer
-  # Typical values: 20, 40, 100, 200
-  eval_iters: 10
-
-  # Learning rate - controls the step size for weight updates
-  # Higher values: Faster learning but risk of overshooting optimal weights
-  # Lower values: More stable learning but slower convergence
-  # Expected values: float
-  # Typical range: 1e-5 to 1e-3
+  # Standard learning rate
   learning_rate: 0.0003
 
 # =============================================================================
-# MODEL ARCHITECTURE - MINIMAL DEMO CONFIGURATION
+# MODEL ARCHITECTURE
 # =============================================================================
-# Minimal model size for fast execution and low memory usage
-
+# Larger model architecture for learning complex multimodal relationships
 model_architecture:
-  # Embedding dimension - size of the vector representation for each token
-  # Current: Minimal size for fast demo execution
-  # Production: Use 128-512 for better model capacity
-  n_embd: 24
+  # Larger embedding dimension for richer representations
+  n_embd: 128
 
-  # Number of attention heads in multi-head attention mechanism
-  # More heads allow the model to attend to different types of relationships
-  # Must divide evenly into n_embd (each head gets n_embd/n_head dimensions)
-  # Expected values: positive integer, must divide n_embd
-  # Typical values: 4, 6, 8, 12, 16
-  n_head: 4
+  # More attention heads for complex attention patterns
+  # Must divide evenly into n_embd (128/8 = 16)
+  n_head: 8
 
-  # Number of transformer layers (blocks) in the model
-  # Current: Minimal layers for fast demo execution
-  # Production: Use 6-12 layers for better learning capacity
-  n_layer: 2
+  # More transformer layers for deeper learning
+  n_layer: 6
 
-  # Dropout rate - probability of randomly setting neurons to zero during training
-  # Regularization technique to prevent overfitting
-  # Higher values: More regularization, less overfitting, potentially underfitting
-  # Lower values: Less regularization, risk of overfitting
-  # Expected values: float, 0.0 to 1.0
-  # Typical range: 0.1 to 0.3
+  # Higher dropout for regularization in larger model
   dropout: 0.2
-
-  # Fixed values for custom embedding layer initialization (experimental feature)
-  # Currently not used by main model but available for research/testing
-  # Each element of embedding vectors is randomly selected from this list when using FixedEmbedding
-  # Expected values: list of floats
-  fixed_values: [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5]
-
-# =============================================================================
-# CONFIGURATION NOTES
-# =============================================================================
-#
-# MEMORY CONSIDERATIONS:
-# - GPU memory usage scales with: batch_size x block_size x n_embd x n_layer
-# - If getting out-of-memory errors, reduce batch_size or block_size first
-# - Monitor GPU memory usage during training
-#
-# TRAINING TIME:
-# - Training time scales with: max_iters x batch_size x block_size
-# - Use smaller values for experimentation, scale up for production
-# - Consider using gradient accumulation for large effective batch sizes
-#
-# MODEL CAPACITY:
-# - Total parameters ~ (vocab_size x n_embd) + (n_layer x 4 x n_embd^2)
-# - Larger models need more data to train effectively
-# - Balance model size with available data and computational resources
-#
-# VALIDATION:
-# - Monitor validation loss to detect overfitting
-# - If validation loss stops improving, consider early stopping
-# - Ensure validation set is representative of your target data
-#
-# DEVICE SELECTION:
-# - 'cuda' requires NVIDIA GPU with CUDA support
-# - 'cpu' works on any system but is much slower for large models
-# - Check CUDA availability with: python -c "import torch; print(torch.cuda.is_available())"
-#
-# TROUBLESHOOTING:
-# - If training is very slow: Increase batch_size (if memory allows)
-# - If loss isn't decreasing: Try different learning_rate
-# - If getting NaN losses: Reduce learning_rate
-# - If overfitting: Increase dropout or reduce model size

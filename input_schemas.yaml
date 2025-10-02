@@ -1,223 +1,143 @@
 # =============================================================================
-# INPUT SCHEMAS CONFIGURATION
+# EXAMPLE 2: ADVANCED MULTIMODAL INPUT SCHEMAS
 # =============================================================================
+# This configuration demonstrates advanced multimodal features:
+# - Multiple data files combined into single modalities
+# - Complex multi-step processing pipelines
+# - Strategic cross-attention patterns
+# - Data augmentation with randomness injection
 #
-# This file defines the modality configurations for the multimodal transformer system.
-# Each modality represents a different type of data (e.g., stock prices, time, volume)
-# that will be processed and fed into the transformer model.
+# Modalities demonstrated:
+# 1. Combined Stock Prices (multiple files, complex processing)
+# 2. Volatility Indicators (percentage changes with sophisticated binning)
+# 3. Volume Patterns (trading volume with scaling and binning)
+# 4. Market Timing (time features with data augmentation)
 #
-# YAML STRUCTURE:
-# ---------------
-# modalities:         # Root key containing list of all modality configurations
-#   - modality_name:  # Required: Descriptive name for this modality
-#                     # Expected values: string
-#     path:           # Required: Path to data file or folder containing data files
-#                     # Expected values: string (must include file extension for files)
-#                     # Examples: "./data/stocks/AAPL.csv" or "./data/stocks/" (folder)
-#                     # IMPORTANT: Include the full filename with extension (e.g., .txt, .csv)
-#     column_number:  # Required: Column number to extract (1-based indexing)
-#                     # Expected values: positive integer
-#     has_header:     # Required: Whether the data files have header rows (true/false)
-#     processing_steps: # Optional: List of sequential data processing functions
-#                     # Expected values: list
-#       - function:   # Function name (built-in) or fully qualified name (external)
-#                     # Expected values: string
-#         args:       # Dictionary of arguments to pass to the function
-#                     # Expected values: dict
-#         enabled:    # Optional: Whether this step is enabled (allows temporary disabling)
-#                     # Expected values: true/false (default: true)
-#                     # When false: Step is completely skipped, data flows to next enabled step
-#     randomness_size: # Optional: Add randomness to data points (1-3 or null)
-#     cross_attention: # Optional: Enable cross-attention for this modality
-#                     # Expected values: true/false (default: false)
-#
-# PROCESSING FUNCTIONS:
-# --------------------
-# Built-in functions (use simple names):
-#   - range_numeric_data: Scale numeric values and set decimal places
-#   - bin_numeric_data: Group numeric data into bins/clusters
-#   - convert_to_percent_changes: Convert values to percentage changes
-#   - add_rand_to_data_points: Add randomness to data values
-#
-# External functions (use fully qualified names):
-#   - my_module.custom_function: Import and use external processing functions
-#   - sklearn.preprocessing.StandardScaler.fit_transform: Use third-party libraries
-#
-# DATA FLOW:
-# ----------
-# Data flows sequentially through processing steps:
-# raw_data -> function1 -> function2 -> function3 -> final_processed_data
-# Each function receives the output of the previous function.
-#
-# STEP CONTROL:
-# - enabled: true  -> Step executes normally
-# - enabled: false -> Step is skipped, data passes through unchanged
-# - omitted        -> Defaults to true (step executes)
-#
-# Use cases for enabled: false:
-# - Temporarily disable a step without deleting configuration
-# - A/B testing different processing pipelines
-# - Debugging by isolating specific processing steps
-#
-# EXAMPLES AND GUIDELINES:
-# -----------------------
+# This setup demonstrates how to create sophisticated multimodal systems
+# that can learn complex relationships across different data sources.
 
 # =============================================================================
-# EXAMPLE CONFIGURATIONS
+# MODALITY DEFINITIONS
 # =============================================================================
-
 modalities:
   # -------------------------------------------------------------------------
-  # EXAMPLE 1: Stock price data with ranging and scaling
+  # MODALITY 1: COMBINED STOCK PRICES
   # -------------------------------------------------------------------------
-  - modality_name: "S&P500 1-day Close"  # Expected values: string
-    path: "./data/1day_candles/"  # Expected values: string (file must include extension like .txt or .csv)
-    column_number: 7  # Close price column
-                       # Expected values: positive integer
-    has_header: true  # Expected values: true/false
+  # Combine multiple stock files to learn general price patterns
+  # This demonstrates folder-based loading with sophisticated processing
+  - modality_name: "Multi-Stock Prices"
+    path: "./examples/sample_data/advanced_multimodal/"  # Folder containing multiple files
+    column_number: 13  # Close price column across all files
+    has_header: true
     processing_steps:
-      # Scale prices to 2 whole digits with 1 decimal place (10.0 to 99.9)
+      # First scale prices to consistent range
       - function: range_numeric_data
         args:
-          num_whole_digits: 2    # Number of digits before decimal
-                                 # Expected values: positive integer or null
-          decimal_places: 2      # Number of digits after decimal
-                               # Expected values: non-negative integer or null
+          num_whole_digits: 3
+          decimal_places: 2
         enabled: true
-    randomness_size: 2  # Add randomness with size 2
-                           # Expected values: 1-3 or null
-    cross_attention: true  # Enable cross-attention with other modalities
-                           # Expected values: true/false (default: false)
+    cross_attention: true  # Primary modality - attends to all others
+    randomness_size: 2     # Add randomness during training for data augmentation
 
   # -------------------------------------------------------------------------
-  # EXAMPLE 2: Stock price data converted to percentages and binned
+  # MODALITY 2: VOLATILITY INDICATORS
   # -------------------------------------------------------------------------
-  - modality_name: "Percentage Changes"
-    path: "./data/1day_candles/"  # Expected values: string (file must include extension like .txt or .csv)
-    column_number: 7  # Same data, different processing
+  # Advanced volatility analysis using percentage changes and intelligent binning
+  - modality_name: "Volatility Patterns"
+    path: "./examples/sample_data/advanced_multimodal/"
+    column_number: 13  # Same price data, different processing pipeline
     has_header: true
     processing_steps:
       # Step 1: Convert to percentage changes
       - function: convert_to_percent_changes
-        args: {}  # No additional arguments needed
+        args:
+          decimal_places: 3  # High precision for volatility analysis
         enabled: true
-
-      # Step 2: Group percentages into 6 bins
+      # Step 2: Sophisticated binning with outlier handling
       - function: bin_numeric_data
         args:
-          num_bins: 8              # Number of positive bins (creates +n, -n, and zero bins)
-                                   # Expected values: positive integer
-          outlier_percentile: 3    # Percentile threshold for outlier exclusion from binning
-                                   # Expected values: float, 0.0-1.0
-          exponent: 1.7           # Controls bin distribution (higher = more non-uniform)
-                                   # Expected values: float
+          num_bins: 8           # More granular volatility categories
+          outlier_percentile: 0.05  # Aggressive outlier capping
+          exponent: 1.5         # Non-linear binning for better distribution
         enabled: true
-    randomness_size: null
-    cross_attention: false  # Disable cross-attention for this modality
+    cross_attention: true   # Volatility should attend to prices and volume
+    randomness_size: null   # No randomness - volatility patterns are precise
 
   # -------------------------------------------------------------------------
-  # EXAMPLE 3: Time data (no processing needed)
+  # MODALITY 3: VOLUME PATTERNS
   # -------------------------------------------------------------------------
-#  - modality_name: "Day of Month"
-#    path: "./data/1day_candles/"
-#    column_number: 2   # Day column
-#    has_header: true
-#    processing_steps: []  # No processing steps - use raw time data
-#    randomness_size: null
-#    cross_attention: false
+  # Trading volume analysis with scaling and categorization
+  - modality_name: "Trading Volume"
+    path: "./examples/sample_data/advanced_multimodal/"
+    column_number: 14  # Volume column
+    has_header: true
+    processing_steps:
+      # Step 1: Scale volume numbers to manageable range
+      - function: range_numeric_data
+        args:
+          num_whole_digits: 2
+          decimal_places: 0   # Volumes don't need decimal precision
+        enabled: true
+      # Step 2: Bin scaled volumes into activity categories
+      - function: bin_numeric_data
+        args:
+          num_bins: 6
+          outlier_percentile: 0.1
+        enabled: true
+    cross_attention: false  # Volume patterns are relatively independent
+    randomness_size: 1      # Light randomness for volume data augmentation
 
   # -------------------------------------------------------------------------
-  # EXAMPLE 4: Custom external processing function
+  # MODALITY 4: ENHANCED MARKET TIMING
   # -------------------------------------------------------------------------
-  # - modality_name: "Custom Processed Data"
-  #   path: "/path/to/your/data.csv"
-  #   column_number: 1
-  #   has_header: true
-  #   processing_steps:
-  #     # Use external function from custom module
-  #     - function: my_custom_processing.advanced_transform
-  #       args:
-  #         multiplier: 2.5
-  #         method: "exponential"
-  #       enabled: true
-  #
-  #     # Chain with built-in function
-  #     - function: range_numeric_data
-  #       args:
-  #         num_whole_digits: 3
-  #         decimal_places: 2
-  #       enabled: true
-  #   randomness_size: 2  # Add randomness with size 2
-  #   cross_attention: true
+  # Advanced time-based features with data augmentation
+  - modality_name: "Market Timing"
+    path: "./examples/sample_data/advanced_multimodal/"
+    column_number: 6   # Hour column
+    has_header: true
+    processing_steps: []  # Keep raw hour values for interpretability
+    cross_attention: false  # Time is an independent feature
+    randomness_size: 3      # Maximum randomness for robust time pattern learning
 
 # =============================================================================
-# FUNCTION REFERENCE
-# =============================================================================
-
-# BUILT-IN FUNCTIONS:
-# ------------------
-#
-# 1. range_numeric_data:
-#    Purpose: Scale numeric values to specified range and decimal places
-#    Arguments:
-#      - num_whole_digits: Number of digits before decimal
-#                           Expected values: positive integer or null
-#      - decimal_places: Number of digits after decimal
-#                         Expected values: non-negative integer or null
-#    Example: Scales prices from various ranges to 10.0-99.9 format
-#
-# 2. bin_numeric_data:
-#    Purpose: Group numeric data into discrete bins/clusters
-#    Arguments:
-#      - num_bins: Number of bins to create
-#                  Expected values: positive integer
-#      - outlier_percentile: Percentage of extreme values to exclude
-#                             Expected values: float, 0.0-1.0
-#      - exponent: Controls bin distribution (1.0=uniform, >1.0=non-uniform)
-#                  Expected values: float
-#    Example: Groups percentage changes into 6 categories
-#
-# 3. convert_to_percent_changes:
-#    Purpose: Convert values to percentage changes from previous values
-#    Arguments: None
-#    Example: [100, 102, 99] -> [0, 2.0, -2.94]
-#
-# 4. add_rand_to_data_points:
-#    Purpose: Add controlled randomness to data values
-#    Arguments:
-#      - rand_size: Size/magnitude of randomness to add
-#                   Expected values: integer, 1-3
-#    Example: Adds small random variations for data augmentation
-#
-# EXTERNAL FUNCTIONS:
-# ------------------
-# External functions must be specified with fully qualified names:
-# "module_name.function_name" or "package.module.function_name"
-#
-# Requirements for external functions:
-# - Must accept data as first parameter
-# - Must accept additional arguments via **kwargs
-# - Must return processed data in same format
-# - Must preserve data length (same number of elements as input)
-# - Function signature: def my_function(data, **kwargs): return processed_data
-#
-# Examples:
-# - "my_processing.normalize_data"
-# - "sklearn.preprocessing.StandardScaler.fit_transform"
-# - "custom_indicators.calculate_rsi"
-
-# =============================================================================
-# TROUBLESHOOTING
+# ADVANCED CONFIGURATION NOTES
 # =============================================================================
 #
-# Common Issues:
-# 1. "Path does not exist" - Check that file/folder paths are correct
-# 2. "Column must be positive" - Column numbers start from 1, not 0
-# 3. "Function cannot be resolved" - Check spelling of function names
-# 4. "External function not found" - Ensure module is in Python path
+# Key advanced concepts demonstrated:
 #
-# Tips:
-# - Use forward slashes (/) in paths, even on Windows
-# - Test external functions separately before adding to pipeline
-# - Start with simple configurations and add complexity gradually
-# - Check log files for detailed error messages during execution
+# 1. FOLDER-BASED MULTIMODAL LOADING:
+#    - All modalities load from the same folder containing multiple stock files
+#    - Data is concatenated while preserving file boundaries
+#    - Creates larger, more diverse datasets for each modality
+#    - Better generalization across different stocks/securities
+#
+# 2. SOPHISTICATED PROCESSING PIPELINES:
+#    - Multi-step processing chains (e.g., percentages -> binning)
+#    - Fine-tuned parameters for optimal data representation
+#    - Different processing strategies for different data types
+#
+# 3. STRATEGIC CROSS-ATTENTION DESIGN:
+#    - Stock Prices: Attends to all (primary pattern recognition)
+#    - Volatility: Attends to all (needs price and volume context)
+#    - Volume: Independent (volume patterns are self-contained)
+#    - Timing: Independent (time doesn't depend on other modalities)
+#
+# 4. DATA AUGMENTATION STRATEGY:
+#    - Stock Prices: Medium randomness (maintains price integrity)
+#    - Volatility: No randomness (precise volatility calculations)
+#    - Volume: Light randomness (some volume uncertainty is realistic)
+#    - Timing: Maximum randomness (robust time pattern learning)
+#
+# 5. FILE-BASED VALIDATION:
+#    - Last file (GOOGL) reserved for validation
+#    - Tests model's ability to generalize to unseen stocks
+#    - More realistic evaluation than random splitting
+#
+# 6. SCALABILITY FEATURES:
+#    - Larger model architecture for complex pattern learning
+#    - Higher precision processing for nuanced financial data
+#    - GPU optimization for faster training
+#
+# This configuration demonstrates production-ready multimodal financial
+# modeling with sophisticated feature engineering and validation strategies.
+# Perfect for understanding advanced multimodal transformer capabilities!

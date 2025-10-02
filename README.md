@@ -87,6 +87,7 @@ The system supports two configuration approaches to suit different use cases:
   - [Processing Pipeline](#processing-pipeline)
   - [Configuration System](#configuration-system)
 - [Quick Start](#quick-start)
+  - [Try the Examples First!](#try-the-examples-first)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Basic Usage](#basic-usage)
@@ -136,6 +137,23 @@ The system supports two configuration approaches to suit different use cases:
 - **Comprehensive Validation**: System validates all settings on startup with clear error messages
 
 ## Quick Start
+
+### Try the Examples First!
+
+**New to the system?** Start with the ready-to-run examples in the `examples/` folder:
+
+```bash
+# Install dependencies
+pip install torch pyyaml numpy pandas
+
+# Run Example 1 (Basic)
+python examples/run_example.py 1
+
+# Run Example 2 (Advanced)
+python examples/run_example.py 2
+```
+
+Both examples include sample data and complete configurations. See [`examples/README.md`](examples/README.md) for detailed documentation.
 
 ### Prerequisites
 - Python 3.7+

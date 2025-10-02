@@ -11,6 +11,16 @@ This examples package provides two complete, working configurations that demonst
 
 Both examples use **4 modalities** to showcase the power of multimodal learning, where the model learns relationships between different types of time-series data simultaneously.
 
+## Prerequisites
+
+Before running the examples, ensure you have the required dependencies installed:
+
+```bash
+pip install torch pyyaml numpy pandas
+```
+
+**Note on Training Time**: Transformer training requires substantial computational resources. Depending on your hardware (CPU vs GPU) and the example's complexity, training sessions may take anywhere from a few minutes to over an hour. Example 1 typically completes in 1-2 minutes on modern hardware, while Example 2 may require 10-30 minutes or more on CPU. For faster training, consider using a CUDA-enabled GPU if available.
+
 ## Quick Start
 
 ### Option 1: Run Examples Directly
@@ -82,7 +92,7 @@ python main.py
 1. **Multi-Stock Prices** - Combined AAPL, MSFT, GOOGL with data augmentation
 2. **Volatility Patterns** - Multi-step processing (percentages -> advanced binning)
 3. **Trading Volume** - Scaled and categorized volume patterns
-4. **Market Timing** - Enhanced time features with maximum randomness
+4. **Market Timing** - Time-based features (categorical hour data)
 
 **Advanced Features:**
 - **Folder-based loading** - Multiple files per modality
@@ -171,9 +181,7 @@ Both examples generate detailed training logs showing:
 
 ### Performance Metrics
 - **Overall Loss** - Combined multimodal training loss
-- **Per-Modality Loss** - Individual modality performance
-- **Directional Success** - Financial prediction accuracy (up/down/flat)
-- **Validation Performance** - Generalization quality
+- **Directional Success** - Per-modality directional prediction accuracy (up/down/flat)
 
 ## Troubleshooting
 

@@ -88,16 +88,16 @@ modalities:
     randomness_size: 1      # Light randomness for volume data augmentation
 
   # -------------------------------------------------------------------------
-  # MODALITY 4: ENHANCED MARKET TIMING
+  # MODALITY 4: MARKET TIMING
   # -------------------------------------------------------------------------
-  # Advanced time-based features with data augmentation
+  # Time-based features - small categorical vocabulary needs no augmentation
   - modality_name: "Market Timing"
     path: "./examples/sample_data/advanced_multimodal/"
     column_number: 6   # Hour column
     has_header: true
     processing_steps: []  # Keep raw hour values for interpretability
     cross_attention: false  # Time is an independent feature
-    randomness_size: 3      # Maximum randomness for robust time pattern learning
+    randomness_size: null   # No randomness - categorical time data
 
 # =============================================================================
 # ADVANCED CONFIGURATION NOTES
@@ -126,7 +126,7 @@ modalities:
 #    - Stock Prices: Medium randomness (maintains price integrity)
 #    - Volatility: No randomness (precise volatility calculations)
 #    - Volume: Light randomness (some volume uncertainty is realistic)
-#    - Timing: Maximum randomness (robust time pattern learning)
+#    - Timing: No randomness (small categorical vocabulary)
 #
 # 5. FILE-BASED VALIDATION:
 #    - Last file (GOOGL) reserved for validation
