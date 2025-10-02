@@ -1,143 +1,255 @@
 # =============================================================================
-# EXAMPLE 2: ADVANCED MULTIMODAL INPUT SCHEMAS
+# MULTIMODAL INPUT SCHEMAS CONFIGURATION
 # =============================================================================
-# This configuration demonstrates advanced multimodal features:
-# - Multiple data files combined into single modalities
-# - Complex multi-step processing pipelines
-# - Strategic cross-attention patterns
-# - Data augmentation with randomness injection
+# This file defines your data sources (modalities) and how to process them.
 #
-# Modalities demonstrated:
-# 1. Combined Stock Prices (multiple files, complex processing)
-# 2. Volatility Indicators (percentage changes with sophisticated binning)
-# 3. Volume Patterns (trading volume with scaling and binning)
-# 4. Market Timing (time features with data augmentation)
+# Quick Start:
+# 1. Try the examples first: Run 'python examples/run_example.py 1'
+# 2. For your own data: Replace the paths and settings below
+# 3. Then run: 'python main.py'
 #
-# This setup demonstrates how to create sophisticated multimodal systems
-# that can learn complex relationships across different data sources.
+# Quick Reference:
+# - modality_name: Display name for logs
+# - path: File path (.csv/.txt) or folder path (ends with /)
+# - column_number: Column to extract (1-indexed: 1=first, 13=thirteenth)
+# - has_header: true if file has header row, false otherwise
+# - processing_steps: Transform data (see documentation at bottom)
+# - cross_attention: true to learn relationships with other modalities
+# - randomness_size: null (no augmentation) or 1-3 (data augmentation level)
+#
+# For detailed parameter documentation, see bottom of this file.
 
 # =============================================================================
 # MODALITY DEFINITIONS
 # =============================================================================
 modalities:
   # -------------------------------------------------------------------------
-  # MODALITY 1: COMBINED STOCK PRICES
+  # MODALITY 1: EXAMPLE - NUMERIC DATA WITH SCALING
   # -------------------------------------------------------------------------
-  # Combine multiple stock files to learn general price patterns
-  # This demonstrates folder-based loading with sophisticated processing
-  - modality_name: "Multi-Stock Prices"
-    path: "./examples/sample_data/advanced_multimodal/"  # Folder containing multiple files
-    column_number: 13  # Close price column across all files
+  - modality_name: "Price Data"
+    path: "./your_data_folder/your_file.csv"
+    column_number: 13
     has_header: true
     processing_steps:
-      # First scale prices to consistent range
-      - function: range_numeric_data
-        args:
-          num_whole_digits: 3
-          decimal_places: 2
-        enabled: true
-    cross_attention: true  # Primary modality - attends to all others
-    randomness_size: 2     # Add randomness during training for data augmentation
-
-  # -------------------------------------------------------------------------
-  # MODALITY 2: VOLATILITY INDICATORS
-  # -------------------------------------------------------------------------
-  # Advanced volatility analysis using percentage changes and intelligent binning
-  - modality_name: "Volatility Patterns"
-    path: "./examples/sample_data/advanced_multimodal/"
-    column_number: 13  # Same price data, different processing pipeline
-    has_header: true
-    processing_steps:
-      # Step 1: Convert to percentage changes
-      - function: convert_to_percent_changes
-        args:
-          decimal_places: 3  # High precision for volatility analysis
-        enabled: true
-      # Step 2: Sophisticated binning with outlier handling
-      - function: bin_numeric_data
-        args:
-          num_bins: 8           # More granular volatility categories
-          outlier_percentile: 0.05  # Aggressive outlier capping
-          exponent: 1.5         # Non-linear binning for better distribution
-        enabled: true
-    cross_attention: true   # Volatility should attend to prices and volume
-    randomness_size: null   # No randomness - volatility patterns are precise
-
-  # -------------------------------------------------------------------------
-  # MODALITY 3: VOLUME PATTERNS
-  # -------------------------------------------------------------------------
-  # Trading volume analysis with scaling and categorization
-  - modality_name: "Trading Volume"
-    path: "./examples/sample_data/advanced_multimodal/"
-    column_number: 14  # Volume column
-    has_header: true
-    processing_steps:
-      # Step 1: Scale volume numbers to manageable range
       - function: range_numeric_data
         args:
           num_whole_digits: 2
-          decimal_places: 0   # Volumes don't need decimal precision
+          decimal_places: 1
         enabled: true
-      # Step 2: Bin scaled volumes into activity categories
+    cross_attention: true
+    randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # MODALITY 2: EXAMPLE - PERCENTAGE CHANGES WITH BINNING
+  # -------------------------------------------------------------------------
+  - modality_name: "Price Changes"
+    path: "./your_data_folder/your_file.csv"
+    column_number: 13
+    has_header: true
+    processing_steps:
+      - function: convert_to_percent_changes
+        args:
+          decimal_places: 2
+        enabled: true
       - function: bin_numeric_data
         args:
-          num_bins: 6
+          num_bins: 5
           outlier_percentile: 0.1
         enabled: true
-    cross_attention: false  # Volume patterns are relatively independent
-    randomness_size: 1      # Light randomness for volume data augmentation
+    cross_attention: false
+    randomness_size: null
 
   # -------------------------------------------------------------------------
-  # MODALITY 4: ENHANCED MARKET TIMING
+  # MODALITY 3: EXAMPLE - CATEGORICAL TIME DATA
   # -------------------------------------------------------------------------
-  # Advanced time-based features with data augmentation
-  - modality_name: "Market Timing"
-    path: "./examples/sample_data/advanced_multimodal/"
-    column_number: 6   # Hour column
+  - modality_name: "Hour of Day"
+    path: "./your_data_folder/your_file.csv"
+    column_number: 6
     has_header: true
-    processing_steps: []  # Keep raw hour values for interpretability
-    cross_attention: false  # Time is an independent feature
-    randomness_size: 3      # Maximum randomness for robust time pattern learning
+    processing_steps: []
+    cross_attention: false
+    randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # MODALITY 4: EXAMPLE - DAY OF WEEK
+  # -------------------------------------------------------------------------
+  - modality_name: "Day of Week"
+    path: "./your_data_folder/your_file.csv"
+    column_number: 5
+    has_header: true
+    processing_steps: []
+    cross_attention: false
+    randomness_size: null
 
 # =============================================================================
-# ADVANCED CONFIGURATION NOTES
+# COMMENTED OUT MODALITY EXAMPLES
+# =============================================================================
+# Below are additional templates you can uncomment and customize.
+# Remove the '#' from each line to activate them.
+
+# # -------------------------------------------------------------------------
+# # MODALITY 5: VOLUME DATA WITH SCALING AND BINNING
+# # -------------------------------------------------------------------------
+# - modality_name: "Trading Volume"
+#   path: "./your_data_folder/your_file.csv"
+#   column_number: 14
+#   has_header: true
+#   processing_steps:
+#     - function: range_numeric_data
+#       args:
+#         num_whole_digits: 2
+#         decimal_places: 0
+#       enabled: true
+#     - function: bin_numeric_data
+#       args:
+#         num_bins: 6
+#         outlier_percentile: 0.1
+#       enabled: true
+#   cross_attention: false
+#   randomness_size: 1
+
+# # -------------------------------------------------------------------------
+# # MODALITY 6: MULTIPLE FILES (FOLDER LOADING)
+# # -------------------------------------------------------------------------
+# - modality_name: "Multi-Stock Prices"
+#   path: "./your_data_folder/"  # Folder path (ends with /)
+#   column_number: 13
+#   has_header: true
+#   processing_steps:
+#     - function: range_numeric_data
+#       args:
+#         num_whole_digits: 3
+#         decimal_places: 2
+#       enabled: true
+#   cross_attention: true
+#   randomness_size: 2
+
+# =============================================================================
+# DETAILED PARAMETER DOCUMENTATION
 # =============================================================================
 #
-# Key advanced concepts demonstrated:
+# MODALITY_NAME
+# -------------
+# Type: string
+# Description: Human-readable name for this modality (appears in logs and outputs)
+# Examples: "Stock Prices", "Temperature", "Heart Rate", "Trading Volume"
 #
-# 1. FOLDER-BASED MULTIMODAL LOADING:
-#    - All modalities load from the same folder containing multiple stock files
-#    - Data is concatenated while preserving file boundaries
-#    - Creates larger, more diverse datasets for each modality
-#    - Better generalization across different stocks/securities
+# PATH
+# ----
+# Type: string (file path or folder path)
+# Options:
+#   - Single file: "./data/stock.csv" (must include .csv or .txt extension)
+#   - Multiple files: "./data/stocks/" (folder path, must end with /)
+# Notes:
+#   - All files in a folder will be loaded and concatenated
+#   - Use forward slashes even on Windows: "./data/" not ".\data\"
+#   - Files must have consistent structure (same columns)
 #
-# 2. SOPHISTICATED PROCESSING PIPELINES:
-#    - Multi-step processing chains (e.g., percentages -> binning)
-#    - Fine-tuned parameters for optimal data representation
-#    - Different processing strategies for different data types
+# COLUMN_NUMBER
+# -------------
+# Type: integer (1-indexed, NOT 0-indexed)
+# Description: Which column to extract from the CSV/TXT file
+# Examples: 1 = first column, 13 = thirteenth column, 14 = fourteenth column
+# Note: Count columns from left to right, starting at 1
 #
-# 3. STRATEGIC CROSS-ATTENTION DESIGN:
-#    - Stock Prices: Attends to all (primary pattern recognition)
-#    - Volatility: Attends to all (needs price and volume context)
-#    - Volume: Independent (volume patterns are self-contained)
-#    - Timing: Independent (time doesn't depend on other modalities)
+# HAS_HEADER
+# ----------
+# Type: boolean (true or false)
+# Description: Does the file have a header row?
+# Options:
+#   - true: Skip first row (header row)
+#   - false: No header, read all rows as data
 #
-# 4. DATA AUGMENTATION STRATEGY:
-#    - Stock Prices: Medium randomness (maintains price integrity)
-#    - Volatility: No randomness (precise volatility calculations)
-#    - Volume: Light randomness (some volume uncertainty is realistic)
-#    - Timing: Maximum randomness (robust time pattern learning)
+# PROCESSING_STEPS
+# ----------------
+# Type: list of processing functions
+# Description: Transform raw data before training (applied sequentially)
+# Order: Functions are applied in sequence (function1 -> function2 -> ...)
+# Options:
+#   - Empty list []: No processing, use raw data
+#   - One or more functions: Each with 'function', 'args', and 'enabled' fields
 #
-# 5. FILE-BASED VALIDATION:
-#    - Last file (GOOGL) reserved for validation
-#    - Tests model's ability to generalize to unseen stocks
-#    - More realistic evaluation than random splitting
+# Available Processing Functions:
 #
-# 6. SCALABILITY FEATURES:
-#    - Larger model architecture for complex pattern learning
-#    - Higher precision processing for nuanced financial data
-#    - GPU optimization for faster training
+#   1. convert_to_percent_changes
+#      Purpose: Convert values to percentage changes
+#      Formula: (current - previous) / previous * 100
+#      Arguments:
+#        - decimal_places: int (0-4) - Precision for percentage calculations
+#      Use when: You want directional movement, not absolute values
+#      Example: Stock prices 100->102 becomes +2.0%
+#      Note: First value in each file will be 0 (no previous value)
 #
-# This configuration demonstrates production-ready multimodal financial
-# modeling with sophisticated feature engineering and validation strategies.
-# Perfect for understanding advanced multimodal transformer capabilities!
+#   2. range_numeric_data
+#      Purpose: Scale numeric values to specific range
+#      Arguments:
+#        - num_whole_digits: int (1-5) - Digits before decimal point
+#        - decimal_places: int (0-4) - Digits after decimal point
+#      Use when: Need to control vocabulary size for large numbers
+#      Example: Scale 1543.892 to 154.39 (3 whole digits, 2 decimal places)
+#      Effect: Larger values = larger vocabulary, more expressiveness
+#
+#   3. bin_numeric_data
+#      Purpose: Group continuous values into discrete bins/categories
+#      Arguments:
+#        - num_bins: int (3-20) - Number of bins to create
+#        - outlier_percentile: float (0.0-0.3) - Fraction to treat as outliers
+#        - exponent: float (0.5-2.0) - Bin spacing pattern (optional, default 1.0)
+#      Use when: Want to reduce vocabulary or create categories
+#      Example: Bin percentages into: large down, down, flat, up, large up
+#      Effect: More bins = more granularity but larger vocabulary
+#
+# CROSS_ATTENTION
+# ---------------
+# Type: boolean (true or false)
+# Description: Can this modality attend to other modalities?
+# Options:
+#   - true: This modality uses cross-attention (learns relationships with others)
+#   - false: Independent learning (faster, simpler)
+# Recommended:
+#   - Set true for 1-2 primary modalities (e.g., main price data)
+#   - Set false for supporting modalities (time, volume, categorical data)
+#   - Too many cross-attention modalities = slower training
+#
+# RANDOMNESS_SIZE
+# ---------------
+# Type: integer or null
+# Description: Data augmentation through randomness injection
+# Options:
+#   - null: No randomness (use original data exactly)
+#   - 1: Light randomness (±1 vocabulary position)
+#   - 2: Medium randomness (±2 vocabulary positions)
+#   - 3: High randomness (±3 vocabulary positions)
+# Recommended:
+#   - Use for numeric data with large vocabularies (100+ unique values)
+#   - Don't use for small categorical data (time, day of week)
+#   - Start with null, add randomness only if model overfits
+# Effect: Creates (2*randomness_size + 1)^block_size possible variations per sequence
+# Example: randomness_size=2, block_size=16 -> 5^16 = ~152 trillion variations
+#
+# =============================================================================
+# BEST PRACTICES
+# =============================================================================
+#
+# 1. PROCESSING ORDER:
+#    - convert_to_percent_changes usually comes first
+#    - range_numeric_data before bin_numeric_data
+#    - Test each step individually before combining
+#
+# 2. VOCABULARY SIZE MANAGEMENT:
+#    - Target: 10-500 unique values per modality
+#    - Too small: Model can't express patterns
+#    - Too large: Slower training, may overfit
+#    - Use binning or ranging to control vocabulary size
+#
+# 3. CROSS-ATTENTION STRATEGY:
+#    - Enable for modalities that should influence each other
+#    - Disable for independent features (time, categorical indicators)
+#    - Balance: Too many = slow, too few = misses relationships
+#
+# 4. DATA AUGMENTATION:
+#    - Only use randomness for large numeric vocabularies
+#    - Not suitable for categorical or time-based data
+#    - Higher values = more augmentation but may reduce precision
+#
+# For more information, see README.md

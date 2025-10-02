@@ -1,90 +1,178 @@
 # =============================================================================
-# EXAMPLE 2: ADVANCED MULTIMODAL CONFIGURATION
+# MULTIMODAL TRANSFORMER CONFIGURATION
 # =============================================================================
-# This is an advanced example demonstrating sophisticated multimodal features
-# with 4 modalities using multiple data files and complex processing pipelines.
+# This is the main configuration file for the Multimodal Transformer system.
 #
-# Features demonstrated:
-# - Multiple data files loaded into single modalities
-# - Advanced processing pipelines with multiple steps
-# - File-based validation splitting
-# - Larger model architecture
-# - GPU-optimized settings
-# - Data augmentation during training
+# Quick Start:
+# 1. Try the examples first: Run 'python examples/run_example.py 1'
+# 2. For your own data: Modify the settings below and 'input_schemas.yaml'
+# 3. Then run: 'python main.py'
+#
+# This configuration uses small, fast settings suitable for learning and
+# quick experimentation. Adjust based on your dataset size and hardware.
 
 # =============================================================================
 # PROJECT SETTINGS
 # =============================================================================
 project_settings:
   # Main project directory - change this to your project path
-  project_file_path: "./examples/"
+  # Type: string (path)
+  # Default: "./"
+  # Example: "./my_project/"
+  project_file_path: "./"
 
   # Output file for training logs and results
-  output_file_name: "advanced_example_training_log.txt"
+  # Type: string (filename)
+  # Default: "training_log.txt"
+  # Note: File will be created in project_file_path/output/
+  output_file_name: "training_log.txt"
 
   # Model file name for saving/loading trained models
-  model_file_name: "advanced_example_model.pth"
+  # Type: string (path/filename)
+  # Default: "output/model.pth"
+  # Note: Include 'output/' prefix to save in output directory
+  model_file_name: "output/model.pth"
 
   # Model creation and saving behavior:
-  # 1 = Create new model (recommended for examples)
-  # 0 = Load existing model
-  create_new_model: 0
+  # Type: integer (0 or 1)
+  # 1 = Create new model (use this when starting fresh)
+  # 0 = Load existing model (use this to continue training)
+  create_new_model: 1
 
   # Model saving behavior:
+  # Type: integer (0 or 1)
   # 1 = Save model during training and at completion
   # 0 = Don't save model (training session only)
   save_model: 1
 
   # Training device - options: 'cpu', 'cuda', 'auto'
-  # 'auto' will use GPU if available, otherwise CPU
-  device: auto
+  # Type: string
+  # Options:
+  #   - 'cpu': Force CPU usage (safe for all systems)
+  #   - 'cuda': Force GPU usage (requires CUDA-compatible GPU)
+  #   - 'auto': Automatically detect and use GPU if available, otherwise CPU
+  # Recommended: 'cpu' for small models, 'auto' for larger models
+  device: cpu
 
 # =============================================================================
 # DATA SPLITTING
 # =============================================================================
 data_splitting:
-  # Use percentage-based splitting
-  validation_size: 0.15
+  # Percentage of data to use for validation (0.0 to 1.0)
+  # Type: float
+  # Default: 0.2 (20%)
+  # Range: 0.05 to 0.3 typical
+  # Note: Only used if num_validation_files = 0
+  validation_size: 0.2
 
-  # Use file-based validation: last 1 file for validation
-  # This demonstrates using specific files for validation
-  # (useful for evaluating generalization across different stocks)
-  num_validation_files: 1
+  # Number of files to use for validation (0 = use validation_size instead)
+  # Type: integer
+  # Default: 0 (use percentage-based splitting)
+  # Options:
+  #   - 0: Use validation_size for percentage-based splitting
+  #   - 1+: Reserve last N files for validation (file-based splitting)
+  # Note: File-based splitting is useful for testing generalization across
+  #       different data sources (e.g., different stocks, time periods)
+  num_validation_files: 0
 
 # =============================================================================
 # TRAINING PARAMETERS
 # =============================================================================
-# More substantial settings for a realistic training scenario
+# Small, fast settings perfect for learning and quick experimentation
 training_parameters:
-  # Larger batch size for more stable gradients
-  batch_size: 16
+  # Number of examples processed together in each training step
+  # Type: integer
+  # Default: 4
+  # Range: 1 to 128+ (depends on available memory)
+  # Trade-offs:
+  #   - Smaller: Less memory usage, more noisy gradients
+  #   - Larger: More memory usage, more stable gradients, faster training
+  # Recommended: 4-8 for small models, 16-32 for larger models
+  batch_size: 4
 
-  # Longer context window for learning longer-term patterns
-  block_size: 16
+  # Context window size - how many time steps the model sees at once
+  # Type: integer
+  # Default: 8
+  # Range: 4 to 512+ (depends on sequence length requirements)
+  # Trade-offs:
+  #   - Smaller: Faster, less memory, shorter-term patterns
+  #   - Larger: Slower, more memory, longer-term patterns
+  # Recommended: 8-16 for quick tests, 32-64 for real training
+  block_size: 8
 
-  # More training iterations for better convergence
-  max_iters: 500
+  # Maximum training iterations (training steps)
+  # Type: integer
+  # Default: 100
+  # Range: 10 to 100000+
+  # Note: More iterations = longer training but potentially better results
+  # Recommended: 100-500 for testing, 1000-10000 for production
+  max_iters: 100
 
-  # Less frequent evaluation for efficiency
-  eval_interval: 50
+  # How often to evaluate on validation set (in iterations)
+  # Type: integer
+  # Default: 25
+  # Range: 10 to 1000+
+  # Trade-offs:
+  #   - More frequent: Better monitoring, slower overall training
+  #   - Less frequent: Faster training, less visibility into progress
+  # Recommended: Set to max_iters/4 for good monitoring
+  eval_interval: 25
 
-  # Standard learning rate
-  learning_rate: 0.0003
+  # Learning rate - controls how fast the model learns
+  # Type: float
+  # Default: 0.001
+  # Range: 0.00001 to 0.01 typical
+  # Trade-offs:
+  #   - Too low: Slow learning, may not converge
+  #   - Too high: Unstable training, may diverge
+  # Recommended: 0.001 for most cases, 0.0003 for larger models
+  learning_rate: 0.001
 
 # =============================================================================
 # MODEL ARCHITECTURE
 # =============================================================================
-# Larger model architecture for learning complex multimodal relationships
+# Small model architecture for fast training and low resource usage
 model_architecture:
-  # Larger embedding dimension for richer representations
-  n_embd: 128
+  # Embedding dimension - internal representation size
+  # Type: integer
+  # Default: 32
+  # Range: 16 to 1024+
+  # Trade-offs:
+  #   - Smaller: Faster, less memory, less capacity
+  #   - Larger: Slower, more memory, more capacity for complex patterns
+  # Recommended: 32-64 for small models, 128-256 for medium, 512+ for large
+  # Note: Must be divisible by n_head
+  n_embd: 32
 
-  # More attention heads for complex attention patterns
-  # Must divide evenly into n_embd (128/8 = 16)
-  n_head: 8
+  # Number of attention heads in each layer
+  # Type: integer
+  # Default: 4
+  # Range: 1 to 32+
+  # Constraint: Must divide evenly into n_embd
+  # Examples: n_embd=32 -> n_head can be 1,2,4,8,16,32
+  # Trade-offs:
+  #   - Fewer heads: Simpler, faster
+  #   - More heads: Can learn more diverse attention patterns
+  # Recommended: 4-8 for most cases
+  n_head: 4
 
-  # More transformer layers for deeper learning
-  n_layer: 6
+  # Number of transformer layers (depth of the model)
+  # Type: integer
+  # Default: 2
+  # Range: 1 to 24+
+  # Trade-offs:
+  #   - Fewer layers: Faster, less capacity
+  #   - More layers: Slower, more capacity for hierarchical learning
+  # Recommended: 2-4 for small models, 6-12 for larger models
+  n_layer: 2
 
-  # Higher dropout for regularization in larger model
-  dropout: 0.2
+  # Dropout rate for regularization (prevents overfitting)
+  # Type: float
+  # Default: 0.1
+  # Range: 0.0 to 0.5
+  # Effect: Randomly drops this fraction of neurons during training
+  # Trade-offs:
+  #   - Lower (0.0-0.1): Less regularization, may overfit on small datasets
+  #   - Higher (0.2-0.5): More regularization, may underfit
+  # Recommended: 0.1 for small models, 0.2 for larger models
+  dropout: 0.1

@@ -23,6 +23,7 @@ data_unused/
 # Old versions and backups
 old/
 origs/
+*.backup
 
 # System files
 .DS_Store
