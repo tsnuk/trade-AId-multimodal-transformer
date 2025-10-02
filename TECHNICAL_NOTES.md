@@ -289,7 +289,6 @@ for token_index, token_value in enumerate(modality_vocab):
 
 For implementation questions or further details:
 - See main [README.md](README.md) for usage documentation and examples
-- See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for configuration reference
 - See [PROGRAM_FLOW.md](PROGRAM_FLOW.md) for execution flow diagrams
 - See [examples/README.md](examples/README.md) for working example configurations
 

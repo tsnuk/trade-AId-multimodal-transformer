@@ -246,7 +246,6 @@ trade-AId-multimodal-transformer/
 |   |-- processing_pipeline.py     # Sequential processing engine
 |
 |-- Documentation:
-|   |-- CONFIGURATION_GUIDE.md     # Configuration reference
 |   |-- PROGRAM_FLOW.md            # Execution flow diagram
 |   |-- TECHNICAL_NOTES.md         # Implementation details
 |

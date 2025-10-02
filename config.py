@@ -72,7 +72,7 @@ if not _yaml_config_exists:
     save_model = 1
 
 # Programmatic Input Schema Definitions
-# For detailed configuration guide, see CONFIGURATION_GUIDE.md
+# For detailed configuration guide, see README.md
 
 # Number of input schemas available for programmatic configuration
 num_input_schemas = 10
