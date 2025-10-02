@@ -501,11 +501,11 @@ def estimate_loss(current_step=None, max_steps=None):
                     total_predictions = all_modalities_total_correct[modality_index] + all_modalities_total_incorrect[modality_index]
                     if total_predictions > 0:
                         overall_success_rate_modality = round((all_modalities_total_correct[modality_index] / total_predictions) * 100, 1)
-                        f.write(f"   METRICS {print_state_display} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
+                        f.write(f"   DIRECTIONAL PREDICTION {print_state_display} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy={overall_success_rate_modality}%\n")
                     else:
-                        f.write(f"   METRICS {print_state_display} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
+                        f.write(f"   DIRECTIONAL PREDICTION {print_state_display} - {modality_name}: Correct={all_modalities_total_correct[modality_index]:,} | Incorrect={all_modalities_total_incorrect[modality_index]:,} | Accuracy=N/A\n")
                 else:
-                    f.write(f"   METRICS {print_state_display} - {modality_name}: Correct=0 | Incorrect=0 | Accuracy=N/A\n")
+                    f.write(f"   DIRECTIONAL PREDICTION {print_state_display} - {modality_name}: Correct=0 | Incorrect=0 | Accuracy=N/A\n")
 
             # Add spacing between TRAINING and VALIDATION sections in file
             if state == 'train':
