@@ -23,7 +23,7 @@ project_settings:
   output_file_name: "advanced_example_training_log.txt"
 
   # Model file name for saving/loading trained models
-  model_file_name: "advanced_example_model.pth"
+  model_file_name: "output/advanced_example_model.pth"
 
   # Model creation and saving behavior:
   # 1 = Create new model (recommended for examples)

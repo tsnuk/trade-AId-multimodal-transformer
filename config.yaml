@@ -28,7 +28,7 @@ project_settings:
   # Model creation and saving behavior:
   # 1 = Create new model (recommended for examples)
   # 0 = Load existing model
-  create_new_model: 1
+  create_new_model: 0
 
   # Model saving behavior:
   # 1 = Save model during training and at completion
