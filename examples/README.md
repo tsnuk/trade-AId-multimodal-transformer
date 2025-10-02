@@ -29,6 +29,7 @@ python main.py
 - Training completes quickly (~30-60 seconds on CPU)
 - Shows the complete training workflow
 - Demonstrates evaluation metrics output
+- Metrics will show limited learning due to small dataset size
 
 ## For Production Use
 
