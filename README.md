@@ -53,6 +53,16 @@ Datasets with fewer than 10,000 rows will likely produce:
 - Sequential/time-series data recommended
 - Multiple files can be loaded from a folder (will be concatenated)
 
+### Getting Enough Data
+**For stock/financial data users**: It's difficult to get 1M rows from a single stock, but you can easily reach this by loading multiple stocks into a single modality:
+
+- Use folder loading: `path: "./your_data/stocks/"` (folder path ends with `/`)
+- Place multiple stock CSV files in the folder (e.g., AAPL.csv, GOOGL.csv, MSFT.csv, etc.)
+- The system automatically concatenates all files in the folder
+- Example: 50 stocks × 20,000 rows each = 1,000,000 total rows
+
+This approach gives the model diverse market conditions and patterns across different assets, improving generalization.
+
 **Bottom Line**: If you don't have at least 100,000 rows of quality data, this system is not suitable for your use case. Consider collecting more data or using simpler statistical methods instead.
 
 ## User Interface Guide
@@ -170,22 +180,23 @@ The system supports two configuration approaches to suit different use cases:
 
 ## Quick Start
 
-### Try the Examples First!
+### Try the Demo (Optional)
 
-**New to the system?** Start with the ready-to-run examples in the `examples/` folder:
+**New to the system?** There's a minimal demo in `examples/` that shows the system works:
 
 ```bash
 # Install dependencies
 pip install torch pyyaml numpy pandas
 
-# Run Example 1 (Basic)
-python examples/run_example.py 1
+# Copy demo configs
+cp examples/demo_config.yaml config.yaml
+cp examples/demo_input_schemas.yaml input_schemas.yaml
 
-# Run Example 2 (Advanced)
-python examples/run_example.py 2
+# Run quick demo (completes in ~30 seconds)
+python main.py
 ```
 
-Both examples include sample data and complete configurations. See [`examples/README.md`](examples/README.md) for detailed documentation.
+**WARNING**: The demo uses only 100 rows of synthetic data and will produce poor results. This is expected - it's only a smoke test to show the system runs. See [`examples/README.md`](examples/README.md) for details.
 
 ### Prerequisites
 - Python 3.7+
@@ -315,7 +326,11 @@ trade-AId-multimodal-transformer/
 |   |-- training_log.txt      # Training logs and metrics
 |   '-- TransformerModel.pth  # Saved model weights
 |
-'-- run_example.py            # Example runner script
+'-- examples/                 # Minimal demo (100 rows, not for real use)
+    |-- demo_data/
+    |-- demo_config.yaml
+    |-- demo_input_schemas.yaml
+    '-- README.md
 ```
 
 ## Configuration

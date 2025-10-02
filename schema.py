@@ -359,7 +359,11 @@ class SchemaManager:
         # Check if no modalities are configured or all are commented out
         if not modalities:
             print("\n[ERROR] No modalities found in input_schemas.yaml")
-            print("Please ensure at least one modality is configured")
+            print("\nTo configure modalities:")
+            print("  1. See input_schemas.yaml for configuration examples and documentation")
+            print("  2. For a quick demo: Copy examples/demo_*.yaml files to config.yaml and input_schemas.yaml")
+            print("  3. For real use: Edit input_schemas.yaml with your data (minimum 100k rows recommended)")
+            print("\nSee README.md for detailed instructions.")
             exit(1)
 
         for modality_config in modalities:
