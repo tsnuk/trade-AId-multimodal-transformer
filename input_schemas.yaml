@@ -22,64 +22,73 @@
 # =============================================================================
 # MODALITY DEFINITIONS
 # =============================================================================
-modalities:
-  # -------------------------------------------------------------------------
-  # MODALITY 1: EXAMPLE - NUMERIC DATA WITH SCALING
-  # -------------------------------------------------------------------------
-  - modality_name: "Price Data"
-    path: "./your_data_folder/your_file.csv"
-    column_number: 13
-    has_header: true
-    processing_steps:
-      - function: range_numeric_data
-        args:
-          num_whole_digits: 2
-          decimal_places: 1
-        enabled: true
-    cross_attention: true
-    randomness_size: null
+# IMPORTANT: The default modalities below are commented out templates.
+# To use this system:
+#   1. Try the examples first: Run 'python examples/run_example.py 1'
+#   2. Then uncomment and modify the modalities below for your own data
+#   3. Replace paths with your actual data files
+#
+modalities: []
 
-  # -------------------------------------------------------------------------
-  # MODALITY 2: EXAMPLE - PERCENTAGE CHANGES WITH BINNING
-  # -------------------------------------------------------------------------
-  - modality_name: "Price Changes"
-    path: "./your_data_folder/your_file.csv"
-    column_number: 13
-    has_header: true
-    processing_steps:
-      - function: convert_to_percent_changes
-        args:
-          decimal_places: 2
-        enabled: true
-      - function: bin_numeric_data
-        args:
-          num_bins: 5
-          outlier_percentile: 0.1
-        enabled: true
-    cross_attention: false
-    randomness_size: null
-
-  # -------------------------------------------------------------------------
-  # MODALITY 3: EXAMPLE - CATEGORICAL TIME DATA
-  # -------------------------------------------------------------------------
-  - modality_name: "Hour of Day"
-    path: "./your_data_folder/your_file.csv"
-    column_number: 6
-    has_header: true
-    processing_steps: []
-    cross_attention: false
-    randomness_size: null
-
-  # -------------------------------------------------------------------------
-  # MODALITY 4: EXAMPLE - DAY OF WEEK
-  # -------------------------------------------------------------------------
-  - modality_name: "Day of Week"
-    path: "./your_data_folder/your_file.csv"
-    column_number: 5
-    has_header: true
-    processing_steps: []
-    cross_attention: false
-    randomness_size: null
+# Uncomment and modify the modalities below to use your own data:
+#
+# # -------------------------------------------------------------------------
+# # MODALITY 1: EXAMPLE - NUMERIC DATA WITH SCALING
+# # -------------------------------------------------------------------------
+# - modality_name: "Price Data"
+#   path: "./your_data_folder/your_file.csv"
+#   column_number: 13
+#   has_header: true
+#   processing_steps:
+#     - function: range_numeric_data
+#       args:
+#         num_whole_digits: 2
+#         decimal_places: 1
+#       enabled: true
+#   cross_attention: true
+#   randomness_size: null
+#
+# # -------------------------------------------------------------------------
+# # MODALITY 2: EXAMPLE - PERCENTAGE CHANGES WITH BINNING
+# # -------------------------------------------------------------------------
+# - modality_name: "Price Changes"
+#   path: "./your_data_folder/your_file.csv"
+#   column_number: 13
+#   has_header: true
+#   processing_steps:
+#     - function: convert_to_percent_changes
+#       args:
+#         decimal_places: 2
+#       enabled: true
+#     - function: bin_numeric_data
+#       args:
+#         num_bins: 5
+#         outlier_percentile: 0.1
+#       enabled: true
+#   cross_attention: false
+#   randomness_size: null
+#
+# # -------------------------------------------------------------------------
+# # MODALITY 3: EXAMPLE - CATEGORICAL TIME DATA
+# # -------------------------------------------------------------------------
+# - modality_name: "Hour of Day"
+#   path: "./your_data_folder/your_file.csv"
+#   column_number: 6
+#   has_header: true
+#   processing_steps: []
+#   cross_attention: false
+#   randomness_size: null
+#
+# # -------------------------------------------------------------------------
+# # MODALITY 4: EXAMPLE - DAY OF WEEK
+# # -------------------------------------------------------------------------
+# - modality_name: "Day of Week"
+#   path: "./your_data_folder/your_file.csv"
+#   column_number: 5
+#   has_header: true
+#   processing_steps: []
+#   cross_attention: false
+#   randomness_size: null
 
 # =============================================================================
 # COMMENTED OUT MODALITY EXAMPLES
