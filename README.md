@@ -12,6 +12,18 @@ A sophisticated multimodal transformer neural network system for processing and 
 
 **Getting Started**: Configure `input_schemas.yaml` with your data sources, set training parameters in `config.yaml`, run `python main.py`. The system handles everything from data loading to multimodal training with comprehensive evaluation metrics.
 
+## Disclaimer
+
+**IMPORTANT: This software is provided for educational and research purposes only.**
+
+- **No Financial Advice**: This software does not provide financial, investment, or trading advice.
+- **No Warranty**: This software is provided "as is" without warranty of any kind, express or implied.
+- **No Liability**: The author accepts no responsibility for any financial losses, damages, or other consequences resulting from the use of this software.
+- **Trading Risks**: Trading and investing in financial markets involves substantial risk of loss. Past performance does not guarantee future results.
+- **Use at Your Own Risk**: Users are solely responsible for any decisions made based on this software's outputs.
+
+By using this software, you acknowledge that you understand and accept these terms.
+
 ## User Interface Guide
 
 ### Primary Files You'll Interact With
@@ -19,7 +31,7 @@ A sophisticated multimodal transformer neural network system for processing and 
 **Configuration Files:**
 - **`input_schemas.yaml`** - **(Recommended)** Define your data sources and processing pipelines with type-safe validation
 - **`config.py`** - Set training hyperparameters (`batch_size`, `learning_rate`, etc.) and system settings
-- **`main.py`** - Execution entry point (usually no editing needed)
+- **`main.py`** - Execution entry point (no editing needed)
 
 **Optional Advanced Files:**
 - **`config_manager.py`** - Programmatic YAML configuration management for advanced users
@@ -66,6 +78,7 @@ The system supports two configuration approaches to suit different use cases:
 ## Table of Contents
 
 - [TL;DR](#tldr)
+- [Disclaimer](#disclaimer)
 - [User Interface Guide](#user-interface-guide)
   - [Primary Files You'll Interact With](#primary-files-youll-interact-with)
   - [Typical Workflows](#-typical-workflows)
@@ -112,7 +125,7 @@ The system supports two configuration approaches to suit different use cases:
 - **Flexible Configuration**: Modern YAML-based configuration with full compatibility for both configuration methods
 
 ### Processing Pipeline
-- **Built-in Functions**: Range scaling, binning, percentage changes
+- **Built-in Functions**: Range scaling, binning, conversion to percent changes
 - **External Functions**: Import and use custom processing functions from any Python module
 - **Sequential Data Flow**: `raw_data -> function1 -> function2 -> function3 -> processed_data`
 - **Step Control**: Use `enabled: false` to temporarily skip processing steps without deleting configuration
@@ -134,8 +147,8 @@ The system supports two configuration approaches to suit different use cases:
 ### Installation
 ```bash
 # Clone or download the project
-git clone [your-repo-url]
-cd multimodal_1
+git clone https://github.com/tsnuk/trade-AId-multimodal-transformer
+cd trade-AId-multimodal-transformer
 
 # Install dependencies
 pip install torch pyyaml numpy pandas
@@ -1162,7 +1175,7 @@ Experiment with different configurations by editing `config.yaml`:
 
 ## License
 
-[Add your license information here]
+This project is released as open source under the MIT License. You are free to use, modify, and distribute this software.
 
 ## Acknowledgments
 
