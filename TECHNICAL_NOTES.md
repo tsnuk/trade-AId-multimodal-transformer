@@ -10,6 +10,8 @@ This document contains detailed technical information about the multimodal trans
 - [Data Augmentation Implementation](#data-augmentation-implementation)
 - [Configuration System Architecture](#configuration-system-architecture)
 - [Directional Prediction Implementation](#directional-prediction-implementation)
+- [Performance Considerations](#performance-considerations)
+- [Additional Resources](#additional-resources)
 
 ---
 
@@ -140,13 +142,16 @@ for modality_index in range(num_modalities):
 
 **Application Timing**:
 ```python
-# In get_batch() function:
-if split == 'train' and is_training == 1:
-    for r in range(num_modalities):
-        this_rand_size = all_modality_params[r][2]
-        if this_rand_size is not None:
-            randomized_data = add_rand_to_data_points(dataset_tensors[r].tolist(), this_rand_size, this_vocab_size)
-            dataset_tensors[r] = torch.tensor(randomized_data, dtype=torch.long)
+# In get_batch() function (training_utils.py:352-360):
+for r in range(num_modalities):
+    this_rand_size = all_modality_params[r][2]
+    this_vocab_size = len(all_vocabularies[r])
+
+    # Randomness would only be applied to training sets (is_training = 1)
+    if this_rand_size is not None and is_training == 1:
+        # Apply randomness to the temporary list for this modality
+        from data_utils import add_rand_to_data_points
+        temp_all_train_sets_processed[r] = add_rand_to_data_points(temp_all_train_sets_processed[r], this_rand_size, this_vocab_size)
 ```
 
 **Mathematical Expansion**:
@@ -163,7 +168,7 @@ if split == 'train' and is_training == 1:
 **Domain Applicability**:
 - **Numerical Data Advantage**: This technique works exceptionally well for numerical data (prices, volumes, technical indicators) where small variations don't affect semantic meaning
 - **Language Model Contrast**: Unlike language models where changing words/tokens would compromise meaning and break the data, numerical variations in financial data preserve the underlying patterns while adding beneficial noise
-- **Why This Matters**: A stock price of $152.34 vs $152.35 represents the same market behavior, but changing "the" to "a" in text completely alters meaning
+- **Why This Matters**: A stock price of 152.34 vs 152.35 represents the same market behavior, but changing "the" to "a" in text completely alters meaning
 - **Semantic Preservation**: Financial data maintains its predictive value even with minor numerical adjustments, making this augmentation technique ideal for time-series numerical datasets
 
 ---
@@ -218,31 +223,36 @@ def get_system_parameters(self) -> Dict[str, Any]:
 
 ### Technical Calculation Details
 
-**Direction Sign Determination**:
+**Direction Sign Determination** (training_utils.py:184-212):
 ```python
 def _get_direction_sign(current_value, previous_value, is_percentage_data):
     if is_percentage_data:
-        if current_value > 0: return 1      # Up
-        elif current_value < 0: return -1   # Down
-        else: return 0                      # Flat
+        if current_value > 0: return 1
+        elif current_value < 0: return -1
+        else: return 0  # Handles current_value == 0
     else:
+        # For value data, direction is based on change from previous value
+        if not isinstance(previous_value, numbers.Number):
+            return None  # Cannot calculate direction if previous value is not numeric
+
         change = current_value - previous_value
         if change > 0: return 1
         elif change < 0: return -1
-        else: return 0
+        else: return 0  # Handles change == 0
 ```
 
-**Certainty Calculation**:
+**Certainty Calculation** (training_utils.py:294-302):
 ```python
-# Sum probabilities of all tokens aligned with predicted direction
-predicted_direction_sign = _get_direction_sign(predicted_token_value, prev_actual_token_value, is_percentage_data)
-probs = F.softmax(predicted_token_logits, dim=0)
+# Calculate directional certainty
+probs = F.softmax(predicted_token_logits, dim=-1)
+summed_certainty_for_direction = 0.0
 
-certainty_sum = 0.0
-for k, vocab_value in enumerate(modality_vocab):
-    vocab_direction_sign = _get_direction_sign(vocab_value, prev_actual_token_value, is_percentage_data)
-    if vocab_direction_sign == predicted_direction_sign:
-        certainty_sum += probs[k].item()
+for token_index, token_value in enumerate(modality_vocab):
+    if isinstance(token_value, numbers.Number):
+        possible_direction_sign = _get_direction_sign(token_value, prev_actual_token_value, is_percentage_data)
+
+        if possible_direction_sign is not None and possible_direction_sign == predicted_direction_sign:
+            summed_certainty_for_direction += probs[token_index].item()
 ```
 
 **Metric Accumulation**:
@@ -269,50 +279,18 @@ for k, vocab_value in enumerate(modality_vocab):
 
 ### Computational Complexity
 
-**Index Generation**: O(batch_size x num_files) for mapping operations
-**Loss Calculation**: O(num_modalities x batch_size x sequence_length)
-**Directional Analysis**: O(num_modalities x batch_size x vocabulary_size)
+- **Index Generation**: O(batch_size × num_files) for mapping operations
+- **Loss Calculation**: O(num_modalities × batch_size × sequence_length)
+- **Directional Analysis**: O(num_modalities × batch_size × vocabulary_size)
 
 ---
 
-## Debugging and Validation
+## Additional Resources
 
-### Common Issues and Solutions
+For implementation questions or further details:
+- See main [README.md](README.md) for usage documentation and examples
+- See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for configuration reference
+- See [PROGRAM_FLOW.md](PROGRAM_FLOW.md) for execution flow diagrams
+- See [examples/README.md](examples/README.md) for working example configurations
 
-**Tensor Size Mismatches**:
-- Usually indicate train/val split applied before index generation
-- Check that `all_full_datasets` is properly passed to training functions
-- Verify file boundary logic receives complete file length information
-
-**Index Out of Bounds**:
-- Check `first_element_offset` calculation for percentage data
-- Ensure `block_size` is smaller than minimum file length
-- Validate file length arrays match actual loaded data
-
-**Configuration Errors**:
-- Mode detection logging helps identify which configuration system is active
-- Parameter extraction errors usually indicate missing variables in chosen configuration method
-
-### Validation Functions
-
-**File Boundary Validation**:
-```python
-# Verify no sequence crosses file boundaries
-def validate_indices(indices, file_lengths, block_size):
-    cumulative_length = 0
-    for file_length in file_lengths:
-        file_end = cumulative_length + file_length
-        for idx in indices:
-            if cumulative_length <= idx < file_end:
-                assert idx + block_size < file_end, f"Sequence crosses file boundary"
-        cumulative_length += file_length
-```
-
----
-
-This technical documentation should be referenced when:
-- Modifying batch generation logic
-- Debugging tensor dimension errors
-- Understanding configuration system internals
-- Implementing new processing functions
-- Troubleshooting training/validation splits
+This document covers the critical technical implementation details. The codebase contains additional inline comments and docstrings for function-level documentation.
