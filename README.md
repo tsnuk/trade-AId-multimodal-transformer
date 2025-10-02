@@ -220,26 +220,53 @@ The data splitting logic ensures that the split points are consistent across all
 ## Project Structure
 
 ```
-multimodal_1/
-|-- README.md                  # This file
-|-- main.py                    # Main training script
-|-- config.py                  # Python configuration variables
-|-- input_schemas.yaml         # Modality configurations
-|-- config.yaml                # System settings
-|-- model.py                   # Neural network architecture
-|-- data_utils.py              # Data loading and processing functions
-|-- training_utils.py          # Training and evaluation utilities
-|-- schema.py                  # Configuration system
-|-- processing_registry.py     # Function registry for data processing
-|-- processing_pipeline.py     # Sequential processing engine
-|-- config_manager.py          # YAML configuration management
-|-- compatibility_layer.py     # Configuration compatibility
-|-- experimental_utils.py      # Experimental functions
-|-- data_1/                    # Data directory
-|   '-- tick_10m/             # Sample data files
-'-- output/                    # Output directory (auto-created)
-    |-- training_log.txt      # Training logs and results
-    '-- TransformerModel.pth  # Saved model weights
+trade-AId-multimodal-transformer/
+|-- README.md                  # Main documentation
+|-- LICENSE                    # MIT License
+|-- .gitignore                 # Git ignore rules
+|
+|-- Core System Files:
+|   |-- main.py                    # Main training script
+|   |-- model.py                   # Neural network architecture
+|   |-- data_utils.py              # Data loading and processing
+|   |-- training_utils.py          # Training and evaluation utilities
+|   |-- file_cache.py              # File caching system
+|
+|-- Configuration System:
+|   |-- config.yaml                # System settings (YAML)
+|   |-- input_schemas.yaml         # Modality configurations (YAML)
+|   |-- config.py                  # Python configuration variables
+|   |-- config_manager.py          # YAML configuration management
+|   |-- config_utils.py            # Configuration utilities
+|   |-- schema.py                  # Configuration validation
+|   |-- compatibility_layer.py     # Configuration compatibility
+|
+|-- Processing System:
+|   |-- processing_registry.py     # Function registry
+|   |-- processing_pipeline.py     # Sequential processing engine
+|
+|-- Documentation:
+|   |-- CONFIGURATION_GUIDE.md     # Configuration reference
+|   |-- PROGRAM_FLOW.md            # Execution flow diagram
+|   |-- TECHNICAL_NOTES.md         # Implementation details
+|
+|-- data/                      # Sample data for testing
+|   '-- 1day_candles/          # Stock price data (AAPL, MSFT, etc.)
+|
+|-- examples/                 # Example configurations
+|   |-- README.md             # Examples documentation
+|   |-- configs/              # Sample config files
+|   '-- sample_data/          # Example datasets
+|
+|-- tests/                    # Test files
+|   |-- test_parameter_coverage.py
+|   '-- test_runtime_parameter_behavior.py
+|
+|-- output/                   # Generated during training (auto-created)
+|   |-- training_log.txt      # Training logs and metrics
+|   '-- TransformerModel.pth  # Saved model weights
+|
+'-- run_example.py            # Example runner script
 ```
 
 ## Configuration
