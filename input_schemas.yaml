@@ -3,10 +3,16 @@
 # =============================================================================
 # This file defines your data sources (modalities) and how to process them.
 #
+# IMPORTANT: DATA REQUIREMENTS
+# This system requires substantial data to produce meaningful results:
+#   - Minimum: 100,000 rows of data
+#   - Recommended: 1,000,000+ rows for production use
+#   - Small datasets (< 10,000 rows) will produce poor results
+#
 # Quick Start:
-# 1. Try the examples first: Run 'python examples/run_example.py 1'
-# 2. For your own data: Replace the paths and settings below
-# 3. Then run: 'python main.py'
+# 1. Prepare your data files (CSV or TXT format)
+# 2. Configure the modalities below with your data paths
+# 3. Run: 'python main.py'
 #
 # Quick Reference:
 # - modality_name: Display name for logs
@@ -22,113 +28,85 @@
 # =============================================================================
 # MODALITY DEFINITIONS
 # =============================================================================
-# NOTE: The modalities below use example data from the examples folder.
-# To use your own data:
-#   1. Replace the 'path' with your data file location
-#   2. Update column_number to match your data structure
-#   3. Adjust processing_steps as needed
+# Replace the example paths below with your actual data files.
+# These examples show the configuration structure only.
 #
 modalities:
   # -------------------------------------------------------------------------
-  # MODALITY 1: EXAMPLE - NUMERIC DATA WITH SCALING
+  # EXAMPLE 1: STOCK PRICES WITH RANGING
   # -------------------------------------------------------------------------
-  - modality_name: "Stock Prices"
-    path: "./examples/sample_data/basic_multimodal/sample_stock_data.csv"
-    column_number: 13
-    has_header: true
-    processing_steps:
-      - function: range_numeric_data
-        args:
-          num_whole_digits: 2
-          decimal_places: 1
-        enabled: true
-    cross_attention: true
-    randomness_size: null
+  # Uncomment and modify this example to use stock price data
+  #
+  # - modality_name: "Stock Prices"
+  #   path: "./your_data/stock_prices.csv"
+  #   column_number: 5  # Adjust to your closing price column
+  #   has_header: true
+  #   processing_steps:
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 2
+  #         decimal_places: 2
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: 2
 
   # -------------------------------------------------------------------------
-  # MODALITY 2: EXAMPLE - PERCENTAGE CHANGES WITH BINNING
+  # EXAMPLE 2: PERCENTAGE CHANGES WITH BINNING
   # -------------------------------------------------------------------------
-  - modality_name: "Price Changes (%)"
-    path: "./examples/sample_data/basic_multimodal/sample_stock_data.csv"
-    column_number: 13
-    has_header: true
-    processing_steps:
-      - function: convert_to_percent_changes
-        args:
-          decimal_places: 2
-        enabled: true
-      - function: bin_numeric_data
-        args:
-          num_bins: 5
-          outlier_percentile: 0.1
-        enabled: true
-    cross_attention: false
-    randomness_size: null
+  # Uncomment and modify this example for price change analysis
+  #
+  # - modality_name: "Price Changes (%)"
+  #   path: "./your_data/stock_prices.csv"
+  #   column_number: 5  # Same column as above
+  #   has_header: true
+  #   processing_steps:
+  #     - function: convert_to_percent_changes
+  #       args:
+  #         decimal_places: 2
+  #       enabled: true
+  #     - function: bin_numeric_data
+  #       args:
+  #         num_bins: 5
+  #         outlier_percentile: 0.1
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: null
 
   # -------------------------------------------------------------------------
-  # MODALITY 3: EXAMPLE - CATEGORICAL TIME DATA
+  # EXAMPLE 3: VOLUME DATA
   # -------------------------------------------------------------------------
-  - modality_name: "Hour of Day"
-    path: "./examples/sample_data/basic_multimodal/sample_stock_data.csv"
-    column_number: 6
-    has_header: true
-    processing_steps: []
-    cross_attention: false
-    randomness_size: null
+  # Uncomment and modify this example for volume analysis
+  #
+  # - modality_name: "Trading Volume"
+  #   path: "./your_data/stock_prices.csv"
+  #   column_number: 6  # Adjust to your volume column
+  #   has_header: true
+  #   processing_steps:
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 2
+  #         decimal_places: 0
+  #       enabled: true
+  #   cross_attention: false
+  #   randomness_size: null
 
   # -------------------------------------------------------------------------
-  # MODALITY 4: EXAMPLE - DAY OF WEEK
+  # EXAMPLE 4: MULTIPLE FILES (FOLDER LOADING)
   # -------------------------------------------------------------------------
-  - modality_name: "Day of Week"
-    path: "./examples/sample_data/basic_multimodal/sample_stock_data.csv"
-    column_number: 5
-    has_header: true
-    processing_steps: []
-    cross_attention: false
-    randomness_size: null
-
-# =============================================================================
-# COMMENTED OUT MODALITY EXAMPLES
-# =============================================================================
-# Below are additional templates you can uncomment and customize.
-# Remove the '#' from each line to activate them.
-
-# # -------------------------------------------------------------------------
-# # MODALITY 5: VOLUME DATA WITH SCALING AND BINNING
-# # -------------------------------------------------------------------------
-# - modality_name: "Trading Volume"
-#   path: "./your_data_folder/your_file.csv"
-#   column_number: 14
-#   has_header: true
-#   processing_steps:
-#     - function: range_numeric_data
-#       args:
-#         num_whole_digits: 2
-#         decimal_places: 0
-#       enabled: true
-#     - function: bin_numeric_data
-#       args:
-#         num_bins: 6
-#         outlier_percentile: 0.1
-#       enabled: true
-#   cross_attention: false
-#   randomness_size: 1
-
-# # -------------------------------------------------------------------------
-# # MODALITY 6: MULTIPLE FILES (FOLDER LOADING)
-# # -------------------------------------------------------------------------
-# - modality_name: "Multi-Stock Prices"
-#   path: "./your_data_folder/"  # Folder path (ends with /)
-#   column_number: 13
-#   has_header: true
-#   processing_steps:
-#     - function: range_numeric_data
-#       args:
-#         num_whole_digits: 3
-#         decimal_places: 2
-#       enabled: true
-#   cross_attention: true
-#   randomness_size: 2
+  # Load all CSV files from a folder for multi-asset analysis
+  #
+  # - modality_name: "Multi-Stock Prices"
+  #   path: "./your_data/stocks/"  # Folder path (ends with /)
+  #   column_number: 5
+  #   has_header: true
+  #   processing_steps:
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 3
+  #         decimal_places: 2
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: 2
 
 # =============================================================================
 # DETAILED PARAMETER DOCUMENTATION
@@ -150,12 +128,13 @@ modalities:
 #   - All files in a folder will be loaded and concatenated
 #   - Use forward slashes even on Windows: "./data/" not ".\data\"
 #   - Files must have consistent structure (same columns)
+#   - MINIMUM 100,000 rows recommended for meaningful results
 #
 # COLUMN_NUMBER
 # -------------
 # Type: integer (1-indexed, NOT 0-indexed)
 # Description: Which column to extract from the CSV/TXT file
-# Examples: 1 = first column, 13 = thirteenth column, 14 = fourteenth column
+# Examples: 1 = first column, 5 = fifth column, 13 = thirteenth column
 # Note: Count columns from left to right, starting at 1
 #
 # HAS_HEADER
@@ -237,23 +216,29 @@ modalities:
 # BEST PRACTICES
 # =============================================================================
 #
-# 1. PROCESSING ORDER:
+# 1. DATA REQUIREMENTS:
+#    - Minimum: 100,000 rows of data
+#    - Recommended: 1,000,000+ rows for production use
+#    - Small datasets will produce poor/meaningless results
+#    - More data = better pattern recognition and generalization
+#
+# 2. PROCESSING ORDER:
 #    - convert_to_percent_changes usually comes first
 #    - range_numeric_data before bin_numeric_data
 #    - Test each step individually before combining
 #
-# 2. VOCABULARY SIZE MANAGEMENT:
+# 3. VOCABULARY SIZE MANAGEMENT:
 #    - Target: 10-500 unique values per modality
 #    - Too small: Model can't express patterns
 #    - Too large: Slower training, may overfit
 #    - Use binning or ranging to control vocabulary size
 #
-# 3. CROSS-ATTENTION STRATEGY:
+# 4. CROSS-ATTENTION STRATEGY:
 #    - Enable for modalities that should influence each other
 #    - Disable for independent features (time, categorical indicators)
 #    - Balance: Too many = slow, too few = misses relationships
 #
-# 4. DATA AUGMENTATION:
+# 5. DATA AUGMENTATION:
 #    - Only use randomness for large numeric vocabularies
 #    - Not suitable for categorical or time-based data
 #    - Higher values = more augmentation but may reduce precision

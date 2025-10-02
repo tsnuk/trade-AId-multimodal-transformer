@@ -10,6 +10,8 @@ A sophisticated multimodal transformer neural network system for processing and 
 
 **Key Features**: YAML configuration, sequential data processing, directional prediction metrics, vocabulary size control, and planned live broker API integration for real-time trading predictions.
 
+**Data Requirements**: This system requires substantial data to produce meaningful results - minimum 100,000 rows recommended, 1,000,000+ rows for production use. Small datasets will produce poor results.
+
 **Getting Started**: Configure `input_schemas.yaml` with your data sources, set training parameters in `config.yaml`, run `python main.py`. The system handles everything from data loading to multimodal training with comprehensive evaluation metrics.
 
 ## Disclaimer
@@ -23,6 +25,35 @@ A sophisticated multimodal transformer neural network system for processing and 
 - **Use at Your Own Risk**: Users are solely responsible for any decisions made based on this software's outputs.
 
 By using this software, you acknowledge that you understand and accept these terms.
+
+## Data Requirements
+
+**This system requires substantial data to produce meaningful results.**
+
+### Minimum Requirements
+- **100,000 rows** of sequential data (minimum)
+- **1,000,000+ rows** recommended for production use
+- Consistent data structure across all files
+
+### Why Large Datasets Matter
+- **Pattern Recognition**: Neural networks need extensive data to identify reliable patterns
+- **Generalization**: Small datasets lead to overfitting - the model memorizes rather than learns
+- **Statistical Significance**: Validation requires enough data to measure performance accurately
+- **Vocabulary Coverage**: Adequate representation of all possible states and transitions
+
+### What Happens with Small Datasets
+Datasets with fewer than 10,000 rows will likely produce:
+- Poor validation accuracy (near random chance ~50%)
+- High overfitting (training accuracy high, validation accuracy low)
+- Unreliable predictions
+- Misleading metrics
+
+### Data Format
+- CSV or TXT files with consistent column structure
+- Sequential/time-series data recommended
+- Multiple files can be loaded from a folder (will be concatenated)
+
+**Bottom Line**: If you don't have at least 100,000 rows of quality data, this system is not suitable for your use case. Consider collecting more data or using simpler statistical methods instead.
 
 ## User Interface Guide
 
@@ -79,6 +110,7 @@ The system supports two configuration approaches to suit different use cases:
 
 - [TL;DR](#tldr)
 - [Disclaimer](#disclaimer)
+- [Data Requirements](#data-requirements)
 - [User Interface Guide](#user-interface-guide)
   - [Primary Files You'll Interact With](#primary-files-youll-interact-with)
   - [Typical Workflows](#-typical-workflows)

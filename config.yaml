@@ -63,7 +63,7 @@ data_splitting:
   # Default: 0.2 (20%)
   # Range: 0.05 to 0.3 typical
   # Note: Only used if num_validation_files = 0
-  validation_size: 0.2
+  validation_size: 0.1
 
   # Number of files to use for validation (0 = use validation_size instead)
   # Type: integer
@@ -98,7 +98,7 @@ training_parameters:
   #   - Smaller: Faster, less memory, shorter-term patterns
   #   - Larger: Slower, more memory, longer-term patterns
   # Recommended: 8-16 for quick tests, 32-64 for real training
-  block_size: 8
+  block_size: 4
 
   # Maximum training iterations (training steps)
   # Type: integer
@@ -106,7 +106,7 @@ training_parameters:
   # Range: 10 to 100000+
   # Note: More iterations = longer training but potentially better results
   # Recommended: 100-500 for testing, 1000-10000 for production
-  max_iters: 100
+  max_iters: 200
 
   # How often to evaluate on validation set (in iterations)
   # Type: integer
@@ -116,7 +116,7 @@ training_parameters:
   #   - More frequent: Better monitoring, slower overall training
   #   - Less frequent: Faster training, less visibility into progress
   # Recommended: Set to max_iters/4 for good monitoring
-  eval_interval: 25
+  eval_interval: 50
 
   # Learning rate - controls how fast the model learns
   # Type: float
@@ -175,4 +175,4 @@ model_architecture:
   #   - Lower (0.0-0.1): Less regularization, may overfit on small datasets
   #   - Higher (0.2-0.5): More regularization, may underfit
   # Recommended: 0.1 for small models, 0.2 for larger models
-  dropout: 0.1
+  dropout: 0.2
