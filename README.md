@@ -314,7 +314,7 @@ Define your data sources and processing pipelines:
 modalities:
   # Stock price data with scaling
   - modality_name: "Stock Prices"
-    path: "./data/1day_candles/"
+    path: "./your_data_folder/"
     column_number: 13
     has_header: true
     processing_steps:
@@ -326,7 +326,7 @@ modalities:
 
   # Same data converted to percentages and binned
   - modality_name: "Price Changes"
-    path: "./data/1day_candles/"
+    path: "./your_data_folder/"
     column_number: 13
     has_header: true
     processing_steps:
@@ -409,7 +409,7 @@ save_model = 1
 
 # Data sources (input schemas)
 input_schema_1 = [
-    './data/1day_candles/',  # path
+    './your_data_folder/',  # path
     13,                      # column number
     True,                    # has header
     False,                   # convert to percentages
@@ -422,7 +422,7 @@ input_schema_1 = [
 ]
 
 input_schema_2 = [
-    './data/1day_candles/',  # same data, different processing
+    './your_data_folder/',  # same data, different processing
     13,                      # column number
     True,                    # has header
     True,                    # convert to percentages
