@@ -9,11 +9,16 @@
 # For production use with meaningful results:
 #   - Minimum: 1,000,000 rows of real data required
 #
-# See the main input_schemas.yaml file for production templates.
+# See parameter documentation below for production configuration guidance.
 # =============================================================================
 
+# =============================================================================
+# MODALITY DEFINITIONS
+# =============================================================================
 modalities:
-  # Simple price modality
+  # -------------------------------------------------------------------------
+  # DEMO MODALITY 1: SIMPLE PRICE DATA
+  # -------------------------------------------------------------------------
   - modality_name: "Demo Prices"
     path: "./examples/demo_data/demo_stock.csv"
     column_number: 13
@@ -27,7 +32,9 @@ modalities:
     cross_attention: true
     randomness_size: null
 
-  # Percentage changes with binning
+  # -------------------------------------------------------------------------
+  # DEMO MODALITY 2: PERCENTAGE CHANGES WITH BINNING
+  # -------------------------------------------------------------------------
   - modality_name: "Demo Changes (%)"
     path: "./examples/demo_data/demo_stock.csv"
     column_number: 13
@@ -44,3 +51,215 @@ modalities:
         enabled: true
     cross_attention: false
     randomness_size: null
+
+# =============================================================================
+# PRODUCTION CONFIGURATION EXAMPLES (COMMENTED OUT)
+# =============================================================================
+# Below are example configurations for production use. Uncomment and modify
+# these templates for your actual data (minimum 1M rows required).
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 1: STOCK PRICES WITH RANGING
+  # -------------------------------------------------------------------------
+  # - modality_name: "Stock Prices"
+  #   path: "./your_data/stock_prices.csv"
+  #   column_number: 5  # Adjust to your closing price column
+  #   has_header: true
+  #   processing_steps:
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 2
+  #         decimal_places: 2
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: 2
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 2: PERCENTAGE CHANGES WITH BINNING
+  # -------------------------------------------------------------------------
+  # - modality_name: "Price Changes (%)"
+  #   path: "./your_data/stock_prices.csv"
+  #   column_number: 5  # Same column as above
+  #   has_header: true
+  #   processing_steps:
+  #     - function: convert_to_percent_changes
+  #       args:
+  #         decimal_places: 2
+  #       enabled: true
+  #     - function: bin_numeric_data
+  #       args:
+  #         num_bins: 5
+  #         outlier_percentile: 0.1
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 3: VOLUME DATA
+  # -------------------------------------------------------------------------
+  # - modality_name: "Trading Volume"
+  #   path: "./your_data/stock_prices.csv"
+  #   column_number: 6  # Adjust to your volume column
+  #   has_header: true
+  #   processing_steps:
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 2
+  #         decimal_places: 0
+  #       enabled: true
+  #   cross_attention: false
+  #   randomness_size: null
+
+  # -------------------------------------------------------------------------
+  # EXAMPLE 4: MULTIPLE FILES (FOLDER LOADING)
+  # -------------------------------------------------------------------------
+  # Load all CSV files from a folder for multi-asset analysis
+  #
+  # - modality_name: "Multi-Stock Prices"
+  #   path: "./your_data/stocks/"  # Folder path (ends with /)
+  #   column_number: 5
+  #   has_header: true
+  #   processing_steps:
+  #     - function: range_numeric_data
+  #       args:
+  #         num_whole_digits: 3
+  #         decimal_places: 2
+  #       enabled: true
+  #   cross_attention: true
+  #   randomness_size: 2
+
+# =============================================================================
+# DETAILED PARAMETER DOCUMENTATION
+# =============================================================================
+#
+# MODALITY_NAME
+# -------------
+# Type: string
+# Description: Human-readable name for this modality (appears in logs and outputs)
+# Examples: "Stock Prices", "Temperature", "Heart Rate", "Trading Volume"
+#
+# PATH
+# ----
+# Type: string (file path or folder path)
+# Options:
+#   - Single file: "./data/stock.csv" (must include .csv or .txt extension)
+#   - Multiple files: "./data/stocks/" (folder path, must end with /)
+# Notes:
+#   - All files in a folder will be loaded and concatenated
+#   - Use forward slashes even on Windows: "./data/" not ".\data\"
+#   - Files must have consistent structure (same columns)
+#   - MINIMUM 1,000,000 rows required for meaningful results
+#
+# COLUMN_NUMBER
+# -------------
+# Type: integer (1-indexed, NOT 0-indexed)
+# Description: Which column to extract from the CSV/TXT file
+# Examples: 1 = first column, 5 = fifth column, 13 = thirteenth column
+# Note: Count columns from left to right, starting at 1
+#
+# HAS_HEADER
+# ----------
+# Type: boolean (true or false)
+# Description: Does the file have a header row?
+# Options:
+#   - true: Skip first row (header row)
+#   - false: No header, read all rows as data
+#
+# PROCESSING_STEPS
+# ----------------
+# Type: list of processing functions
+# Description: Transform raw data before training (applied sequentially)
+# Order: Functions are applied in sequence (function1 -> function2 -> ...)
+# Options:
+#   - Empty list []: No processing, use raw data
+#   - One or more functions: Each with 'function', 'args', and 'enabled' fields
+#
+# Available Processing Functions:
+#
+#   1. convert_to_percent_changes
+#      Purpose: Convert values to percentage changes
+#      Formula: (current - previous) / previous * 100
+#      Arguments:
+#        - decimal_places: int (0-4) - Precision for percentage calculations
+#      Use when: You want directional movement, not absolute values
+#      Example: Stock prices 100->102 becomes +2.0%
+#      Note: First value in each file will be 0 (no previous value)
+#
+#   2. range_numeric_data
+#      Purpose: Scale numeric values to specific range
+#      Arguments:
+#        - num_whole_digits: int (1-5) - Digits before decimal point
+#        - decimal_places: int (0-4) - Digits after decimal point
+#      Use when: Need to control vocabulary size for large numbers
+#      Example: Scale 1543.892 to 154.39 (3 whole digits, 2 decimal places)
+#      Effect: Larger values = larger vocabulary, more expressiveness
+#
+#   3. bin_numeric_data
+#      Purpose: Group continuous values into discrete bins/categories
+#      Arguments:
+#        - num_bins: int (3-20) - Number of bins to create
+#        - outlier_percentile: float (0.0-0.3) - Fraction to treat as outliers
+#        - exponent: float (0.5-2.0) - Bin spacing pattern (optional, default 1.0)
+#      Use when: Want to reduce vocabulary or create categories
+#      Example: Bin percentages into: large down, down, flat, up, large up
+#      Effect: More bins = more granularity but larger vocabulary
+#
+# CROSS_ATTENTION
+# ---------------
+# Type: boolean (true or false)
+# Description: Can this modality attend to other modalities?
+# Options:
+#   - true: This modality uses cross-attention (learns relationships with others)
+#   - false: Independent learning (faster, simpler)
+# Recommended:
+#   - Set true for 1-2 primary modalities (e.g., main price data)
+#   - Set false for supporting modalities (time, volume, categorical data)
+#   - Too many cross-attention modalities = slower training
+#
+# RANDOMNESS_SIZE
+# ---------------
+# Type: integer or null
+# Description: Data augmentation through randomness injection
+# Options:
+#   - null: No randomness (use original data exactly)
+#   - 1: Light randomness (±1 vocabulary position)
+#   - 2: Medium randomness (±2 vocabulary positions)
+#   - 3: High randomness (±3 vocabulary positions)
+# Recommended:
+#   - Use for numeric data with large vocabularies (100+ unique values)
+#   - Don't use for small categorical data (time, day of week)
+#   - Start with null, add randomness only if model overfits
+# Effect: Creates (2*randomness_size + 1)^block_size possible variations per sequence
+# Example: randomness_size=2, block_size=16 -> 5^16 = ~152 billion variations
+#
+# =============================================================================
+# BEST PRACTICES
+# =============================================================================
+#
+# 1. DATA REQUIREMENTS:
+#    - Minimum: 1,000,000 rows of data required
+#    - Small datasets will produce poor/meaningless results
+#    - More data = better pattern recognition and generalization
+#
+# 2. PROCESSING ORDER:
+#    - convert_to_percent_changes usually comes first
+#    - range_numeric_data before bin_numeric_data
+#    - Test each step individually before combining
+#
+# 3. VOCABULARY SIZE MANAGEMENT:
+#    - Target: 10-500 unique values per modality
+#    - Too small: Model can't express patterns
+#    - Too large: Slower training, may overfit
+#    - Use binning or ranging to control vocabulary size
+#
+# 4. CROSS-ATTENTION STRATEGY:
+#    - Enable for modalities that should influence each other
+#    - Disable for independent features (time, categorical indicators)
+#    - Balance: Too many = slow, too few = misses relationships
+#
+# 5. DATA AUGMENTATION:
+#    - Only use randomness for large numeric vocabularies
+#    - Not suitable for categorical or time-based data
+#    - Higher values = more augmentation but may reduce precision
+#
+# For more information, see README.md

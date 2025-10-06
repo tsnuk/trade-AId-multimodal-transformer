@@ -6,30 +6,171 @@
 # For production use with meaningful results:
 #   - Minimum: 1,000,000 rows of data required
 #
-# See the main config.yaml and input_schemas.yaml for production templates.
+# See parameter documentation below for production configuration guidance.
 # =============================================================================
 
+# =============================================================================
+# PROJECT SETTINGS
+# =============================================================================
 project_settings:
+  # Main project directory - change this to your project path
+  # Type: string (path)
+  # Default: "./"
+  # Example: "./my_project/"
   project_file_path: "./examples/"
+
+  # Output file for training logs and results
+  # Type: string (filename)
+  # Default: "training_log.txt"
+  # Note: File will be created in project_file_path/output/
   output_file_name: "demo_training_log.txt"
+
+  # Model file name for saving/loading trained models
+  # Type: string (path/filename)
+  # Default: "output/model.pth"
+  # Note: Include 'output/' prefix to save in output directory
   model_file_name: "output/demo_model.pth"
+
+  # Model creation and saving behavior:
+  # Type: integer (0 or 1)
+  # 1 = Create new model (use this when starting fresh)
+  # 0 = Load existing model (use this to continue training)
   create_new_model: 1
+
+  # Model saving behavior:
+  # Type: integer (0 or 1)
+  # 1 = Save model during training and at completion
+  # 0 = Don't save model (training session only)
   save_model: 0  # Don't save this demo model
+
+  # Training device - options: 'cpu', 'cuda', 'auto'
+  # Type: string
+  # Options:
+  #   - 'cpu': Force CPU usage (safe for all systems)
+  #   - 'cuda': Force GPU usage (requires CUDA-compatible GPU)
+  #   - 'auto': Automatically detect and use GPU if available, otherwise CPU
+  # Recommended: 'cpu' for small models, 'auto' for larger models
   device: cpu
 
+# =============================================================================
+# DATA SPLITTING
+# =============================================================================
 data_splitting:
+  # Percentage of data to use for validation (0.0 to 1.0)
+  # Type: float
+  # Default: 0.2 (20%)
+  # Range: 0.05 to 0.3 typical
+  # Note: Only used if num_validation_files = 0
   validation_size: 0.2
+
+  # Number of files to use for validation (0 = use validation_size instead)
+  # Type: integer
+  # Default: 0 (use percentage-based splitting)
+  # Options:
+  #   - 0: Use validation_size for percentage-based splitting
+  #   - 1+: Reserve last N files for validation (file-based splitting)
+  # Note: File-based splitting is useful for testing generalization across
+  #       different data sources (e.g., different stocks, time periods)
   num_validation_files: 0
 
+# =============================================================================
+# TRAINING PARAMETERS
+# =============================================================================
+# Small, fast settings perfect for learning and quick experimentation
 training_parameters:
+  # Number of examples processed together in each training step
+  # Type: integer
+  # Default: 4
+  # Range: 1 to 128+ (depends on available memory)
+  # Trade-offs:
+  #   - Smaller: Less memory usage, more noisy gradients
+  #   - Larger: More memory usage, more stable gradients, faster training
+  # Recommended: 4-8 for small models, 16-32 for larger models
   batch_size: 4
+
+  # Context window size - how many time steps the model sees at once
+  # Type: integer
+  # Default: 8
+  # Range: 4 to 512+ (depends on sequence length requirements)
+  # Trade-offs:
+  #   - Smaller: Faster, less memory, shorter-term patterns
+  #   - Larger: Slower, more memory, longer-term patterns
+  # Recommended: 8-16 for quick tests, 32-64 for real training
   block_size: 4
+
+  # Maximum training iterations (training steps)
+  # Type: integer
+  # Default: 100
+  # Range: 10 to 100000+
+  # Note: More iterations = longer training but potentially better results
+  # Recommended: 100-500 for testing, 1000-10000 for production
   max_iters: 50  # Very short training for demo
+
+  # How often to evaluate on validation set (in iterations)
+  # Type: integer
+  # Default: 25
+  # Range: 10 to 1000+
+  # Trade-offs:
+  #   - More frequent: Better monitoring, slower overall training
+  #   - Less frequent: Faster training, less visibility into progress
+  # Recommended: Set to max_iters/4 for good monitoring
   eval_interval: 25
+
+  # Learning rate - controls how fast the model learns
+  # Type: float
+  # Default: 0.001
+  # Range: 0.00001 to 0.01 typical
+  # Trade-offs:
+  #   - Too low: Slow learning, may not converge
+  #   - Too high: Unstable training, may diverge
+  # Recommended: 0.001 for most cases, 0.0003 for larger models
   learning_rate: 0.001
 
+# =============================================================================
+# MODEL ARCHITECTURE
+# =============================================================================
+# Small model architecture for fast training and low resource usage
 model_architecture:
+  # Embedding dimension - internal representation size
+  # Type: integer
+  # Default: 32
+  # Range: 16 to 1024+
+  # Trade-offs:
+  #   - Smaller: Faster, less memory, less capacity
+  #   - Larger: Slower, more memory, more capacity for complex patterns
+  # Recommended: 32-64 for small models, 128-256 for medium, 512+ for large
+  # Note: Must be divisible by n_head
   n_embd: 32
+
+  # Number of attention heads in each layer
+  # Type: integer
+  # Default: 4
+  # Range: 1 to 32+
+  # Constraint: Must divide evenly into n_embd
+  # Examples: n_embd=32 -> n_head can be 1,2,4,8,16,32
+  # Trade-offs:
+  #   - Fewer heads: Simpler, faster
+  #   - More heads: Can learn more diverse attention patterns
+  # Recommended: 4-8 for most cases
   n_head: 4
+
+  # Number of transformer layers (depth of the model)
+  # Type: integer
+  # Default: 2
+  # Range: 1 to 24+
+  # Trade-offs:
+  #   - Fewer layers: Faster, less capacity
+  #   - More layers: Slower, more capacity for hierarchical learning
+  # Recommended: 2-4 for small models, 6-12 for larger models
   n_layer: 2
+
+  # Dropout rate for regularization (prevents overfitting)
+  # Type: float
+  # Default: 0.1
+  # Range: 0.0 to 0.5
+  # Effect: Randomly drops this fraction of neurons during training
+  # Trade-offs:
+  #   - Lower (0.0-0.1): Less regularization, may overfit on small datasets
+  #   - Higher (0.2-0.5): More regularization, may underfit
+  # Recommended: 0.1 for small models, 0.2 for larger models
   dropout: 0.1
