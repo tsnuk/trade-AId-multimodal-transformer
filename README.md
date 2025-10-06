@@ -10,7 +10,7 @@ A sophisticated multimodal transformer neural network system for processing and 
 
 **Key Features**: YAML configuration, sequential data processing, directional prediction metrics, vocabulary size control, and planned live broker API integration for real-time trading predictions.
 
-**Data Requirements**: This system requires substantial data to produce meaningful results - minimum 100,000 rows recommended, 1,000,000+ rows for production use. Small datasets will produce poor results.
+**Data Requirements**: This system requires substantial data to produce meaningful results - minimum 1,000,000 rows required. Smaller datasets will produce poor results.
 
 **Getting Started**: Configure `input_schemas.yaml` with your data sources, set training parameters in `config.yaml`, run `python main.py`. The system handles everything from data loading to multimodal training with comprehensive evaluation metrics.
 
@@ -31,8 +31,7 @@ By using this software, you acknowledge that you understand and accept these ter
 **This system requires substantial data to produce meaningful results.**
 
 ### Minimum Requirements
-- **100,000 rows** of sequential data (minimum)
-- **1,000,000+ rows** recommended for production use
+- **1,000,000 rows** of sequential data (minimum required)
 - Consistent data structure across all files
 
 ### Why Large Datasets Matter
@@ -63,7 +62,7 @@ Datasets with fewer than 10,000 rows will likely produce:
 
 This approach gives the model diverse market conditions and patterns across different assets, improving generalization.
 
-**Bottom Line**: If you don't have at least 100,000 rows of quality data, this system is not suitable for your use case. Consider collecting more data or using simpler statistical methods instead.
+**Note**: This system requires at least 1,000,000 rows of quality data to produce meaningful results. Smaller datasets should use simpler statistical methods.
 
 ## User Interface Guide
 

@@ -9,7 +9,7 @@ This demo exists to:
 - Provide a quick "hello world" style test
 - Illustrate the multimodal learning workflow
 
-**Note**: Small datasets produce limited results. For meaningful predictions, use 100k+ rows (see main README.md).
+**Note**: Small datasets produce limited results. For meaningful predictions, use 1M+ rows (see main README.md).
 
 ## Running the Demo
 
@@ -35,7 +35,7 @@ python main.py
 
 For real applications with meaningful results:
 
-1. **Prepare data**: Minimum 100,000 rows (1M+ recommended, see main README.md)
+1. **Prepare data**: Minimum 1,000,000 rows required (see main README.md)
 2. **Configure**: Edit `config.yaml` and `input_schemas.yaml` in project root
 3. **Scale up**: Use folder loading to combine multiple data sources
 4. **Optimize**: Adjust model size and training iterations for your dataset

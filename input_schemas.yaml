@@ -7,8 +7,7 @@
 #   - The multimodal learning workflow
 #
 # For production use with meaningful results:
-#   - Minimum: 100,000 rows of real data
-#   - Recommended: 1,000,000+ rows
+#   - Minimum: 1,000,000 rows of real data required
 #
 # See the main input_schemas.yaml file for production templates.
 # =============================================================================
