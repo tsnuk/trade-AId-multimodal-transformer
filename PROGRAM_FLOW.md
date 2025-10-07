@@ -5,7 +5,7 @@
 ```
 START: main.py execution
 |
-|- 1. CONFIGURATION LOADING (main.py:30-60)
+|- 1. CONFIGURATION LOADING (main.py:29-64)
 |   |- config_manager.py -> load_config()
 |   |   |- Loads config.yaml -> system settings
 |   |   '- Loads input_schemas.yaml -> modality configurations
@@ -14,28 +14,28 @@ START: main.py execution
 |   |   '- Creates InputSchema objects
 |   '- Sets global config variables
 |
-|- 2. DATA LOADING & PROCESSING (main.py:61-235)
+|- 2. DATA LOADING & PROCESSING (main.py:66-259)
 |   |- For each modality:
-|   |   |- data_utils.py -> load_and_process_data()
+|   |   |- file_cache.py -> load_file_data_cached()
 |   |   |   |- Loads CSV/TXT files from path
 |   |   |   |- Extracts specified column
 |   |   |   '- Returns raw numeric data + file info
-|   |   |- processing_pipeline.py -> ProcessingPipeline.process()
-|   |   |   |- Applies processing steps sequentially:
-|   |   |   |   |- convert_to_percent_changes()
-|   |   |   |   |- range_numeric_data()
-|   |   |   |   '- bin_numeric_data()
-|   |   |   '- processing_registry.py -> validates functions
-|   |   '- Creates vocabulary from processed data
-|   '- VOCABULARY BUILDING output
+|   |   |- data_utils.py -> Processing functions applied inline:
+|   |   |   |- convert_to_percent_changes() (if enabled)
+|   |   |   |- range_numeric_data() (if enabled)
+|   |   |   '- bin_numeric_data() (if enabled)
+|   |   '- data_utils.py -> numerical_representation()
+|   |       '- Creates vocabulary from processed data
+|   '- VOCABULARY BUILDING output (main.py:271-325)
 |
-|- 3. DATASET SPLITTING (main.py:245-280)
+|- 3. DATASET SPLITTING (main.py:334-378)
 |   |- data_utils.py -> create_train_val_datasets()
 |   |   |- If num_validation_files > 0: File-based split
 |   |   '- Else: Percentage-based split using validation_size
+|   |- file_cache.py -> cleanup_cache() (main.py:380)
 |   '- DATASET SPLITTING output
 |
-|- 4. MODEL INITIALIZATION (main.py:282-320)
+|- 4. MODEL INITIALIZATION (main.py:451-485)
 |   |- model.py -> MultimodalTransformer()
 |   |   |- Creates embedding layers for each modality
 |   |   |- Initializes MultimodalBlock layers
@@ -46,50 +46,50 @@ START: main.py execution
 |   |- If create_new_model=0: Load existing model weights
 |   '- Move model to device (CPU/CUDA)
 |
-|- 5. TRAINING SETUP (main.py:321-390)
+|- 5. TRAINING SETUP (main.py:487-592)
 |   |- Creates PyTorch optimizer (AdamW)
 |   |- Sets up training log file
-|   |- data_utils.py -> write_training_log_header()
+|   |- data_utils.py -> write_initial_run_details()
 |   |   '- Writes configuration summary to log
 |   '- TRAINING STARTUP output
 |
-|- 6. MAIN TRAINING LOOP (main.py:391-520)
+|- 6. MAIN TRAINING LOOP (main.py:598-653)
 |   |
 |   |- For each iteration (0 to max_iters):
 |   |   |
-|   |   |- TRAINING STEP
-|   |   |   |- training_utils.py -> train_step()
-|   |   |   |   |- Gets random training batches
-|   |   |   |   |- model.forward() -> MultimodalTransformer
-|   |   |   |   |   |- Embedding lookup for each modality
-|   |   |   |   |   |- Processes through transformer blocks:
-|   |   |   |   |   |   |- Self-attention (all modalities)
-|   |   |   |   |   |   |- Cross-attention (if enabled)
-|   |   |   |   |   |   '- FeedForward
-|   |   |   |   |   '- Output predictions
-|   |   |   |   |- Calculates loss (CrossEntropyLoss)
-|   |   |   |   |- Backpropagation
-|   |   |   |   '- Optimizer step
-|   |   |   '- Returns training loss
-|   |   |
 |   |   |- EVALUATION (every eval_interval steps)
-|   |   |   |- training_utils.py -> calculate_evaluation_metrics()
-|   |   |   |   |- Runs model on validation batches
-|   |   |   |   |- Calculates validation loss
-|   |   |   |   |- Calculates directional accuracy
-|   |   |   |   '- Returns metrics dictionary
+|   |   |   |- training_utils.py -> estimate_loss()
+|   |   |   |   |- Runs model on train/val batches
+|   |   |   |   |- Calculates train/validation loss
+|   |   |   |   |- training_utils.py -> calculate_evaluation_metrics()
+|   |   |   |   |   |- Calculates directional accuracy
+|   |   |   |   |   '- Returns metrics dictionary
+|   |   |   |   '- Returns average losses
 |   |   |   |- LOSS METRICS output (console)
 |   |   |   |- STEP log entry (training_log.txt)
+|   |   |   |- Early stopping check (if validation improves)
 |   |   |   '- Model saving (if save_model=1)
 |   |   |
-|   |   '- Early stopping check (if validation improves)
+|   |   |- TRAINING STEP
+|   |   |   |- training_utils.py -> get_batch('train')
+|   |   |   |   '- Gets random training batches
+|   |   |   |- model.forward() -> MultimodalTransformer
+|   |   |   |   |- Embedding lookup for each modality
+|   |   |   |   |- Processes through transformer blocks:
+|   |   |   |   |   |- Self-attention (all modalities)
+|   |   |   |   |   |- Cross-attention (if enabled)
+|   |   |   |   |   '- FeedForward
+|   |   |   |   '- Output predictions + loss
+|   |   |   |- Calculates total loss (sum of modality losses)
+|   |   |   |- Backpropagation
+|   |   |   '- Optimizer step
+|   |   |
+|   |   '- Continue to next iteration
 |   |
-|   '- Loop continues until max_iters reached
+|   '- Loop continues until max_iters reached or early stopping
 |
-|- 7. TRAINING COMPLETION (main.py:521-560)
+|- 7. TRAINING COMPLETION (main.py:655-668)
 |   |- Final model save (if save_model=1)
-|   |- Final evaluation metrics
-|   |- Cleanup (file_cache.py -> cleanup_cache())
 |   '- TRAINING COMPLETE output
 |
 '- END: Program termination
@@ -100,6 +100,7 @@ START: main.py execution
 | File | Primary Responsibility |
 |------|----------------------|
 | **main.py** | Main execution orchestrator |
+| **compatibility_layer.py** | YAML/programmatic config bridging |
 | **config_manager.py** | Configuration loading/validation |
 | **schema.py** | YAML schema management |
 | **data_utils.py** | Data loading, processing, splitting |
@@ -120,8 +121,8 @@ START: main.py execution
 
 | File | Content |
 |------|---------|
-| **training_log.txt** | Detailed training log |
-| **TransformerModel.pth** | Saved model weights |
+| **output_file_name** (configurable) | Detailed training log |
+| **model_file_name** (configurable) | Saved model weights |
 
 ## Key Processing Phases
 
@@ -149,4 +150,4 @@ START: main.py execution
 
 ### Phase 5: Completion
 - Final model save
-- Cleanup and termination
+- Training complete message
